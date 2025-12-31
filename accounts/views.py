@@ -62,9 +62,7 @@ def register_tenant(request):
                         user.save()
                         
                         # 2. Create Tenant
-                        tenant = tenant_form.save(commit=False)
-                        tenant.name = tenant_form.cleaned_data['company_name']
-                        tenant.save() # Schema created here
+                        tenant = tenant_form.save() # Form now correctly maps 'name' field
 
                         # Create Domain
                         from .models import Domain
@@ -128,6 +126,9 @@ def register_tenant(request):
                     # If any error occurs (e.g. IntegrityError even inside transaction if triggered oddly, 
                     # or some other save error), add error to form and let user retry.
                     # Since we are in atomic block, User creation is rolled back.
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"Registration failed for user {user_data.get('username', 'unknown')}: {str(e)}", exc_info=True)
                     tenant_form.add_error(None, f"Registration failed: {str(e)}")
 
                 

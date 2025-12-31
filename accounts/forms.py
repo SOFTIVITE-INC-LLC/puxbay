@@ -3,13 +3,13 @@ from django.contrib.auth.models import User
 from .models import Tenant, Branch, APIKey
 
 class TenantRegistrationForm(forms.ModelForm):
-    company_name = forms.CharField(label="Company Name", max_length=100)
+    name = forms.CharField(label="Company Name", max_length=100)
     subdomain = forms.CharField(label="Subdomain (e.g., storename)", max_length=100, help_text="This will be your unique store URL identifier.")
     address = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=False)
 
     class Meta:
         model = Tenant
-        fields = ['company_name', 'subdomain', 'address']
+        fields = ['name', 'subdomain', 'address']
 
     def clean_subdomain(self):
         subdomain = self.cleaned_data.get('subdomain')

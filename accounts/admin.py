@@ -178,6 +178,7 @@ class CrossTenantAuditLogAdmin(ModelAdmin):
 class SEOSettingsAdmin(ModelAdmin):
     list_display = ('tenant', 'meta_title', 'homepage_video_id', 'updated_at')
     search_fields = ('tenant__name', 'meta_title')
+    readonly_fields = ('updated_at',)
     fieldsets = (
         (None, {
             "fields": ("tenant", "meta_title", "meta_description", "keywords"),
