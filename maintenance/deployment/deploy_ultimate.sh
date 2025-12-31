@@ -18,7 +18,7 @@ USER="softivite"
 GROUP="www-data"
 APP_REPLICAS=5
 DB_REPLICAS=5
-REPLICATION_USER="puxbay_replicator"
+REPLICATION_USER="puxbay"
 REPLICATION_PASSWORD="Thinkce@softivitepuxbay"
 BACKUP_RETENTION_DAYS=30
 
