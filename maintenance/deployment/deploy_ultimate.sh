@@ -580,9 +580,6 @@ echo ""
 
 echo -e "${YELLOW}Step 14: Seeding initial data...${NC}"
 
-# 1. Seed Currencies
-echo "Running seed_currencies..."
-python manage.py seed_currencies
 
 # 2. Seed Features
 echo "Running seed_features..."
