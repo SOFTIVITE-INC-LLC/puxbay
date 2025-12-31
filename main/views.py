@@ -70,20 +70,30 @@ def dashboard(request):
         
         # Total counts (Optimized via TenantMetrics)
         from .models import TenantMetrics
-        metrics, created = TenantMetrics.objects.get_or_create(tenant=tenant)
         
-        if created:
-            # First time setup - populate initial values
-            metrics.total_products = Product.objects.filter(tenant=tenant).count()
-            metrics.total_orders = Order.objects.filter(tenant=tenant).count()
-            metrics.total_customers = Customer.objects.filter(tenant=tenant).count()
-            metrics.total_branches = Branch.objects.filter(tenant=tenant).count()
-            metrics.save()
+        # Try to use cached metrics, fall back to direct queries if table doesn't exist
+        try:
+            metrics, created = TenantMetrics.objects.get_or_create(tenant=tenant)
             
-        products_count = metrics.total_products
-        orders_count = metrics.total_orders
-        customers_count = metrics.total_customers
-        branches_count = metrics.total_branches
+            if created:
+                # First time setup - populate initial values
+                metrics.total_products = Product.objects.filter(tenant=tenant).count()
+                metrics.total_orders = Order.objects.filter(tenant=tenant).count()
+                metrics.total_customers = Customer.objects.filter(tenant=tenant).count()
+                metrics.total_branches = Branch.objects.filter(tenant=tenant).count()
+                metrics.save()
+                
+            products_count = metrics.total_products
+            orders_count = metrics.total_orders
+            customers_count = metrics.total_customers
+            branches_count = metrics.total_branches
+        except Exception:
+            # Fallback if TenantMetrics table doesn't exist yet (during migrations)
+            products_count = Product.objects.filter(tenant=tenant).count()
+            orders_count = Order.objects.filter(tenant=tenant).count()
+            customers_count = Customer.objects.filter(tenant=tenant).count()
+            branches_count = Branch.objects.filter(tenant=tenant).count()
+
         
         # Today's metrics
         today = timezone.now().date()
