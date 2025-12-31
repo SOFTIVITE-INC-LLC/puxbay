@@ -114,9 +114,7 @@ MIDDLEWARE = [
     # 'csp.middleware.CSPMiddleware', # CSP Support
 ]
 
-# Disable replica health check in development
-if not DEBUG:
-    MIDDLEWARE.insert(2, 'possystem.middleware_db.ReplicaHealthCheckMiddleware')
+
 
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
@@ -162,7 +160,7 @@ DATABASES = {
         'NAME': config('DB_NAME', default='puxbay'),
         'USER': config('DB_USER', default='puxbay'),
         'PASSWORD': config('DB_PASSWORD', default='Thinkce@softivitepuxbay'),
-        'HOST': config('DB_HOST', default='localhost'),
+        'HOST': '127.0.0.1' if config('DB_HOST', default='127.0.0.1') == 'localhost' else config('DB_HOST'),
         'PORT': config('DB_PORT', default='5432'),
         'CONN_MAX_AGE': 600,
         'OPTIONS': {
@@ -172,36 +170,12 @@ DATABASES = {
 }
 
 
-# Dynamic Replica Configuration
-DB_NUM_REPLICAS = config('DB_NUM_REPLICAS', default=0, cast=int)
-DB_REPLICA_HOST = config('DB_REPLICA_HOST', default='localhost')
-DB_USER_REPLICA = config('DB_USER_REPLICA', default=DATABASES['default']['USER'])
-DB_PASSWORD = DATABASES['default']['PASSWORD']
-DB_NAME = DATABASES['default']['NAME']
 
-for i in range(1, DB_NUM_REPLICAS + 1):
-    DATABASES[f'replica{i}'] = {
-        'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': DB_NAME,
-        'USER': DB_USER_REPLICA,
-        'PASSWORD': DB_PASSWORD,
-        'HOST': DB_REPLICA_HOST,
-        'PORT': config(f'DB_REPLICA{i}_PORT', default=str(5432 + i)),
-        'CONN_MAX_AGE': 600,
-        'OPTIONS': {'connect_timeout': 10}
-    }
 
 # Database routers - order matters!
-if DEBUG:
-    DATABASE_ROUTERS = [
-        'django_tenants.routers.TenantSyncRouter',
-        'possystem.db_router.PrimaryOnlyRouter',
-    ]
-else:
-    DATABASE_ROUTERS = [
-        'django_tenants.routers.TenantSyncRouter',  # Tenant routing MUST come first
-        'possystem.db_router.ReadReplicaRouter',  # Read/write splitting with load balancing
-    ]
+DATABASE_ROUTERS = [
+    'django_tenants.routers.TenantSyncRouter',
+]
 
 
 
@@ -694,7 +668,7 @@ LOGGING = {
         'file': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'django_errors.log',
+            'filename': str(BASE_DIR / 'django_errors.log'),
             'formatter': 'verbose',
         },
         'db_log': {
