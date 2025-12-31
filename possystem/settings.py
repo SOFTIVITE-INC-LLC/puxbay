@@ -169,8 +169,8 @@ DATABASES = {
             'connect_timeout': 10,
         }
     },
-    }
 }
+
 
 # Dynamic Replica Configuration
 DB_NUM_REPLICAS = config('DB_NUM_REPLICAS', default=0, cast=int)
