@@ -167,9 +167,13 @@ EOF
         
         mkdir -p $DATA_DIR_STANDBY
         chown postgres:postgres $DATA_DIR_STANDBY
+        chmod 700 $DATA_DIR_STANDBY
         
         # Create base backup (using env to pass password securely)
         sudo -u postgres env PGPASSWORD=$REPLICATION_PASSWORD pg_basebackup -h localhost -D $DATA_DIR_STANDBY -U $REPLICATION_USER -v -P -X stream
+        
+        # Ensure permissions remain correct after backup
+        chmod 700 $DATA_DIR_STANDBY
         
         # Create standby.signal
         sudo -u postgres touch $DATA_DIR_STANDBY/standby.signal
