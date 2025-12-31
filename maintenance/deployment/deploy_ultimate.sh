@@ -205,8 +205,11 @@ log_rotation_size = 10MB
 
 # Locations
 unix_socket_directories = '/var/run/postgresql'
-pid_file = '$DATA_DIR_STANDBY/postmaster.pid'
 EOF
+
+        # Create empty postgresql.auto.conf to suppress warning
+        touch $DATA_DIR_STANDBY/postgresql.auto.conf
+        chown postgres:postgres $DATA_DIR_STANDBY/postgresql.auto.conf
 
         # Create isolated pg_hba.conf
         cat > $DATA_DIR_STANDBY/pg_hba.conf << EOF
