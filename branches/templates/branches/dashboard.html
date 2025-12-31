@@ -659,7 +659,7 @@
                 </div>
                 <div>
                     <dt class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Manager</dt>
-                    <dd class="text-base font-bold text-slate-900 border-l-2 border-indigo-200 pl-3">{{ manager.user.get_full_name|default:manager.user.username|default:"No Manager Assigned" }}</dd>
+                    <dd class="text-base font-bold text-slate-900 border-l-2 border-indigo-200 pl-3">{% if manager %}{{ manager.user.get_full_name|default:manager.user.username|default:"No Manager Assigned" }}{% else %}No Manager Assigned{% endif %}</dd>
                 </div>
                 <div>
                     <dt class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Established</dt>
