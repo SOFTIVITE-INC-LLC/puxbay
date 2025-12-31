@@ -14,6 +14,7 @@ psycopg2-binary>=2.9.9
 
 # Admin UI
 django-unfold>=0.21.0
+django-tinymce>=3.6.1
 
 # REST API
 djangorestframework>=3.14.0,<4.0
@@ -29,8 +30,16 @@ stripe>=7.0.0
 cryptography>=41.0.0
 django-csp==4.0
 django-ratelimit>=4.1.0
+pyotp>=2.9.0
+
+# Utilities
+requests>=2.31.0
+Pillow>=10.0.0
+qrcode>=7.4.2
+
 # Production (optional - uncomment when deploying)
-# gunicorn>=21.0.0
+gunicorn>=21.0.0
+uvicorn[standard]>=0.23.0
 # whitenoise>=6.6.0
 redis>=5.0.0
 django-redis>=5.4.0
