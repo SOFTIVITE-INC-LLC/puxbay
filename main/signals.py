@@ -68,48 +68,76 @@ def inventory_low_webhook_trigger(sender, instance, **kwargs):
 def create_tenant_metrics(sender, instance, created, **kwargs):
     """Ensure every tenant has a metrics object"""
     if created:
-        TenantMetrics.objects.get_or_create(tenant=instance)
+        try:
+            TenantMetrics.objects.get_or_create(tenant=instance)
+        except Exception:
+            # Table doesn't exist yet during initial migrations
+            pass
 
 @receiver(post_save, sender=Product)
 def update_product_metrics(sender, instance, created, **kwargs):
     if created and instance.tenant:
-        metrics, _ = TenantMetrics.objects.get_or_create(tenant=instance.tenant)
-        TenantMetrics.objects.filter(id=metrics.id).update(total_products=F('total_products') + 1)
+        try:
+            metrics, _ = TenantMetrics.objects.get_or_create(tenant=instance.tenant)
+            TenantMetrics.objects.filter(id=metrics.id).update(total_products=F('total_products') + 1)
+        except Exception:
+            pass
 
 @receiver(post_delete, sender=Product)
 def decrement_product_metrics(sender, instance, **kwargs):
     if instance.tenant:
-        TenantMetrics.objects.filter(tenant=instance.tenant).update(total_products=F('total_products') - 1)
+        try:
+            TenantMetrics.objects.filter(tenant=instance.tenant).update(total_products=F('total_products') - 1)
+        except Exception:
+            pass
 
 @receiver(post_save, sender=Order)
 def update_order_metrics(sender, instance, created, **kwargs):
     if created and instance.tenant:
-        metrics, _ = TenantMetrics.objects.get_or_create(tenant=instance.tenant)
-        TenantMetrics.objects.filter(id=metrics.id).update(total_orders=F('total_orders') + 1)
+        try:
+            metrics, _ = TenantMetrics.objects.get_or_create(tenant=instance.tenant)
+            TenantMetrics.objects.filter(id=metrics.id).update(total_orders=F('total_orders') + 1)
+        except Exception:
+            pass
 
 @receiver(post_delete, sender=Order)
 def decrement_order_metrics(sender, instance, **kwargs):
     if instance.tenant:
-        TenantMetrics.objects.filter(tenant=instance.tenant).update(total_orders=F('total_orders') - 1)
+        try:
+            TenantMetrics.objects.filter(tenant=instance.tenant).update(total_orders=F('total_orders') - 1)
+        except Exception:
+            pass
 
 @receiver(post_save, sender=Customer)
 def update_customer_metrics(sender, instance, created, **kwargs):
     if created and instance.tenant:
-        metrics, _ = TenantMetrics.objects.get_or_create(tenant=instance.tenant)
-        TenantMetrics.objects.filter(id=metrics.id).update(total_customers=F('total_customers') + 1)
+        try:
+            metrics, _ = TenantMetrics.objects.get_or_create(tenant=instance.tenant)
+            TenantMetrics.objects.filter(id=metrics.id).update(total_customers=F('total_customers') + 1)
+        except Exception:
+            pass
 
 @receiver(post_delete, sender=Customer)
 def decrement_customer_metrics(sender, instance, **kwargs):
     if instance.tenant:
-        TenantMetrics.objects.filter(tenant=instance.tenant).update(total_customers=F('total_customers') - 1)
+        try:
+            TenantMetrics.objects.filter(tenant=instance.tenant).update(total_customers=F('total_customers') - 1)
+        except Exception:
+            pass
 
 @receiver(post_save, sender=Branch)
 def update_branch_metrics(sender, instance, created, **kwargs):
     if created and instance.tenant:
-        metrics, _ = TenantMetrics.objects.get_or_create(tenant=instance.tenant)
-        TenantMetrics.objects.filter(id=metrics.id).update(total_branches=F('total_branches') + 1)
+        try:
+            metrics, _ = TenantMetrics.objects.get_or_create(tenant=instance.tenant)
+            TenantMetrics.objects.filter(id=metrics.id).update(total_branches=F('total_branches') + 1)
+        except Exception:
+            pass
 
 @receiver(post_delete, sender=Branch)
 def decrement_branch_metrics(sender, instance, **kwargs):
     if instance.tenant:
-        TenantMetrics.objects.filter(tenant=instance.tenant).update(total_branches=F('total_branches') - 1)
+        try:
+            TenantMetrics.objects.filter(tenant=instance.tenant).update(total_branches=F('total_branches') - 1)
+        except Exception:
+            pass
