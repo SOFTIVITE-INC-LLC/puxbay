@@ -169,58 +169,27 @@ DATABASES = {
             'connect_timeout': 10,
         }
     },
-    # Read replicas for load distribution (5 replicas)
-    'replica1': {
+    }
+}
+
+# Dynamic Replica Configuration
+DB_NUM_REPLICAS = config('DB_NUM_REPLICAS', default=0, cast=int)
+DB_REPLICA_HOST = config('DB_REPLICA_HOST', default='localhost')
+DB_USER_REPLICA = config('DB_USER_REPLICA', default=DATABASES['default']['USER'])
+DB_PASSWORD = DATABASES['default']['PASSWORD']
+DB_NAME = DATABASES['default']['NAME']
+
+for i in range(1, DB_NUM_REPLICAS + 1):
+    DATABASES[f'replica{i}'] = {
         'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': config('DB_NAME', default='puxbay'),
-        'USER': config('DB_USER_REPLICA', default='puxbay'),
-        'PASSWORD': config('DB_PASSWORD', default='Thinkce@softivitepuxbay'),
-        'HOST': config('DB_REPLICA_HOST', default='localhost'),
-        'PORT': config('DB_REPLICA1_PORT', default='5433'),
-        'CONN_MAX_AGE': 600,
-        'OPTIONS': {'connect_timeout': 10}
-    },
-    'replica2': {
-        'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': config('DB_NAME', default='puxbay'),
-        'USER': config('DB_USER_REPLICA', default='puxbay'),
-        'PASSWORD': config('DB_PASSWORD', default='Thinkce@softivitepuxbay'),
-        'HOST': config('DB_REPLICA_HOST', default='localhost'),
-        'PORT': config('DB_REPLICA2_PORT', default='5434'),
-        'CONN_MAX_AGE': 600,
-        'OPTIONS': {'connect_timeout': 10}
-    },
-    'replica3': {
-        'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': config('DB_NAME', default='puxbay'),
-        'USER': config('DB_USER_REPLICA', default='puxbay'),
-        'PASSWORD': config('DB_PASSWORD', default='Thinkce@softivitepuxbay'),
-        'HOST': config('DB_REPLICA_HOST', default='localhost'),
-        'PORT': config('DB_REPLICA3_PORT', default='5435'),
-        'CONN_MAX_AGE': 600,
-        'OPTIONS': {'connect_timeout': 10}
-    },
-    'replica4': {
-        'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': config('DB_NAME', default='puxbay'),
-        'USER': config('DB_USER_REPLICA', default='puxbay'),
-        'PASSWORD': config('DB_PASSWORD', default='Thinkce@softivitepuxbay'),
-        'HOST': config('DB_REPLICA_HOST', default='localhost'),
-        'PORT': config('DB_REPLICA4_PORT', default='5436'),
-        'CONN_MAX_AGE': 600,
-        'OPTIONS': {'connect_timeout': 10}
-    },
-    'replica5': {
-        'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': config('DB_NAME', default='puxbay'),
-        'USER': config('DB_USER_REPLICA', default='puxbay'),
-        'PASSWORD': config('DB_PASSWORD', default='Thinkce@softivitepuxbay'),
-        'HOST': config('DB_REPLICA_HOST', default='localhost'),
-        'PORT': config('DB_REPLICA5_PORT', default='5437'),
+        'NAME': DB_NAME,
+        'USER': DB_USER_REPLICA,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_REPLICA_HOST,
+        'PORT': config(f'DB_REPLICA{i}_PORT', default=str(5432 + i)),
         'CONN_MAX_AGE': 600,
         'OPTIONS': {'connect_timeout': 10}
     }
-}
 
 # Database routers - order matters!
 if DEBUG:

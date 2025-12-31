@@ -47,6 +47,13 @@ echo "   1) Yes - Set up 5 read replicas for high availability"
 echo "   2) No - Skip replication setup"
 read -p "   Enter choice [1-2]: " REPLICATION_CHOICE
 
+# Export DB_NUM_REPLICAS for Django settings
+if [ "$REPLICATION_CHOICE" = "1" ]; then
+    export DB_NUM_REPLICAS=$DB_REPLICAS
+else
+    export DB_NUM_REPLICAS=0
+fi
+
 echo ""
 echo -e "${YELLOW}2. Do you want to set up automated daily backups?${NC}"
 echo "   1) Yes - Configure daily backups with $BACKUP_RETENTION_DAYS day retention"
