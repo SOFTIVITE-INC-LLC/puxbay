@@ -156,22 +156,53 @@ EOF
         
         echo -e "${YELLOW}   Creating replica $i (port $STANDBY_PORT)...${NC}"
         
+        # Clean up previous data if exists (ensures re-run capability)
+        if [ -d "$DATA_DIR_STANDBY" ]; then
+            echo -e "${YELLOW}   Cleaning up existing directory $DATA_DIR_STANDBY...${NC}"
+            rm -rf $DATA_DIR_STANDBY
+        fi
+        
         mkdir -p $DATA_DIR_STANDBY
         chown postgres:postgres $DATA_DIR_STANDBY
         
-        # Create base backup
-        sudo -u postgres pg_basebackup -h localhost -D $DATA_DIR_STANDBY -U $REPLICATION_USER -v -P -W
+        # Create base backup (using env to pass password securely)
+        sudo -u postgres env PGPASSWORD=$REPLICATION_PASSWORD pg_basebackup -h localhost -D $DATA_DIR_STANDBY -U $REPLICATION_USER -v -P -X stream
         
         # Create standby.signal
         sudo -u postgres touch $DATA_DIR_STANDBY/standby.signal
         
-        # Configure standby
-        cat > $DATA_DIR_STANDBY/postgresql.auto.conf << EOF
+        # Fix Configuration: Remove symlinks/files copied from primary to ensure isolation
+        rm -f $DATA_DIR_STANDBY/postgresql.conf
+        rm -f $DATA_DIR_STANDBY/pg_hba.conf
+        rm -f $DATA_DIR_STANDBY/postgresql.auto.conf
+        
+        # Create isolated postgresql.conf for standby
+        cat > $DATA_DIR_STANDBY/postgresql.conf << EOF
+data_directory = '$DATA_DIR_STANDBY'
+hba_file = '$DATA_DIR_STANDBY/pg_hba.conf'
+ident_file = '$DATA_DIR_STANDBY/pg_ident.conf'
 port = $STANDBY_PORT
+listen_addresses = '*'
+max_connections = 100
+shared_buffers = 128MB
+dynamic_shared_memory_type = posix
+hot_standby = on
 primary_conninfo = 'host=localhost port=5432 user=$REPLICATION_USER password=$REPLICATION_PASSWORD'
+# Avoid path conflicts with primary
+external_pid_file = '' 
+EOF
+
+        # Create isolated pg_hba.conf
+        cat > $DATA_DIR_STANDBY/pg_hba.conf << EOF
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+local   all             all                                     peer
+host    all             all             127.0.0.1/32            md5
+host    all             all             ::1/128                 md5
+host    replication     $REPLICATION_USER    127.0.0.1/32       md5
 EOF
         
-        chown postgres:postgres $DATA_DIR_STANDBY/postgresql.auto.conf
+        chown postgres:postgres $DATA_DIR_STANDBY/postgresql.conf
+        chown postgres:postgres $DATA_DIR_STANDBY/pg_hba.conf
         
         # Create systemd service
         cat > /etc/systemd/system/postgresql-standby$i.service << EOF
