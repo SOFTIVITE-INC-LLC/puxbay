@@ -100,7 +100,7 @@ echo -e "${GREEN}✓ Virtual environment created${NC}"
 echo -e "${YELLOW}Step 4: Installing Python dependencies...${NC}"
 pip install --upgrade pip
 pip install -r requirements.txt
-pip install gunicorn daphne uvicorn[standard] django-redis checks-redis
+pip install gunicorn daphne uvicorn[standard] django-redis
 
 echo -e "${GREEN}✓ Python dependencies installed${NC}"
 
