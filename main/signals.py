@@ -1,5 +1,6 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.db import transaction
 from django.db.models import F
 from .models import Order, Customer, Product, TenantMetrics
 from accounts.models import Branch, Tenant
@@ -69,7 +70,8 @@ def create_tenant_metrics(sender, instance, created, **kwargs):
     """Ensure every tenant has a metrics object"""
     if created:
         try:
-            TenantMetrics.objects.get_or_create(tenant=instance)
+            with transaction.atomic():
+                TenantMetrics.objects.get_or_create(tenant=instance)
         except Exception:
             # Table doesn't exist yet during initial migrations
             pass
