@@ -8,7 +8,7 @@ import sys
 import django
 
 # Setup Django environment
-sys.path.insert(0, '/var/www/possystem')
+sys.path.insert(0, '/opt/puxbay')
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'possystem.settings')
 django.setup()
 
