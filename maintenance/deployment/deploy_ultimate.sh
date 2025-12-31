@@ -126,6 +126,9 @@ if [ "$REPLICATION_CHOICE" = "1" ]; then
     # Create replication user (using PostgreSQL 18 explicit path)
     sudo -u postgres /usr/lib/postgresql/18/bin/psql -c "CREATE USER $REPLICATION_USER WITH REPLICATION ENCRYPTED PASSWORD '$REPLICATION_PASSWORD';" || echo "Replication user already exists"
     
+    # Force grant replication privilege (in case user was created without it, e.g. if same as app user)
+    sudo -u postgres /usr/lib/postgresql/18/bin/psql -c "ALTER USER $REPLICATION_USER WITH REPLICATION;"
+    
     # Update pg_hba.conf
     cat >> /etc/postgresql/18/main/pg_hba.conf << EOF
 
