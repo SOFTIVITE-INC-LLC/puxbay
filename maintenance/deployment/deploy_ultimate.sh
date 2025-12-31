@@ -62,7 +62,7 @@ echo ""
 echo -e "${YELLOW}Step 1: Installing system dependencies...${NC}"
 
 # Add PostgreSQL 18 repository
-apt-get install -y wget ca-certificates
+apt-get install -y wget ca-certificates gnupg lsb-release
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 
@@ -176,7 +176,11 @@ EOF
         rm -f $DATA_DIR_STANDBY/pg_hba.conf
         rm -f $DATA_DIR_STANDBY/postgresql.auto.conf
         
-        # Create isolated postgresql.conf for standby
+        # Create log directory for standby
+        mkdir -p /var/log/postgresql
+        chown postgres:postgres /var/log/postgresql
+
+        # Create isolated postgresql.conf for standby with logging
         cat > $DATA_DIR_STANDBY/postgresql.conf << EOF
 data_directory = '$DATA_DIR_STANDBY'
 hba_file = '$DATA_DIR_STANDBY/pg_hba.conf'
@@ -188,8 +192,17 @@ shared_buffers = 128MB
 dynamic_shared_memory_type = posix
 hot_standby = on
 primary_conninfo = 'host=localhost port=5432 user=$REPLICATION_USER password=$REPLICATION_PASSWORD'
-# Avoid path conflicts with primary
-external_pid_file = '' 
+
+# Logging
+logging_collector = on
+log_directory = '/var/log/postgresql'
+log_filename = 'standby$i.log'
+log_rotation_age = 1d
+log_rotation_size = 10MB
+
+# Locations
+unix_socket_directories = '/var/run/postgresql'
+pid_file = '$DATA_DIR_STANDBY/postmaster.pid'
 EOF
 
         # Create isolated pg_hba.conf
@@ -214,8 +227,10 @@ After=network.target postgresql.service
 Type=forking
 User=postgres
 Group=postgres
-ExecStart=/usr/lib/postgresql/18/bin/pg_ctl start -D $DATA_DIR_STANDBY
-ExecStop=/usr/lib/postgresql/18/bin/pg_ctl stop -D $DATA_DIR_STANDBY
+# PIDFile is critical for systemd to track forking services correctly
+PIDFile=$DATA_DIR_STANDBY/postmaster.pid
+ExecStart=/usr/lib/postgresql/18/bin/pg_ctl start -D $DATA_DIR_STANDBY -l /var/log/postgresql/standby$i-startup.log -w -t 300
+ExecStop=/usr/lib/postgresql/18/bin/pg_ctl stop -D $DATA_DIR_STANDBY -m fast
 ExecReload=/usr/lib/postgresql/18/bin/pg_ctl reload -D $DATA_DIR_STANDBY
 Restart=on-failure
 
