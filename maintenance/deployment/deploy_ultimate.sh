@@ -115,6 +115,8 @@ echo -e "${YELLOW}Step 5: Setting up PostgreSQL primary database...${NC}"
 sudo -u postgres /usr/lib/postgresql/18/bin/psql -c "CREATE DATABASE puxbay;" || echo "Database already exists"
 sudo -u postgres /usr/lib/postgresql/18/bin/psql -c "CREATE USER puxbay WITH PASSWORD 'Thinkce@softivitepuxbay';" || echo "User already exists"
 sudo -u postgres /usr/lib/postgresql/18/bin/psql -c "GRANT ALL PRIVILEGES ON DATABASE puxbay TO puxbay;"
+# Fix for PostgreSQL 15+: Grant creation rights on public schema
+sudo -u postgres /usr/lib/postgresql/18/bin/psql -d puxbay -c "ALTER SCHEMA public OWNER TO puxbay;"
 
 echo -e "${GREEN}✓ Primary database configured${NC}"
 
