@@ -1,0 +1,476 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SaaS POS{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto pb-24">
+    <nav class="flex mb-6 text-sm font-medium text-slate-500" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2">
+            <li><a href="{% url 'branch_dashboard' branch.id %}" class="hover:text-blue-600 transition-colors">{{ branch.name }}</a></li>
+            <li><span class="text-slate-300">/</span></li>
+            <li><a href="{% url 'product_list' branch.id %}" class="hover:text-blue-600 transition-colors">Products</a></li>
+            <li><span class="text-slate-300">/</span></li>
+            <li class="text-slate-900" aria-current="page">{{ title }}</li>
+        </ol>
+    </nav>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6" id="product-form">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+        <div class="rounded-xl bg-red-50 border border-red-200 p-4">
+            <div class="flex">
+                <svg class="h-5 w-5 text-red-400 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-sm font-medium text-red-800">{{ form.non_field_errors|join:", " }}</h3>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Section 1: Basic Information -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <h3 class="text-lg font-bold text-slate-900">📦 Basic Information</h3>
+                <p class="mt-1 text-sm text-slate-600">Essential product details</p>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Name -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Product Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" value="{{ form.name.value|default:'' }}" 
+                        class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. Wireless Mouse" required>
+                    {% if form.name.errors %}<p class="mt-1 text-sm text-red-600">{{ form.name.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- SKU -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="{{ form.sku.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">SKU <span class="text-red-500">*</span></label>
+                    <input type="text" name="{{ form.sku.name }}" id="{{ form.sku.id_for_label }}" value="{{ form.sku.value|default:'' }}" 
+                        class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. WM-001" required>
+                    {% if form.sku.errors %}<p class="mt-1 text-sm text-red-600">{{ form.sku.errors.0 }}</p>{% endif %}
+                </div>
+
+                <!-- Category & Supplier -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 col-span-2">
+                    <div>
+                        <label for="{{ form.category.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Category</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}<p class="mt-1 text-sm text-red-600">{{ form.category.errors.0 }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label for="{{ form.supplier.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Supplier</label>
+                        {{ form.supplier }}
+                        {% if form.supplier.errors %}<p class="mt-1 text-sm text-red-600">{{ form.supplier.errors.0 }}</p>{% endif %}
+                        <p class="mt-1 text-[10px] text-slate-400">Can't find a supplier? <a href="{% url 'supplier_create' %}" class="text-blue-500 hover:underline">Add one here</a></p>
+                    </div>
+                </div>
+
+                <!-- Product Image Upload with Cropping -->
+                <div class="col-span-2">
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Product Image</label>
+                    <div class="flex items-start gap-6">
+                        <div class="relative group">
+                            <div id="image-preview-container" class="w-32 h-32 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden cursor-pointer hover:border-blue-500 transition-colors">
+                                {% if form.instance.image %}
+                                    <img src="{{ form.instance.image.url }}" id="image-preview" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div id="preview-placeholder" class="text-center">
+                                        <span class="material-symbols-outlined text-slate-400 text-3xl">add_photo_alternate</span>
+                                        <p class="text-[10px] text-slate-400 mt-1">Upload</p>
+                                    </div>
+                                    <img src="" id="image-preview" class="w-full h-full object-cover hidden">
+                                {% endif %}
+                            </div>
+                            <button type="button" onclick="document.getElementById('product-image-input').click()" class="absolute -bottom-2 -right-2 bg-blue-600 text-white rounded-full p-1.5 shadow-lg hover:bg-blue-700 transition-colors">
+                                <span class="material-symbols-outlined text-sm">edit</span>
+                            </button>
+                        </div>
+                        <div class="flex-1 space-y-2">
+                            <p class="text-xs text-slate-500">Recommended: Square image (min 600x600px). Allowed types: JPG, PNG, WEBP.</p>
+                            {{ form.image }}
+                            {% if form.image.errors %}<p class="mt-1 text-sm text-red-600">{{ form.image.errors.0 }}</p>{% endif %}
+                            <div id="crop-status" class="hidden text-xs text-green-600 flex items-center gap-1 font-medium">
+                                <span class="material-symbols-outlined text-sm">check_circle</span> Image cropped and ready
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="col-span-2">
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Description</label>
+                    <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="3" 
+                        class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the product...">{{ form.description.value|default:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cropping Modal -->
+        <div id="cropper-modal" class="fixed inset-0 z-[100] hidden overflow-hidden flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeCropper()"></div>
+            <div class="relative bg-white rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                    <h4 class="font-bold text-slate-900">Crop Product Image</h4>
+                    <button type="button" onclick="closeCropper()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-hidden bg-slate-100 p-4 min-h-[400px]">
+                    <img id="cropper-image" class="max-w-full block">
+                </div>
+                <div class="px-6 py-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
+                    <button type="button" onclick="closeCropper()" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
+                    <button type="button" onclick="applyCrop()" class="px-6 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md transition-all">Apply Crop</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Pricing & Inventory -->
+        <!-- ... (remaining sections unchanged) ... -->
+
+        <!-- Section 2: Pricing & Inventory -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-green-50 to-emerald-50">
+                <h3 class="text-lg font-bold text-slate-900">💰 Pricing & Inventory</h3>
+                <p class="mt-1 text-sm text-slate-600">Set prices and stock levels</p>
+            </div>
+            <div class="p-6 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Retail Price -->
+                    <div>
+                        <label for="{{ form.price.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Retail Price <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-3 text-slate-500">{{ branch.currency_symbol }}</span>
+                            <input type="number" step="0.01" name="{{ form.price.name }}" id="{{ form.price.id_for_label }}" value="{{ form.price.value|default:'' }}" 
+                                class="block w-full pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                style="padding-left: 5rem;" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <!-- Wholesale Price -->
+                    <div>
+                        <label for="{{ form.wholesale_price.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Wholesale Price</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-3 text-slate-500">{{ branch.currency_symbol }}</span>
+                            <input type="number" step="0.01" name="{{ form.wholesale_price.name }}" id="{{ form.wholesale_price.id_for_label }}" value="{{ form.wholesale_price.value|default:'0.00' }}" 
+                                class="block w-full pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                style="padding-left: 5rem;" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <!-- Cost Price -->
+                    <div>
+                        <label for="{{ form.cost_price.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Cost Price</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-3 text-slate-500">{{ branch.currency_symbol }}</span>
+                            <input type="number" step="0.01" name="{{ form.cost_price.name }}" id="{{ form.cost_price.id_for_label }}" value="{{ form.cost_price.value|default:'0.00' }}" 
+                                class="block w-full pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                                style="padding-left: 5rem;" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
+                    <!-- Stock Quantity -->
+                    <div>
+                        <label for="{{ form.stock_quantity.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Current Stock</label>
+                        <input type="number" name="{{ form.stock_quantity.name }}" id="{{ form.stock_quantity.id_for_label }}" value="{{ form.stock_quantity.value|default:'' }}" 
+                            class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="0">
+                    </div>
+
+                    <!-- Low Stock Threshold -->
+                    <div>
+                        <label for="{{ form.low_stock_threshold.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Low Stock Alert</label>
+                        <input type="number" name="{{ form.low_stock_threshold.name }}" id="{{ form.low_stock_threshold.id_for_label }}" value="{{ form.low_stock_threshold.value|default:'10' }}" 
+                            class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="10">
+                    </div>
+
+                    <!-- Min Wholesale Qty -->
+                    <div>
+                        <label for="{{ form.minimum_wholesale_quantity.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Min Wholesale Qty</label>
+                        <input type="number" name="{{ form.minimum_wholesale_quantity.name }}" id="{{ form.minimum_wholesale_quantity.id_for_label }}" value="{{ form.minimum_wholesale_quantity.value|default:'1' }}" 
+                            class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Origin & Manufacturing -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-purple-50 to-pink-50">
+                <h3 class="text-lg font-bold text-slate-900">🌍 Origin & Manufacturing</h3>
+                <p class="mt-1 text-sm text-slate-600">Product source and manufacturing details</p>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Country of Origin -->
+                <div>
+                    <label for="{{ form.country_of_origin.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Country of Origin</label>
+                    <input type="text" name="{{ form.country_of_origin.name }}" id="{{ form.country_of_origin.id_for_label }}" value="{{ form.country_of_origin.value|default:'' }}" 
+                        class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. China, USA, Ghana">
+                </div>
+
+                <!-- Manufacturing Date -->
+                <div>
+                    <label for="{{ form.manufacturing_date.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Manufacturing Date</label>
+                    <input type="date" name="{{ form.manufacturing_date.name }}" id="{{ form.manufacturing_date.id_for_label }}" value="{{ form.manufacturing_date.value|date:'Y-m-d' }}" 
+                        class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- Manufacturer Name -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="{{ form.manufacturer_name.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Manufacturer Name</label>
+                    <input type="text" name="{{ form.manufacturer_name.name }}" id="{{ form.manufacturer_name.id_for_label }}" value="{{ form.manufacturer_name.value|default:'' }}" 
+                        class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. Acme Manufacturing Ltd">
+                </div>
+
+                <!-- Manufacturer Address -->
+                <div class="col-span-2 md:col-span-1">
+                    <label for="{{ form.manufacturer_address.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Manufacturer Address</label>
+                    <textarea name="{{ form.manufacturer_address.name }}" id="{{ form.manufacturer_address.id_for_label }}" rows="2" 
+                        class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Full manufacturer address">{{ form.manufacturer_address.value|default:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Tracking & Documentation -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-amber-50 to-orange-50">
+                <h3 class="text-lg font-bold text-slate-900">📋 Tracking & Documentation</h3>
+                <p class="mt-1 text-sm text-slate-600">Batch, barcode, and invoice information</p>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Barcode -->
+                <div>
+                    <label for="{{ form.barcode.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Barcode / QR Code</label>
+                    <input type="text" name="{{ form.barcode.name }}" id="{{ form.barcode.id_for_label }}" value="{{ form.barcode.value|default:'' }}" 
+                        class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Scan or enter barcode">
+                </div>
+
+                <!-- Batch Number -->
+                <div>
+                    <label for="{{ form.batch_number.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Batch Number</label>
+                    <input type="text" name="{{ form.batch_number.name }}" id="{{ form.batch_number.id_for_label }}" value="{{ form.batch_number.value|default:'' }}" 
+                        class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. BATCH-001">
+                </div>
+
+                <!-- Invoice/Waybill Number -->
+                <div>
+                    <label for="{{ form.invoice_waybill_number.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Invoice / Waybill Number</label>
+                    <input type="text" name="{{ form.invoice_waybill_number.name }}" id="{{ form.invoice_waybill_number.id_for_label }}" value="{{ form.invoice_waybill_number.value|default:'' }}" 
+                        class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="e.g. INV-2024-001">
+                </div>
+
+                <!-- Expiry Date -->
+                <div>
+                    <label for="{{ form.expiry_date.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Expiry Date</label>
+                    <input type="date" name="{{ form.expiry_date.name }}" id="{{ form.expiry_date.id_for_label }}" value="{{ form.expiry_date.value|date:'Y-m-d' }}" 
+                        class="block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- Active Status -->
+                <div class="col-span-2 pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-semibold text-slate-900">Product Status</span>
+                        <p class="text-xs text-slate-500">Inactive products won't appear in POS</p>
+                    </div>
+                    <label for="{{ form.is_active.id_for_label }}" class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="{{ form.is_active.id_for_label }}" name="{{ form.is_active.name }}" {% if form.is_active.value %}checked{% endif %} class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm font-medium text-slate-700">Active</span>
+                    </label>
+                </div>
+
+                <!-- Composite Product Toggle -->
+                <div class="col-span-2 pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-semibold text-slate-900">Composite Product (Bundle)</span>
+                        <p class="text-xs text-slate-500">Enable this to create a bundle composed of other products</p>
+                    </div>
+                    <label for="{{ form.is_composite.id_for_label }}" class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="{{ form.is_composite.id_for_label }}" name="{{ form.is_composite.name }}" {% if form.is_composite.value %}checked{% endif %} class="sr-only peer" onchange="toggleComponents(this)">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        <span class="ml-3 text-sm font-medium text-slate-700">Composite</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Bundle Components -->
+        <div id="components-section" class="bg-white rounded-xl shadow-sm border border-slate-200 {% if not form.is_composite.value %}hidden{% endif %}">
+            <div class="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-purple-50 to-indigo-50">
+                <h3 class="text-lg font-bold text-slate-900">🧩 Bundle Components</h3>
+                <p class="mt-1 text-sm text-slate-600">Add products included in this bundle</p>
+            </div>
+            <div class="p-6">
+                {{ formset.management_form }}
+                <div class="space-y-4" id="formset-container">
+                    {% for component_form in formset %}
+                    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end p-4 border border-slate-100 rounded-lg bg-slate-50">
+                        {{ component_form.id }}
+                        <div class="flex-1 w-full">
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Product</label>
+                            {{ component_form.component_product }}
+                        </div>
+                        <div class="w-full sm:w-32">
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Quantity</label>
+                            {{ component_form.quantity }}
+                        </div>
+                        <div class="pb-1">
+                            {% if formset.can_delete %}
+                                <label class="inline-flex items-center text-xs text-red-600 hover:text-red-800 cursor-pointer">
+                                    {{ component_form.DELETE }} Delete
+                                </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p class="mt-4 text-xs text-slate-400 italic">Save to add more rows if needed.</p>
+            </div>
+        </div>
+
+        <!-- Sticky Footer -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 shadow-2xl lg:pl-72 z-40">
+            <div class="max-w-6xl mx-auto flex justify-end gap-3">
+                <a href="{% url 'product_list' branch.id %}" class="inline-flex items-center px-6 py-3 border border-slate-300 shadow-sm text-sm font-semibold rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" class="inline-flex items-center px-8 py-3 border border-transparent shadow-sm text-sm font-semibold rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all transform hover:-translate-y-0.5">
+                    {% if title == "Add Product" %}
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Create Product
+                    {% else %}
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Save Changes
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Cropper.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<style>
+    /* Custom select styling */
+    select {
+        @apply block w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white;
+    }
+
+    .cropper-container {
+        width: 100% !important;
+    }
+</style>
+
+<script>
+    let cropper = null;
+    const imageInput = document.getElementById('product-image-input');
+    const cropperModal = document.getElementById('cropper-modal');
+    const cropperImage = document.getElementById('cropper-image');
+    const imagePreview = document.getElementById('image-preview');
+    const previewPlaceholder = document.getElementById('preview-placeholder');
+    const cropStatus = document.getElementById('crop-status');
+
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    cropperImage.src = e.target.result;
+                    cropperModal.classList.remove('hidden');
+                    
+                    if (cropper) {
+                        cropper.destroy();
+                    }
+                    
+                    cropper = new Cropper(cropperImage, {
+                        aspectRatio: 1,
+                        viewMode: 2,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        toggleDragModeOnDblclick: false,
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    function closeCropper() {
+        cropperModal.classList.add('hidden');
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        // If they cancel, we clear the input to allow re-selecting the same file
+        if (!imagePreview.src || imagePreview.src === window.location.href) {
+            imageInput.value = '';
+        }
+    }
+
+    function applyCrop() {
+        if (!cropper) return;
+
+        const canvas = cropper.getCroppedCanvas({
+            width: 800,
+            height: 800,
+        });
+
+        canvas.toBlob((blob) => {
+            // Create a new File object
+            const fileName = imageInput.files[0].name;
+            const croppedFile = new File([blob], fileName, { type: 'image/jpeg' });
+
+            // Create a DataTransfer to update the file input
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(croppedFile);
+            imageInput.files = dataTransfer.files;
+
+            // Update Preview
+            imagePreview.src = URL.createObjectURL(blob);
+            imagePreview.classList.remove('hidden');
+            if (previewPlaceholder) previewPlaceholder.classList.add('hidden');
+            cropStatus.classList.remove('hidden');
+
+            closeCropper();
+        }, 'image/jpeg');
+    }
+
+    function toggleComponents(checkbox) {
+        const section = document.getElementById('components-section');
+        if (checkbox.checked) {
+            section.classList.remove('hidden');
+        } else {
+            section.classList.add('hidden');
+        }
+    }
+
+    // Auto-expand component section if it's already checked on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const compositeCheckbox = document.getElementById('{{ form.is_composite.id_for_label }}');
+        if (compositeCheckbox && compositeCheckbox.checked) {
+            toggleComponents(compositeCheckbox);
+        }
+    });
+
+    // Make preview container clickable
+    document.getElementById('image-preview-container').addEventListener('click', function() {
+        imageInput.click();
+    });
+</script>
+{% endblock %}

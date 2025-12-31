@@ -1,0 +1,281 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Create Campaign - {{ branch.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+    <!-- Breadcrumb -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-4">
+             <li>
+                {% if is_company_view %}
+                <a href="{% url 'dashboard' %}" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                {% else %}
+                <a href="{% url 'branch_dashboard' branch.id %}" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                {% endif %}
+                    <svg class="flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                    <span class="sr-only">Home</span>
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+                    </svg>
+                    {% if is_company_view %}
+                    <a href="{% url 'company_marketing_list' %}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">Marketing</a>
+                    {% else %}
+                    <a href="{% url 'campaign_list' branch.id %}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">Marketing</a>
+                    {% endif %}
+                </div>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+                    </svg>
+                    <span class="ml-4 text-sm font-medium text-gray-500 dark:text-gray-400" aria-current="page">Create</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Form -->
+        <div class="lg:col-span-2">
+            <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                 <!-- Header -->
+                <div class="px-8 py-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
+                    <div>
+                         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create Campaign</h1>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Reach your customers with targeted messages.</p>
+                    </div>
+                    <div class="h-10 w-10 flex items-center justify-center rounded-lg bg-pink-100 text-pink-600 dark:bg-pink-900/50 dark:text-pink-400">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="px-8 py-8">
+                    <form method="post" class="space-y-8" id="campaignForm">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Info -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 pb-2">Campaign Details</h3>
+                            
+                            <!-- Internal Name -->
+                             <div>
+                                <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    Internal Campaign Name
+                                </label>
+                                <div class="mt-2 relative rounded-md shadow-sm">
+                                    <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
+                                        class="form-input block w-full px-4 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-pink-500 focus:border-pink-500 sm:text-sm py-2.5"
+                                        placeholder="e.g. Summer Sale 2025"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Campaign Type -->
+                                <div>
+                                    <label for="{{ form.campaign_type.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        Channel
+                                    </label>
+                                    <div class="mt-2">
+                                        {{ form.campaign_type }}
+                                    </div>
+                                </div>
+
+                                <!-- Target Audience -->
+                                <div>
+                                    <label for="{{ form.target_tier.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        Target Audience
+                                    </label>
+                                    <div class="mt-2">
+                                        {{ form.target_tier }}
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Leave empty to blast to all customers.</p>
+                                </div>
+                            </div>
+
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 pb-2 pt-4">Automation & Scheduling</h3>
+                            
+                            <div class="space-y-6 bg-blue-50/30 dark:bg-blue-900/10 p-6 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <label for="{{ form.is_automated.id_for_label }}" class="text-sm font-bold text-gray-900 dark:text-white">Enable Automation</label>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Trigger this campaign based on customer events.</p>
+                                    </div>
+                                    <div class="flex items-center">
+                                        {{ form.is_automated }}
+                                    </div>
+                                </div>
+
+                                <div id="automationSettings" class="grid grid-cols-1 md:grid-cols-2 gap-6 {% if not form.is_automated.value %}hidden{% endif %}">
+                                    <div>
+                                        <label for="{{ form.trigger_event.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Trigger Event</label>
+                                        <div class="mt-2">
+                                            {{ form.trigger_event }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="schedulingSettings" class="{% if form.is_automated.value %}hidden{% endif %}">
+                                    <label for="{{ form.scheduled_at.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Schedule One-time Send</label>
+                                    <div class="mt-2">
+                                        {{ form.scheduled_at }}
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Leave blank to keep as draft.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                         <!-- Message Content -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 pb-2">Message Content</h3>
+                            
+                             <!-- Subject -->
+                            <div id="subjectWrapper">
+                                <label for="{{ form.subject.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    Subject / Title
+                                </label>
+                                <div class="mt-2">
+                                    <input type="text" name="{{ form.subject.name }}" id="{{ form.subject.id_for_label }}" 
+                                        class="form-input block w-full px-4 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-pink-500 focus:border-pink-500 sm:text-sm py-2.5"
+                                        placeholder="Enter subject line..."
+                                        oninput="updatePreview()">
+                                </div>
+                            </div>
+
+                            <!-- Body -->
+                            <div>
+                                <label for="{{ form.message.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    Message Body
+                                </label>
+                                <div class="mt-2">
+                                    <textarea name="{{ form.message.name }}" id="{{ form.message.id_for_label }}" rows="6" 
+                                        class="form-textarea block w-full px-4 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-pink-500 focus:border-pink-500 sm:text-sm py-2.5"
+                                        placeholder="Type your message here..."
+                                        oninput="updatePreview()"></textarea>
+                                </div>
+                                <div class="flex justify-between items-center mt-2">
+                                     <p class="text-xs text-gray-500">Use clear, concise language for better engagement.</p>
+                                     <p class="text-xs text-gray-400" id="charCount">0 chars</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700">
+                            {% if is_company_view %}
+                            <a href="{% url 'company_marketing_list' %}" class="bg-white py-2.5 px-5 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                Cancel
+                            </a>
+                            {% else %}
+                            <a href="{% url 'campaign_list' branch.id %}" class="bg-white py-2.5 px-5 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                Cancel
+                            </a>
+                            {% endif %}
+                            <button type="submit" class="inline-flex justify-center py-2.5 px-6 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 dark:focus:ring-offset-gray-900 transition-colors">
+                                Save Campaign
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Sidebar -->
+        <div class="lg:col-span-1 space-y-6">
+             <div class="sticky top-24">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Preview</h3>
+                
+                <!-- Email/SMS Frame -->
+                <div class="bg-gray-100 dark:bg-gray-900 rounded-[2rem] border-8 border-gray-800 dark:border-gray-700 shadow-2xl overflow-hidden min-h-[500px] relative flex flex-col">
+                    <!-- Status Bar -->
+                    <div class="bg-gray-800 text-white px-6 py-3 flex justify-between items-center text-xs font-medium z-10">
+                        <span>9:41</span>
+                        <div class="flex gap-1.5">
+                            <div class="h-2.5 w-2.5 bg-white rounded-full"></div>
+                            <div class="h-2.5 w-2.5 bg-white/50 rounded-full"></div>
+                            <div class="h-2.5 w-2.5 bg-white/50 rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="flex-1 bg-white dark:bg-gray-800 p-4 relative overflow-y-auto w-full">
+                        <div class="animate-pulse space-y-4" id="emptyState">
+                            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                        </div>
+                        
+                        <div id="previewContent" class="hidden font-sans">
+                            <div class="font-bold text-lg mb-2 text-gray-900 dark:text-white" id="previewSubject">Subject Line</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap" id="previewBody">Your message will appear here...</div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-center text-xs text-gray-500 mt-4">Draft preview</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updatePreview() {
+        const subject = document.getElementById('{{ form.subject.id_for_label }}').value;
+        const body = document.getElementById('{{ form.message.id_for_label }}').value;
+        
+        const emptyState = document.getElementById('emptyState');
+        const previewContent = document.getElementById('previewContent');
+        const charCount = document.getElementById('charCount');
+
+        if (subject || body) {
+            emptyState.classList.add('hidden');
+            previewContent.classList.remove('hidden');
+            document.getElementById('previewSubject').innerText = subject;
+            document.getElementById('previewBody').innerText = body;
+        } else {
+             emptyState.classList.remove('hidden');
+             previewContent.classList.add('hidden');
+        }
+        
+        charCount.innerText = body.length + ' chars';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Standardize form inputs
+        const selects = document.querySelectorAll('select');
+        selects.forEach(input => {
+             if (!input.classList.contains('form-select')) {
+                 input.classList.add('form-select', 'block', 'w-full', 'rounded-lg', 'border-gray-300', 'dark:border-gray-600', 'dark:bg-gray-700', 'dark:text-white', 'focus:ring-pink-500', 'focus:border-pink-500', 'sm:text-sm', 'py-2.5', 'px-4');
+             }
+        });
+
+        // Toggle automation settings
+        const isAutomatedCheckbox = document.getElementById('{{ form.is_automated.id_for_label }}');
+        const automationSettings = document.getElementById('automationSettings');
+        const schedulingSettings = document.getElementById('schedulingSettings');
+
+        function toggleAutomation() {
+            if (isAutomatedCheckbox.checked) {
+                automationSettings.classList.remove('hidden');
+                schedulingSettings.classList.add('hidden');
+            } else {
+                automationSettings.classList.add('hidden');
+                schedulingSettings.classList.remove('hidden');
+            }
+        }
+
+        if (isAutomatedCheckbox) {
+            isAutomatedCheckbox.addEventListener('change', toggleAutomation);
+            toggleAutomation(); // Initial state
+        }
+    });
+</script>
+{% endblock %}

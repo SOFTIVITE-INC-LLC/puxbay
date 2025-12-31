@@ -1,0 +1,567 @@
+{% extends 'dashboard_base.html' %}
+{% load humanize %}
+
+{% block title %}{{ product.name }} - {{ branch.name }}{% endblock %}
+
+{% block page_title %}Product Details{% endblock %}
+
+{% block content %}
+<div>
+    <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'product_list' branch.id %}" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </a>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">{{ product.name }}</h1>
+                {% if product.is_active %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">Active</span>
+                {% else %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-600/20">Inactive</span>
+                {% endif %}
+            </div>
+            <p class="text-slate-500 mt-1 ml-9">SKU: {{ product.sku }} • Category: {{ product.category.name|default:"Uncategorized" }}</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button id="open-details-modal" class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                <svg class="w-4 h-4 mr-2 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Full Details
+            </button>
+            {% if request.user.profile.role != 'sales' %}
+            <a href="{% url 'product_update' branch.id product.pk %}" class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                Edit Product
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Product Image Card -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex items-center justify-center p-2 bg-slate-50">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" class="w-full h-48 object-cover rounded-lg shadow-inner" alt="{{ product.name }}">
+            {% else %}
+                <div class="w-full h-48 rounded-lg border-2 border-dashed border-slate-200 bg-white flex flex-col items-center justify-center text-slate-300">
+                    <span class="material-symbols-outlined text-4xl mb-2">image_not_supported</span>
+                    <span class="text-xs font-medium">No Image</span>
+                </div>
+            {% endif %}
+        </div>
+        <!-- Overview Card -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4">Overview</h3>
+            <dl class="space-y-4">
+                <div class="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
+                    <dt class="text-sm font-medium text-slate-500">Price</dt>
+                    <dd class="text-sm font-semibold text-slate-900">${{ product.price|intcomma }}</dd>
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
+                    <dt class="text-sm font-medium text-slate-500">Cost Price</dt>
+                    <dd class="text-sm font-mono text-slate-600">${{ product.cost_price|default:"0.00"|intcomma }}</dd>
+                </div>
+                 <div class="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
+                    <dt class="text-sm font-medium text-slate-500">Margin</dt>
+                    <dd class="text-sm text-green-600 font-medium">
+                        {% if product.price and product.cost_price %}
+                            {% widthratio product.price|add:"0" product.cost_price|add:"0" 1 as margin %}
+                             {# This is tricky in templates, simplified: #}
+                             --
+                        {% else %}
+                            --
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Inventory Card -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4">Inventory Status</h3>
+            <div class="flex items-center justify-between mb-6">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-slate-900">{{ product.stock_quantity }}</div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">In Stock</div>
+                </div>
+                <div class="h-10 w-px bg-slate-200"></div>
+                 <div class="text-center">
+                    <div class="text-3xl font-bold text-slate-900">{{ product.low_stock_threshold }}</div>
+                    <div class="text-xs text-slate-500 uppercase tracking-wide mt-1">Reorder Point</div>
+                </div>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2.5 mb-2 overflow-hidden">
+                {% widthratio product.stock_quantity product.low_stock_threshold 100 as percentage %}
+                <div class="bg-blue-600 h-2.5 rounded-full" style="width: min({{ percentage }}%, 100%)"></div>
+            </div>
+            {% if product.stock_quantity <= product.low_stock_threshold %}
+                <p class="text-sm text-orange-600 font-medium mt-2 flex items-center">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    Low stock alert active
+                </p>
+            {% endif %}
+        </div>
+        
+         <!-- Details Card -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4">Product Specs</h3>
+            <dl class="space-y-3">
+                <div>
+                    <dt class="text-xs text-slate-500 uppercase tracking-wide">Barcode</dt>
+                    <dd class="text-sm text-slate-900 font-mono mt-0.5">{{ product.barcode|default:"--" }}</dd>
+                </div>
+                 <div>
+                    <dt class="text-xs text-slate-500 uppercase tracking-wide">Brand/Manufacturer</dt>
+                    <dd class="text-sm text-slate-900 mt-0.5">--</dd>
+                </div>
+                 <div>
+                    <dt class="text-xs text-slate-500 uppercase tracking-wide">Description</dt>
+                    <dd class="text-sm text-slate-600 mt-0.5 line-clamp-3">{{ product.description|default:"No description provided." }}</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Tabs for History -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="border-b border-slate-200">
+            <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs" id="history-tabs">
+                <button data-target="tab-history" class="tab-btn active border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    Stock History
+                </button>
+                <button data-target="tab-pos" class="tab-btn border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+
+                    Purchase Orders
+                </button>
+                <button data-target="tab-audit" class="tab-btn border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    Audit Trail
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-6">
+            <!-- Stock History Tab -->
+            <div id="tab-history" class="tab-content space-y-4">
+                 <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Type</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Reference</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Change</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Balance</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            {% for movement in movements %}
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ movement.created_at|date:"M d, Y H:i" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize
+                                        {% if movement.quantity_change > 0 %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ movement.get_movement_type_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{{ movement.reference|default:"--" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium {% if movement.quantity_change > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                    {% if movement.quantity_change > 0 %}+{% endif %}{{ movement.quantity_change }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-900 font-semibold">{{ movement.balance_after }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{{ movement.created_by.user.username|default:"System" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500">No stock movements recorded yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PO Tab -->
+            <div id="tab-pos" class="tab-content hidden" style="display: none;">
+                 <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">PO #</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Supplier</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Ordered Qty</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Unit Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            {% for item in po_items %}
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 hover:text-blue-800">
+                                    <a href="{% url 'purchase_order_detail' branch.id item.po.id %}">{{ item.po.reference_id }}</a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ item.po.created_at|date:"M d, Y" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{{ item.po.supplier.name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize
+                                        {% if item.po.status == 'received' %}bg-green-100 text-green-800
+                                        {% elif item.po.status == 'cancelled' %}bg-red-100 text-red-800
+                                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                        {{ item.po.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-900">{{ item.quantity }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-600">${{ item.unit_cost }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500">No purchase orders found for this product.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+            <!-- Audit Trail Tab -->
+            <div id="tab-audit" class="tab-content hidden" style="display: none;">
+                 <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Action</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            {% for record in history %}
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ record.changed_at|date:"M d, Y H:i" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize
+                                        {% if record.action == 'created' %}bg-green-100 text-green-800
+                                        {% elif record.action == 'updated' %}bg-blue-100 text-blue-800
+                                        {% elif record.action == 'deleted' %}bg-red-100 text-red-800
+                                        {% else %}bg-slate-100 text-slate-800{% endif %}">
+                                        {{ record.get_action_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 font-medium">
+                                    {{ record.changed_by.user.username|default:"System" }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-slate-600">
+                                    <div class="max-w-md truncate" title="{{ record.changes_summary }}">
+                                        {{ record.changes_summary|default:"-" }}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-500">No audit history found for this product.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Full Details Modal (Hidden by default) -->
+    <div id="details-modal" class="hidden relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity opacity-0 ease-out duration-300"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <!-- Modal Panel -->
+                <div id="modal-panel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-4xl opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95 ease-out duration-300 border border-slate-100">
+                    
+                    <!-- Header -->
+                    <div class="bg-white px-6 py-5 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-blue-50 rounded-lg">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-800 tracking-tight" id="modal-title">Product Verification</h3>
+                                <p class="text-sm text-slate-500">Comprehensive details for {{ product.name }}</p>
+                            </div>
+                        </div>
+                        <button type="button" id="close-modal-x" class="rounded-full p-2 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <span class="sr-only">Close</span>
+                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="px-6 py-8 bg-slate-50/50 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            
+                            <!-- Identity Card -->
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0c0 .883-.393 1.627-1 .883-.607 1-1" />
+                                    </svg>
+                                    <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Identity & Core</h4>
+                                </div>
+                                <div class="flex flex-col items-center mb-6">
+                                    {% if product.image %}
+                                        <img src="{{ product.image.url }}" class="w-32 h-32 rounded-xl object-cover border-2 border-slate-100 shadow-sm mb-2" alt="{{ product.name }}">
+                                    {% else %}
+                                        <div class="w-24 h-24 rounded-xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-400 font-bold text-2xl mb-2">
+                                            {{ product.name|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Name</dt>
+                                        <dd class="col-span-2 text-slate-900 font-semibold">{{ product.name }}</dd>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">System ID</dt>
+                                        <dd class="col-span-2 text-slate-500 font-mono text-xs">{{ product.id }}</dd>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">SKU</dt>
+                                        <dd class="col-span-2 text-slate-900 font-mono bg-slate-100 inline-block px-2 py-0.5 rounded text-xs w-fit">{{ product.sku }}</dd>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Barcode</dt>
+                                        <dd class="col-span-2 text-slate-900 font-mono">{{ product.barcode|default:"-" }}</dd>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Classification Card -->
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <svg class="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                    </svg>
+                                    <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Classification</h4>
+                                </div>
+                                <div class="space-y-3">
+                                     <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Category</dt>
+                                        <dd class="col-span-2 text-slate-900">{{ product.category.name|default:"Uncategorized" }}</dd>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Branch</dt>
+                                        <dd class="col-span-2 text-slate-900">{{ product.branch.name|default:"All" }}</dd>
+                                    </div>
+                                     <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Status</dt>
+                                        <dd class="col-span-2">
+                                             {% if product.is_active %}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20">Active</span>
+                                            {% else %}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700 ring-1 ring-inset ring-slate-600/20">Inactive</span>
+                                            {% endif %}
+                                        </dd>
+                                    </div>
+                                </div>
+                            </div>
+
+                             <!-- Pricing Card -->
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Pricing Logic</h4>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Retail Price</dt>
+                                        <dd class="col-span-2 text-slate-900 font-bold text-base">${{ product.price|intcomma }}</dd>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Cost Price</dt>
+                                        <dd class="col-span-2 text-slate-900 font-medium font-mono">${{ product.cost_price|default:"0.00"|intcomma }}</dd>
+                                    </div>
+                                     <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Wholesale</dt>
+                                        <dd class="col-span-2 text-slate-900">
+                                            <div class="font-medium">${{ product.wholesale_price|default:"0.00"|intcomma }}</div>
+                                            <div class="text-xs text-slate-500">Min Qty: {{ product.minimum_wholesale_quantity }}</div>
+                                        </dd>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Inventory Card -->
+                            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                                <div class="flex items-center gap-2 mb-2">
+                                     <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                    <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wide">Inventory Control</h4>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Current Stock</dt>
+                                        <dd class="col-span-2">
+                                            <span class="font-bold {{ product.stock_quantity|yesno:'text-slate-900,text-red-600' }} text-lg">{{ product.stock_quantity }}</span>
+                                            <span class="text-xs text-slate-500">units</span>
+                                        </dd>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Threshold</dt>
+                                        <dd class="col-span-2 text-slate-900">{{ product.low_stock_threshold }} units</dd>
+                                    </div>
+                                    <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Strategy</dt>
+                                        <dd class="col-span-2 text-slate-900">
+                                            {% if product.is_batch_tracked %}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700">Batch Tracked</span>
+                                            {% else %}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">Standard</span>
+                                            {% endif %}
+                                        </dd>
+                                    </div>
+                                     <div class="grid grid-cols-3 gap-2 text-sm border-b border-slate-50 pb-2 last:border-0 last:pb-0">
+                                        <dt class="font-medium text-slate-500">Auto Reorder</dt>
+                                        <dd class="col-span-2 text-slate-900">
+                                            {% if product.auto_reorder %}
+                                                <span class="text-green-600 font-medium">Enabled</span> <span class="text-slate-500 text-xs">(Qty: {{ product.reorder_quantity }})</span>
+                                            {% else %}
+                                                <span class="text-slate-400">Disabled</span>
+                                            {% endif %}
+                                        </dd>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="col-span-1 md:col-span-2 space-y-3">
+                                <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wide border-b border-slate-200 pb-2">Full Description</h4>
+                                <div class="text-sm text-slate-600 bg-white p-4 rounded-xl border border-slate-200 leading-relaxed shadow-sm">
+                                    {{ product.description|default:"No description available."|linebreaks }}
+                                </div>
+                            </div>
+
+                            <!-- Timestamps -->
+                            <div class="col-span-1 md:col-span-2 border-t border-slate-200 pt-6 flex justify-between text-xs text-slate-400">
+                                <span>Created: {{ product.created_at|date:"M d, Y H:i" }}</span>
+                                <span>Last Updated: {{ product.updated_at|date:"M d, Y H:i" }}</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="bg-slate-50 px-6 py-4 sm:flex sm:flex-row-reverse border-t border-slate-100">
+                        <button type="button" id="close-modal-btn" class="inline-flex w-full justify-center rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:ml-3 sm:w-auto transition-all">Close Verification</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Tabs Logic ---
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                
+                // Update Buttons
+                tabBtns.forEach(b => {
+                    b.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                    b.classList.add('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                });
+                btn.classList.add('active', 'border-blue-500', 'text-blue-600');
+                btn.classList.remove('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+
+                // Update Content
+                tabContents.forEach(content => {
+                    if (content.id === targetId) {
+                        content.classList.remove('hidden');
+                        content.style.display = 'block';
+                    } else {
+                        content.classList.add('hidden');
+                        content.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        // --- Modal Logic ---
+        const modal = document.getElementById('details-modal');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const modalPanel = document.getElementById('modal-panel');
+        const openBtn = document.getElementById('open-details-modal');
+        const closeBtn = document.getElementById('close-modal-btn');
+        const closeX = document.getElementById('close-modal-x');
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            // Allow time for display:block to apply before opacity transition
+            setTimeout(() => {
+                modalBackdrop.classList.remove('opacity-0');
+                modalPanel.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            modalBackdrop.classList.add('opacity-0');
+            modalPanel.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+            
+            // Wait for transition to finish
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        if (openBtn) openBtn.addEventListener('click', openModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (closeX) closeX.addEventListener('click', closeModal);
+        
+        // Close on backdrop click
+        if (modal) {
+             modal.addEventListener('click', function(e) {
+                if (e.target === modal || e.target.closest('#modal-backdrop')) {
+                    // This logic is a bit tricky because the backdrop is separate in structure
+                    // But here our backdrop is a sibling.
+                    // The click on the overlay wrapper (fixed inset-0 z-10 w-screen) is what we usually catch.
+                }
+            });
+            // Better backdrop click handling:
+            // The wrapper div (z-10) catches clicks. Panel stops propagation?
+             const wrapper = modal.querySelector('.w-screen'); 
+             if(wrapper) {
+                 wrapper.addEventListener('click', (e) => {
+                     if (e.target === wrapper || e.target.closest('#modal-backdrop')) {
+                         closeModal();
+                     }
+                 });
+             }
+             if(modalPanel) {
+                 modalPanel.addEventListener('click', (e) => e.stopPropagation());
+             }
+        }
+        
+    });
+</script>
+{% endblock %}

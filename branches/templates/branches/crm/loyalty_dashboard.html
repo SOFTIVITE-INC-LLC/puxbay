@@ -1,0 +1,254 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Loyalty Program - {{ branch.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Loyalty Program</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Configure rewards, manage tiers, and boost customer retention.</p>
+        </div>
+        <div class="flex items-center gap-3">
+             <a href="{% url 'tier_create' branch.id %}" class="inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+                <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create New Tier
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Settings / Control Panel -->
+        <div class="lg:col-span-2 space-y-8">
+             <!-- Program Configuration Card -->
+            <!-- Program Configuration Card -->
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                <div class="px-8 py-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                             <div class="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                                 <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                             </div>
+                            Program Configuration
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-12">Define how customers earn and spend points.</p>
+                    </div>
+                </div>
+                
+                <div class="p-8">
+                    <form method="post" class="space-y-8">
+                        {% csrf_token %}
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Earning Section -->
+                            <div class="relative p-6 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-800/30 hover:border-indigo-200 transition-colors">
+                                <div class="absolute top-0 right-0 -mt-3 -mr-3 h-10 w-10 bg-white dark:bg-gray-800 rounded-full shadow-sm flex items-center justify-center border border-gray-100 dark:border-gray-700">
+                                    <span class="text-xl">💰</span>
+                                </div>
+                                
+                                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Earning Rules</h4>
+                                
+                                <div class="space-y-4">
+                                     <div>
+                                        <label for="{{ form.points_per_currency.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Points per {{ settings.tenant.currency_symbol|default:'$' }}1.00
+                                        </label>
+                                        <div class="relative rounded-lg shadow-sm">
+                                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                                <span class="text-indigo-500 font-bold">+</span>
+                                            </div>
+                                            <!-- Added px-4 (implicit via pl-10) padding fix -->
+                                            {{ form.points_per_currency }}
+                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+                                                <span class="text-gray-400 font-medium text-xs">PTS</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                     <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-indigo-100 dark:border-indigo-900/50 shadow-sm">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                                            Currently: <strong class="text-indigo-600 dark:text-indigo-400">{{ settings.tenant.currency_symbol|default:'$' }}100.00</strong> spent = <strong class="text-indigo-600 dark:text-indigo-400">{% widthratio form.points_per_currency.value|default:1 1 100 %} Points</strong>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Spending Section -->
+                            <div class="relative p-6 rounded-2xl bg-pink-50/50 dark:bg-pink-900/10 border border-pink-100 dark:border-pink-800/30 hover:border-pink-200 transition-colors">
+                                 <div class="absolute top-0 right-0 -mt-3 -mr-3 h-10 w-10 bg-white dark:bg-gray-800 rounded-full shadow-sm flex items-center justify-center border border-gray-100 dark:border-gray-700">
+                                    <span class="text-xl">🎁</span>
+                                </div>
+                                
+                                <h4 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Redemption Rules</h4>
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="{{ form.redemption_rate.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                            Value per 1 Point
+                                        </label>
+                                        <div class="relative rounded-lg shadow-sm">
+                                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                                 <span class="text-pink-500 font-bold">{{ settings.tenant.currency_symbol|default:'$' }}</span>
+                                            </div>
+                                            <input type="number" name="{{ form.redemption_rate.name }}" step="0.01" value="{{ form.redemption_rate.value }}" id="{{ form.redemption_rate.id_for_label }}" 
+                                                class="form-input block w-full pl-10 pr-12 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-pink-500 focus:border-pink-500 sm:text-sm py-3 transition-shadow shadow-sm" placeholder="0.01">
+                                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
+                                                <span class="text-gray-400 font-medium text-xs">/ PT</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                     <div class="bg-white dark:bg-gray-800 rounded-lg p-3 border border-pink-100 dark:border-pink-900/50 shadow-sm">
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                                            Currently: <strong class="text-pink-600 dark:text-pink-400">100 Points</strong> = <strong class="text-pink-600 dark:text-pink-400">{{ settings.tenant.currency_symbol|default:'$' }}{% widthratio form.redemption_rate.value 1 100 %}</strong> discount
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-6 border-t border-gray-100 dark:border-gray-700">
+                            <p class="text-sm text-gray-500 dark:text-gray-400 italic">Settings apply instantly to all new transactions.</p>
+                            <button type="submit" class="inline-flex items-center px-8 py-3 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gray-900 hover:bg-gray-800 dark:bg-indigo-600 dark:hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-all transform hover:-translate-y-0.5">
+                                Save Configuration
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Add Script to style Django rendered inputs -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const inputs = document.querySelector('input[name="points_per_currency"]');
+                    if (inputs) {
+                         inputs.classList.add('form-input', 'block', 'w-full', 'pl-10', 'pr-12', 'rounded-lg', 'border-gray-300', 'dark:border-gray-600', 'dark:bg-gray-700', 'dark:text-white', 'focus:ring-indigo-500', 'focus:border-indigo-500', 'sm:text-sm', 'py-3', 'transition-shadow', 'shadow-sm');
+                    }
+                });
+            </script>
+
+            <!-- Tiers List (Modern Card Layout) -->
+             <div class="space-y-4">
+                <div class="flex items-center justify-between px-1">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Customer Tiers</h3>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300">
+                        {{ tiers|length }} Active Levels
+                    </span>
+                </div>
+
+                {% if tiers %}
+                <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                    <ul class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                        {% for tier in tiers %}
+                        <li class="group hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150">
+                            <div class="px-6 py-4 flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                     <!-- Tier Icon/Badge -->
+                                    <div class="flex-shrink-0 h-12 w-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-{{ tier.color }}-400 to-{{ tier.color }}-600 text-white shadow-md">
+                                       <span class="font-bold text-lg">{{ tier.name|slice:":1" }}</span>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ tier.name }}</p>
+                                            {% if forloop.first %}
+                                            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                                Base Tier
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                            Over {{ settings.tenant.currency_symbol|default:'$' }}{{ tier.min_spend }} spend · <span class="text-green-600 dark:text-green-400 font-medium">{{ tier.discount_percentage }}% Discount</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <a href="{% url 'tier_update' branch.id tier.id %}" class="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </a>
+                                    <a href="{% url 'tier_delete' branch.id tier.id %}" class="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-2xl p-10 text-center border border-gray-100 dark:border-gray-700 border-dashed">
+                    <div class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600 mb-4">
+                        <svg class="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Start Building Loyalty</h3>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">Create tiers to reward your best customers. Add your first tier now!</p>
+                    <div class="mt-6">
+                        <a href="{% url 'tier_create' branch.id %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900">
+                            Create First Tier
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Side: Stats & Info -->
+        <div class="space-y-6">
+            <!-- Quick Stats Card -->
+            <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                <!-- Decorative background shapes -->
+                <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-10 blur-xl"></div>
+                <div class="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-white opacity-10 blur-lg"></div>
+
+                <h3 class="text-lg font-semibold mb-4 relative z-10">Program Insights</h3>
+                
+                <div class="grid grid-cols-1 gap-6 relative z-10">
+                    <div>
+                        <p class="text-indigo-100 text-sm font-medium">Customer Engagement</p>
+                        <div class="mt-1 flex items-baseline">
+                            <span class="text-3xl font-bold">Active</span>
+                        </div>
+                        <p class="text-xs text-indigo-200 mt-1">Loyalty tracking is live</p>
+                    </div>
+                    
+                    <div class="pt-4 border-t border-indigo-500/30">
+                        <p class="text-indigo-100 text-sm font-medium">Point Value</p>
+                        <p class="text-2xl font-bold mt-1">100 pts = {{ settings.tenant.currency_symbol|default:'$' }}{% widthratio form.redemption_rate.value 1 100 %}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help / Tips Card -->
+             <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 border border-blue-100 dark:border-blue-800">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300">Tips for Success</h3>
+                        <div class="mt-2 text-sm text-blue-700 dark:text-blue-400">
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Set achievable goals for the first tier to encourage sign-ups.</li>
+                                <li>Use distinctive colors for higher tiers (Gold, Platinum) to create prestige.</li>
+                                <li>Regularly review redemption rates to ensure profitability.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

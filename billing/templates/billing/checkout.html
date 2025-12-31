@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="mb-8">
+            <a href="{% url 'pricing' %}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                <svg class="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Back to Pricing
+            </a>
+            <h1 class="mt-4 text-3xl font-extrabold text-gray-900">Secure Checkout</h1>
+            <p class="mt-1 text-base text-gray-500">Complete your upgrade securely.</p>
+        </div>
+
+        <form id="payment-form" method="POST" action="{% url 'process_payment' plan.id %}" class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            {% csrf_token %}
+            
+            <!-- LEFT COLUMN: Payment Details -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Payment Method Section -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        <h2 class="text-lg font-bold text-gray-900">
+                            {% if plan.price == 0 %}
+                                Activate Free Trial
+                            {% else %}
+                                Select Payment Method
+                            {% endif %}
+                        </h2>
+                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% if plan.price > 0 %}Encrypted & Secure{% endif %}
+                        </span>
+                    </div>
+                    
+                    {% if plan.price > 0 %}
+                    <div class="p-6">
+                        {% if active_gateways %}
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-{{ active_gateways|length }}">
+                            {% for gateway in active_gateways %}
+                            <!-- {{ gateway.name }} -->
+                            <label class="relative flex flex-col p-4 bg-white border-2 rounded-xl cursor-pointer hover:bg-gray-50 transition-all peer-checked:ring-1 group
+                                {% if gateway.slug == 'stripe' %}hover:border-blue-500 peer-checked:border-blue-600 peer-checked:ring-blue-600
+                                {% elif gateway.slug == 'paystack' %}hover:border-green-500 peer-checked:border-green-600 peer-checked:ring-green-600
+                                {% elif gateway.slug == 'paypal' %}hover:border-indigo-500 peer-checked:border-indigo-600 peer-checked:ring-indigo-600
+                                {% else %}hover:border-gray-500 peer-checked:border-gray-600 peer-checked:ring-gray-600{% endif %}">
+                                <input type="radio" name="payment_provider" value="{{ gateway.slug }}" class="peer sr-only" {% if forloop.first %}checked{% endif %}>
+                                <span class="flex items-center justify-between mb-2">
+                                     <span class="font-bold text-gray-900">{{ gateway.name }}</span>
+                                     {% if gateway.slug == 'stripe' %}
+                                        <svg class="w-5 h-5 text-gray-400 peer-checked:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                                     {% elif gateway.slug == 'paystack' %}
+                                        <svg class="w-5 h-5 text-gray-400 peer-checked:text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                     {% elif gateway.slug == 'paypal' %}
+                                        <svg class="w-5 h-5 text-gray-400 peer-checked:text-indigo-600" fill="currentColor" viewBox="0 0 24 24"><path d="M7.076 21.337l.756-3.828H6.012c-1.11 0-1.637-.62-1.743-1.898-.016-.182-.019-.38-.009-.597.108-2.671 1.77-5.023 4.225-6.388-.506-.725-.664-1.636-.26-2.583.56-1.312 2.053-2.613 4.29-2.613 1.833 0 3.23.86 3.65 2.658.21.9.012 1.8-.458 2.625l.003.004c.06.077.107.168.14.269.467 1.455-.262 3.665-2.228 5.768-.11.117-.225.23-.343.339.426.69.61 1.493.42 2.375-.558 2.585-2.738 3.87-5.625 3.87h-1.002z"/></svg>
+                                     {% else %}
+                                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                     {% endif %}
+                                </span>
+                                <span class="text-xs text-gray-500">{{ gateway.description }}</span>
+                                <!-- Checkmark -->
+                                <div class="absolute top-2 right-2 opacity-0 peer-checked:opacity-100 transition-opacity {% if gateway.slug == 'stripe' %}text-blue-600{% elif gateway.slug == 'paystack' %}text-green-600{% elif gateway.slug == 'paypal' %}text-indigo-600{% else %}text-gray-600{% endif %}">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                </div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+                            <svg class="mx-auto h-12 w-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <h3 class="text-lg font-bold text-red-900 mb-2">No Payment Methods Available</h3>
+                            <p class="text-sm text-red-700">Please contact support as we are currently unable to process payments.</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Info Section -->
+                        <div class="mt-8 bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-start">
+                            <svg class="h-6 w-6 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-blue-800">Secure Payment Environment</h3>
+                                <p class="mt-1 text-sm text-blue-600">
+                                    We use industry-standard encryption to protect your data. Your payment information is never stored on our servers.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Free Trial Activation -->
+                    <div class="p-6">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                            <svg class="mx-auto h-12 w-12 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h3 class="text-lg font-bold text-green-900 mb-2">No Payment Required</h3>
+                            <p class="text-sm text-green-700 mb-4">
+                                Start your {{ plan.trial_days }}-day free trial instantly. No credit card needed!
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Footer Actions -->
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                         <button type="submit" id="pay-button" {% if plan.price > 0 and not active_gateways %}disabled{% endif %} class="w-full bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed border border-transparent rounded-lg py-4 px-4 text-lg font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-md transition-all flex items-center justify-center">
+                            <span>
+                                {% if plan.price == 0 %}
+                                    Activate Free Trial
+                                {% else %}
+                                    {% with first_gw=active_gateways|first %}
+                                        Confirm & Pay With {{ first_gw.name|default:"Payment Method" }}
+                                    {% endwith %}
+                                {% endif %}
+                            </span>
+                            <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: Order Summary -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-8">
+                    <h3 class="text-lg font-bold text-gray-900 mb-6">Order Summary</h3>
+                    
+                    <div class="flex items-center mb-6">
+                        <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        </div>
+                        <div class="ml-4">
+                            <h4 class="text-lg font-bold text-gray-900">{{ plan.name }}</h4>
+                            <p class="text-sm text-gray-500">Monthly Subscription</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4 border-t border-gray-100 pt-4">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-500">Subtotal</span>
+                            <span class="font-medium text-gray-900" id="subtotal-amount">${{ plan.price }}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                             <span class="text-gray-500">Tax</span>
+                             <span class="font-medium text-gray-900" id="tax-amount">$0.00</span>
+                        </div>
+                        <div class="flex justify-between items-center text-base pt-4 border-t border-gray-100">
+                            <span class="font-bold text-gray-900">Total Due</span>
+                            <span class="font-extrabold text-2xl text-blue-600" id="total-amount">${{ plan.price }}</span>
+                        </div>
+                        <div id="currency-note" class="text-xs text-gray-500 bg-gray-50 p-2 rounded hidden">
+                            <span id="currency-conversion-text"></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-gray-100 grid grid-cols-2 gap-4">
+                         <div class="flex flex-col items-center">
+                             <svg class="w-6 h-6 text-green-500 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                             <span class="text-xs text-gray-500 font-medium">SSL Secure</span>
+                         </div>
+                         <div class="flex flex-col items-center">
+                             <svg class="w-6 h-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                             <span class="text-xs text-gray-500 font-medium">Cancel Anytime</span>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const radios = document.querySelectorAll('input[name="payment_provider"]');
+        const payBtn = document.getElementById('pay-button');
+        const payBtnText = payBtn.querySelector('span');
+        
+        // Currency elements
+        const subtotalAmount = document.getElementById('subtotal-amount');
+        const taxAmount = document.getElementById('tax-amount');
+        const totalAmount = document.getElementById('total-amount');
+        const currencyNote = document.getElementById('currency-note');
+        const currencyConversionText = document.getElementById('currency-conversion-text');
+        
+        // Plan prices from database
+        const planPriceUSD = {{ plan.price }};
+        const planPriceGHS = {{ plan.price_ghs }};
+        
+        function updateCurrency(provider) {
+            if(provider === 'paystack') {
+                // Show GHS
+                subtotalAmount.textContent = `GH₵${planPriceGHS}`;
+                taxAmount.textContent = 'GH₵0.00';
+                totalAmount.textContent = `GH₵${planPriceGHS}`;
+                
+                // Show conversion note
+                currencyNote.classList.remove('hidden');
+                currencyConversionText.textContent = `≈ $${planPriceUSD} USD (Regional Price)`;
+            } else {
+                // Show USD (Stripe/PayPal)
+                subtotalAmount.textContent = `$${planPriceUSD}`;
+                taxAmount.textContent = '$0.00';
+                totalAmount.textContent = `$${planPriceUSD}`;
+                
+                // Hide conversion note
+                currencyNote.classList.add('hidden');
+            }
+        }
+        
+        radios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const provider = e.target.value;
+                const name = provider.charAt(0).toUpperCase() + provider.slice(1);
+                payBtnText.textContent = `Confirm & Pay With ${name}`;
+                
+                // Update currency display
+                updateCurrency(provider);
+                
+                // Reset classes
+                payBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'bg-green-600', 'hover:bg-green-700', 'bg-indigo-600', 'hover:bg-indigo-700');
+                
+                if(provider === 'paystack') {
+                    payBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                } else if(provider === 'paypal') {
+                    payBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+                } else {
+                    payBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                }
+            });
+        });
+
+        // Initial currency display based on default selected provider
+        const checkedRadio = document.querySelector('input[name="payment_provider"]:checked');
+        if (checkedRadio) {
+            updateCurrency(checkedRadio.value);
+        }
+    });
+</script>
+{% endblock %}

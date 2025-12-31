@@ -1,0 +1,18 @@
+{% extends 'registration/base_auth.html' %}
+
+{% block title %}Account Activated{% endblock %}
+{% block icon %}check_circle{% endblock %}
+{% block heading %}Welcome to Puxbay!{% endblock %}
+{% block subheading %}Your account has been verified.{% endblock %}
+
+{% block content %}
+<p class="text-slate-400 mb-6">
+    Thank you for verifying your email. You can now access your dashboard and start managing your store.
+</p>
+<div class="mt-8">
+    <a href="{% url 'pricing' %}" 
+       class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 focus:ring-offset-slate-900 transition-all duration-200">
+        Continue to Setup
+    </a>
+</div>
+{% endblock %}

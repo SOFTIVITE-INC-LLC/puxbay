@@ -1,0 +1,179 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Report Builder - Analytics{% endblock %}
+
+{% block page_title %}Custom Report Builder{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Controls -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h2 class="text-lg font-bold text-slate-800 mb-4">Build Your Report</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Metric Selection -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Metrics</label>
+                <select id="metric-select" class="w-full rounded-lg border-slate-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="revenue">Total Revenue</option>
+                    <option value="orders">Order Count</option>
+                    <option value="avg_order">Average Order Value</option>
+                    <option value="customers">Customer Count</option>
+                    <option value="products_sold">Products Sold</option>
+                </select>
+            </div>
+            
+            <!-- Date Range -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Date Range</label>
+                <select id="period-select" class="w-full rounded-lg border-slate-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="week">Last 7 Days</option>
+                    <option value="month" selected>Last 30 Days</option>
+                    <option value="year">Last Year</option>
+                </select>
+            </div>
+            
+            <!-- Group By -->
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Group By</label>
+                <select id="groupby-select" class="w-full rounded-lg border-slate-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="day">Day</option>
+                    <option value="week">Week</option>
+                    <option value="month">Month</option>
+                    <option value="category">Category</option>
+                    <option value="payment">Payment Method</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <button id="generate-report-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">
+                Generate Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 min-h-[400px]">
+        <div id="report-chart"></div>
+        <div id="report-loading" class="flex items-center justify-center h-64 hidden">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p class="text-slate-500">Generating report...</p>
+            </div>
+        </div>
+        <div id="report-empty" class="flex items-center justify-center h-64">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-purple-600 text-3xl">query_stats</span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800 mb-2">Custom Report Builder</h3>
+                <p class="text-slate-500 max-w-md mx-auto">Select your metrics and click "Generate Report" to visualize your data.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let chart = null;
+        
+        const metricSelect = document.getElementById('metric-select');
+        const periodSelect = document.getElementById('period-select');
+        const groupbySelect = document.getElementById('groupby-select');
+        const generateBtn = document.getElementById('generate-report-btn');
+        const chartContainer = document.getElementById('report-chart');
+        const loadingDiv = document.getElementById('report-loading');
+        const emptyDiv = document.getElementById('report-empty');
+        
+        generateBtn.addEventListener('click', function() {
+            generateReport();
+        });
+        
+        function generateReport() {
+            const metric = metricSelect.value;
+            const period = periodSelect.value;
+            const groupby = groupbySelect.value;
+            
+            // Show loading
+            emptyDiv.classList.add('hidden');
+            chartContainer.innerHTML = '';
+            loadingDiv.classList.remove('hidden');
+            
+            // Fetch data from backend
+            const url = `{% url 'report_builder_data' %}?metric=${metric}&period=${period}&groupby=${groupby}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    loadingDiv.classList.add('hidden');
+                    renderChart(data, metric, groupby);
+                })
+                .catch(err => {
+                    console.error('Error generating report:', err);
+                    loadingDiv.classList.add('hidden');
+                    emptyDiv.classList.remove('hidden');
+                });
+        }
+        
+        function renderChart(data, metric, groupby) {
+            const metricLabels = {
+                'revenue': 'Revenue',
+                'orders': 'Orders',
+                'avg_order': 'Avg Order Value',
+                'customers': 'Customers',
+                'products_sold': 'Products Sold'
+            };
+            
+            const options = {
+                series: [{
+                    name: metricLabels[metric] || 'Value',
+                    data: data.values || []
+                }],
+                chart: {
+                    height: 350,
+                    type: 'bar',
+                    toolbar: { show: true }
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 4,
+                        dataLabels: {
+                            position: 'top',
+                        },
+                    }
+                },
+                dataLabels: {
+                    enabled: true,
+                    offsetY: -20,
+                    style: {
+                        fontSize: '12px',
+                        colors: ["#304758"]
+                    }
+                },
+                xaxis: {
+                    categories: data.labels || [],
+                    position: 'bottom',
+                },
+                yaxis: {
+                    title: {
+                        text: metricLabels[metric] || 'Value'
+                    }
+                },
+                title: {
+                    text: `${metricLabels[metric]} by ${groupby}`,
+                    align: 'center'
+                }
+            };
+            
+            if (chart) {
+                chart.destroy();
+            }
+            chart = new ApexCharts(chartContainer, options);
+            chart.render();
+        }
+    });
+</script>
+{% endblock %}

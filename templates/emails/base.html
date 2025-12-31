@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; padding: 0; background-color: #f4f7fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f4f7fa; padding-bottom: 40px; }
+        .main { background-color: #ffffff; margin: 0 auto; width: 100%; max-width: 600px; border-collapse: collapse; border-radius: 12px; overflow: hidden; margin-top: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header { background-color: #0f172a; padding: 30px; text-align: center; }
+        .footer { padding: 30px; text-align: center; color: #64748b; font-size: 13px; }
+        .content { padding: 40px; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <table class="main">
+            <tr>
+                <td class="header">
+                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px;">PUXBAY</h1>
+                </td>
+            </tr>
+            <tr>
+                <td class="content">
+                    {% block content %}{% endblock %}
+                </td>
+            </tr>
+        </table>
+        <div class="footer">
+            <p>&copy; 2025 Puxbay Cloud POS. All rights reserved.</p>
+            <p>Empowering retailers with next-gen retail technology.</p>
+        </div>
+    </div>
+</body>
+</html>

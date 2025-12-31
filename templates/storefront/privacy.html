@@ -1,0 +1,52 @@
+{% extends 'storefront/base.html' %}
+
+{% block title %}Privacy Policy{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-16 px-4">
+    <div class="text-center mb-16">
+        <h1 class="text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-4">Privacy Policy</h1>
+        <p class="text-gray-500 dark:text-gray-400 font-medium">Last updated: {% now "F j, Y" %}</p>
+    </div>
+
+    <div class="prose prose-lg max-w-none space-y-8">
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4">Information We Collect</h2>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+                We collect information that you provide directly to us, including your name, email address, phone number, and shipping address when you create an account or place an order.
+            </p>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                We also automatically collect certain information about your device when you use our services, including IP address, browser type, and usage data.
+            </p>
+        </div>
+
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4">How We Use Your Information</h2>
+            <ul class="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400">
+                <li>Process and fulfill your orders</li>
+                <li>Send you order confirmations and updates</li>
+                <li>Respond to your customer service requests</li>
+                <li>Send you marketing communications (with your consent)</li>
+                <li>Improve our services and user experience</li>
+            </ul>
+        </div>
+
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4">Data Security</h2>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.
+            </p>
+        </div>
+
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4">Your Rights</h2>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+                You have the right to access, correct, or delete your personal information. You may also opt-out of marketing communications at any time.
+            </p>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                For privacy-related inquiries, please contact our support team.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

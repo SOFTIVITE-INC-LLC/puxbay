@@ -1,0 +1,58 @@
+{% extends 'storefront/base.html' %}
+
+{% block title %}Terms of Service{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-16 px-4">
+    <div class="text-center mb-16">
+        <h1 class="text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-4">Terms of Service</h1>
+        <p class="text-gray-500 dark:text-gray-400 font-medium">Last updated: {% now "F j, Y" %}</p>
+    </div>
+
+    <div class="prose prose-lg max-w-none space-y-8">
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4">Acceptance of Terms</h2>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                By accessing and using {{ store_settings.store_name|default:tenant.name }}, you accept and agree to be bound by the terms and provision of this agreement.
+            </p>
+        </div>
+
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4">Use of Service</h2>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+                You agree to use our service only for lawful purposes and in accordance with these Terms. You agree not to:
+            </p>
+            <ul class="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400">
+                <li>Use the service in any way that violates applicable laws or regulations</li>
+                <li>Attempt to interfere with the proper functioning of the service</li>
+                <li>Engage in any fraudulent activity</li>
+                <li>Impersonate another person or entity</li>
+            </ul>
+        </div>
+
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4">Orders and Payments</h2>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+                All orders are subject to acceptance and availability. We reserve the right to refuse or cancel any order for any reason.
+            </p>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                Prices are subject to change without notice. Payment must be received before order fulfillment.
+            </p>
+        </div>
+
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4">Limitation of Liability</h2>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                To the maximum extent permitted by law, {{ store_settings.store_name|default:tenant.name }} shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the service.
+            </p>
+        </div>
+
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4">Changes to Terms</h2>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                We reserve the right to modify these terms at any time. Continued use of the service after changes constitutes acceptance of the modified terms.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

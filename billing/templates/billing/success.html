@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <div class="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                <svg class="h-10 w-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
+            <p class="text-gray-600 mb-6">Your subscription has been activated.</p>
+            {% if session_id %}
+            <p class="text-sm text-gray-500 mb-6">Session ID: {{ session_id }}</p>
+            {% endif %}
+            {% if reference %}
+            <p class="text-sm text-gray-500 mb-6">Reference: {{ reference }}</p>
+            {% endif %}
+            <a href="{% url 'dashboard' %}" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                Go to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

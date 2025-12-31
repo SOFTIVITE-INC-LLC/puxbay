@@ -1,0 +1,190 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{% if expense %}Edit Expense{% else %}Add Expense{% endif %} - {{ branch.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <!-- Breadcrumb -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'branch_dashboard' branch.id %}" class="text-slate-700 dark:text-slate-300 hover:text-blue-600 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                    </svg>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <a href="{% url 'branch_expense_list' branch.id %}" class="ml-1 text-slate-700 dark:text-slate-300 hover:text-blue-600 md:ml-2">Expenses</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="ml-1 text-slate-500 dark:text-slate-400 md:ml-2">{% if expense %}Edit{% else %}Add{% endif %}</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">{% if expense %}Edit Expense{% else %}Record New Expense{% endif %}</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Track operational costs for {{ branch.name }}</p>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div class="flex">
+                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-800 dark:text-red-200">{{ form.non_field_errors }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Category -->
+                <div>
+                    <label for="{{ form.category.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Category <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.category.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Amount -->
+                <div>
+                    <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Amount <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-slate-500 dark:text-slate-400 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" name="amount" id="{{ form.amount.id_for_label }}" 
+                               value="{{ form.amount.value|default:'' }}"
+                               step="0.01" min="0"
+                               class="pl-7 w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white"
+                               placeholder="0.00" required>
+                    </div>
+                    {% if form.amount.errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.amount.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Date -->
+                <div>
+                    <label for="{{ form.date.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Date <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.date }}
+                    {% if form.date.errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.date.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Description -->
+            <div>
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Description <span class="text-red-500">*</span>
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+            
+            <!-- Receipt Upload -->
+            <div>
+                <label for="{{ form.receipt_file.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Receipt/Invoice
+                </label>
+                {{ form.receipt_file }}
+                {% if form.receipt_file.errors %}
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.receipt_file.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">Upload receipt or invoice (PDF, JPG, PNG)</p>
+                {% if expense and expense.receipt_file %}
+                <div class="mt-2">
+                    <a href="{{ expense.receipt_file.url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                        </svg>
+                        View current receipt
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <a href="{% url 'branch_expense_list' branch.id %}" class="px-6 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    {% if expense %}Update Expense{% else %}Save Expense{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/offline-forms.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        new OfflineFormManager({
+            formId: document.querySelector('form').getAttribute('id') || 'expense-form', // Ensure form has ID or select by tag if single
+            storeName: 'expenses',
+            transactionType: 'create_expense',
+            redirectUrl: "{% url 'branch_expense_list' branch.id %}",
+            onBeforeSave: async (data) => {
+                // Add branch info
+                data.branch_id = {{ branch.id }};
+                
+                // Capture Category Name for offline display
+                const catSelect = document.querySelector('select[name="category"]');
+                if (catSelect && catSelect.selectedIndex >= 0) {
+                    data.category_name = catSelect.options[catSelect.selectedIndex].text;
+                }
+                
+                // Add logic for file uploads if needed (Note: Files are tricky offline without FileSystem API or complex Base64)
+                // For valid MVP 'offline', we might skip file upload or warn user.
+                // Converting file to Base64 for IndexedDB storage is possible but heavy.
+                // For now, let's just proceed without file if offline or warn.
+                
+                return data;
+            }
+        });
+        
+        // Helper: Add ID to form if missing
+        const form = document.querySelector('form');
+        if (form && !form.id) form.id = 'expense-form';
+    });
+</script>
+{% endblock %}

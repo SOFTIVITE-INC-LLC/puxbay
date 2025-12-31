@@ -1,0 +1,622 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}POS - {{ branch.name }}{% endblock %}
+
+{% block page_title %}Point of Sale{% endblock %}
+
+{% block content %}
+<style>
+    [v-cloak] {
+        display: none !important;
+    }
+    /* Kiosk Mode Styles */
+    .kiosk-mode .product-card {
+        padding: 1.5rem !important;
+    }
+    .kiosk-mode .product-name {
+        font-size: 1.125rem !important; /* text-lg */
+        font-weight: 700 !important;
+    }
+    .kiosk-mode .product-price {
+        font-size: 1rem !important; /* text-base */
+    }
+    .kiosk-mode .grid-cols-kiosk {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+    }
+    .kiosk-mode button, 
+    .kiosk-mode .btn-touch {
+        min-height: 3.5rem !important;
+        font-size: 1.1rem !important;
+    }
+</style>
+
+<div id="pos-container" v-cloak data-kiosk-class="kiosk-mode" class="fixed inset-0 bg-slate-100 dark:bg-slate-900 z-50 flex flex-col h-screen w-screen overflow-hidden">
+    <!-- Top Bar -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 h-16 flex-none px-6 flex items-center justify-between shadow-sm z-20 transition-all"
+            data-kiosk-class="h-20">
+        <div class="flex items-center gap-4">
+            <a href="{% url 'branch_dashboard' branch.id %}" class="text-slate-500 hover:text-slate-700 transition-colors dark:text-slate-400 dark:hover:text-slate-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 dark:text-white" data-kiosk-class="text-2xl">
+                    {{ branch.name }}
+                    <span class="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400">
+                        {% verbatim %}{{ state.currentUser?.name || state.currentUser?.username }}{% endverbatim %}
+                    </span>
+                </h1>
+                <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400" data-kiosk-class="text-sm">
+                    <span id="connection-status" class="flex items-center gap-1 text-emerald-600 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Online
+                    </span>
+                    <span>•</span>
+                    <span id="last-sync-time">Synced just now</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+             <!-- Kiosk Toggle -->
+             <button @click="toggleKiosk" id="kiosk-toggle-btn" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-300 text-slate-600 hover:bg-slate-50 transition-all dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700" data-kiosk-class="px-5 py-2.5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                <span id="kiosk-status-text" class="text-xs font-semibold uppercase">Mobile</span>
+             </button>
+
+             <button @click="toggleTheme" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-full transition-all" title="Toggle Theme">
+                <svg v-if="state.theme === 'light'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 18v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M16.242 16.242l.707.707M7.757 7.757l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+            </button>
+            <button @click="syncInventory" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all" title="Sync Inventory">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </button>
+            <button @click="openModal('hardware')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-full transition-all" title="Printer Settings">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            </button>
+            <button @click="openModal('pin')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-700 rounded-full transition-all" title="Switch Staff">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            </button>
+            <button @click="openModal('issue_gift_card')" class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-700 rounded-full transition-all" title="Issue/Sell Gift Card">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+            </button>
+            <button @click="toggleFullscreen" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all" title="Fullscreen">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 4l-5-5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- LEFT: Products Area (66%) -->
+        <main class="w-full lg:w-2/3 flex flex-col bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+            <!-- Search & Filter Bar -->
+            <div class="p-4 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm flex-none space-y-4" data-kiosk-class="p-6">
+                <!-- Search -->
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <input type="text" v-model="state.searchQuery" class="block w-full pl-10 pr-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg leading-5 bg-slate-50 dark:bg-slate-700 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 sm:text-sm dark:text-white" 
+                           data-kiosk-class="py-4 text-lg"
+                           placeholder="Search products by name or SKU...">
+                </div>
+
+                <!-- Categories -->
+                <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    <button @click="state.selectedCategory = 'all'" 
+                            :class="['px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap', state.selectedCategory === 'all' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700']">
+                        All Items
+                    </button>
+                    <button v-for="cat in state.categories" :key="cat.id" 
+                            @click="state.selectedCategory = cat.id"
+                            :class="['px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap', state.selectedCategory == cat.id ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700']">
+                        {% verbatim %}{{ cat.name }}{% endverbatim %}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="flex-1 overflow-y-auto p-4 custom-scrollbar" data-kiosk-class="p-6">
+                <div v-show="filteredProducts.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-20 transition-all"
+                     data-kiosk-class="grid-cols-kiosk gap-6">
+                    <div v-for="product in filteredProducts" :key="product.id" @click="handleProductClick(product)"
+                         class="product-card bg-white dark:bg-slate-800 rounded-2xl p-3 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer transition-all transform hover:-translate-y-1 active:scale-95 group relative overflow-hidden flex flex-col h-full">
+                        <div class="aspect-square bg-slate-50 dark:bg-slate-900 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-4 relative">
+                            <img :src="product.image_url || '{% static 'images/default_product.png' %}'" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
+                        </div>
+                        <h3 class="product-name font-bold text-slate-800 dark:text-white text-sm line-clamp-2 mb-1">{% verbatim %}{{ product.name }}{% endverbatim %}</h3>
+                        <p class="text-[10px] text-slate-400 mb-2 font-medium">{% verbatim %}{{ product.category }}{% endverbatim %}</p>
+                        <div class="mt-auto flex items-center justify-between">
+                            <span class="product-price text-sm font-black text-blue-600 dark:text-blue-400">{% verbatim %}{{ state.currency }}{{ product.price.toFixed(2) }}{% endverbatim %}</span>
+                            <span :class="['text-[10px] px-2 py-0.5 rounded-full font-bold', product.stock > 10 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20' : 'bg-red-50 text-red-600 dark:bg-red-900/20']">
+                                {% verbatim %}{{ product.stock }}{% endverbatim %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Empty State -->
+                <div v-show="filteredProducts.length === 0" class="h-full flex flex-col items-center justify-center text-slate-400 pb-20">
+                    <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                    <p class="text-lg font-medium">No products found</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- RIGHT: Cart Area (33%) -->
+        <aside class="w-full lg:w-1/3 bg-white dark:bg-slate-800 flex flex-col shadow-xl z-30 relative border-l dark:border-slate-700">
+            <!-- Customer Selector -->
+            <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex-none bg-slate-50/50 dark:bg-slate-800/50" data-kiosk-class="p-6">
+                <div class="relative">
+                    <div @click="state.showCustomerDropdown = !state.showCustomerDropdown" class="w-full bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2.5 flex items-center justify-between cursor-pointer hover:border-blue-400 hover:ring-2 hover:ring-blue-100 transition-all shadow-sm"
+                         data-kiosk-class="py-4">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300 font-bold text-sm shrink-0"
+                                 data-kiosk-class="w-10 h-10 text-base">
+                                <svg class="w-4 h-4" data-kiosk-class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            </div>
+                            <div class="flex flex-col truncate">
+                                <span class="font-medium text-slate-900 dark:text-white text-sm" data-kiosk-class="text-lg">{% verbatim %}{{ selectedCustomer.name }}{% endverbatim %}</span>
+                                <span class="text-xs text-slate-500 dark:text-slate-400" data-kiosk-class="text-sm">Select Customer</span>
+                            </div>
+                        </div>
+                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div v-show="state.showCustomerDropdown" class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden transform transition-all">
+                        <div class="p-2 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                            <input type="text" v-model="state.customerSearch" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm focus:outline-none focus:border-blue-500 dark:bg-slate-700 dark:text-white" placeholder="Search customers...">
+                        </div>
+                        <div class="max-h-60 overflow-y-auto">
+                            <div v-for="c in filteredCustomers" :key="c.id" @click="selectCustomer(c)" 
+                                 class="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-0 transition-colors">
+                                <p class="text-sm font-bold text-slate-800 dark:text-white">{% verbatim %}{{ c.name }}{% endverbatim %}</p>
+                                <p class="text-xs text-slate-500">{% verbatim %}{{ c.phone }} • {{ c.customer_type }}{% endverbatim %}</p>
+                            </div>
+                        </div>
+                        <div class="p-2 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                            <a href="{% url 'customer_create' branch.id %}" target="_blank" class="flex items-center justify-center gap-2 w-full py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                Add New Customer
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Items -->
+            <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                <div v-if="state.cart.length > 0" class="space-y-3">
+                    <div v-for="item in state.cart" :key="item.cartItemId" 
+                         class="flex items-center justify-between gap-3 p-3 bg-white dark:bg-slate-700/50 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm transition-all hover:shadow-md">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-semibold text-slate-800 dark:text-white truncate">{% verbatim %}{{ item.name }}{% endverbatim %}</h4>
+                            <div class="text-xs text-slate-500">{% verbatim %}{{ state.currency }}{{ item.price.toFixed(2) }} <span v-if="item.batchNumber">• {{ item.batchNumber }}</span>{% endverbatim %}</div>
+                        </div>
+                        <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-lg p-1">
+                            <button @click="updateQuantity(item.cartItemId, -1)" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-white hover:shadow-sm text-slate-600 transition-all">-</button>
+                            <span class="text-sm font-bold w-6 text-center">{% verbatim %}{{ item.quantity }}{% endverbatim %}</span>
+                            <button @click="updateQuantity(item.cartItemId, 1)" class="w-7 h-7 flex items-center justify-center rounded-md hover:bg-white hover:shadow-sm text-slate-600 transition-all">+</button>
+                        </div>
+                        <button @click="removeFromCart(item.cartItemId)" class="text-slate-300 hover:text-red-500 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div v-else class="h-full flex flex-col items-center justify-center text-slate-400 space-y-3">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    </div>
+                    <p class="text-sm">Your cart is empty</p>
+                </div>
+            </div>
+
+            <!-- Smart Suggestions Panel -->
+            <div v-show="state.recommendations.length > 0" class="flex-none bg-blue-50/50 dark:bg-blue-900/10 p-4 border-t border-b border-blue-100 dark:border-blue-800">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-lg">auto_awesome</span>
+                    <h4 class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">Frequently Bought Together</h4>
+                </div>
+                <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                    <div v-for="r in state.recommendations" :key="r.id" @click="handleProductClick(r)" 
+                         class="flex-none w-32 bg-white dark:bg-slate-800 p-2 rounded-xl border border-blue-100 dark:border-blue-900 shadow-sm cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all transform hover:-translate-y-1 active:scale-95 group">
+                        <div class="aspect-square bg-slate-50 dark:bg-slate-900 rounded-lg mb-2 overflow-hidden flex items-center justify-center p-2">
+                            <img :src="r.image_url || '{% static 'images/default_product.png' %}'" class="w-full h-full object-contain group-hover:scale-110 transition-transform">
+                        </div>
+                        <h5 class="text-[10px] font-bold text-slate-800 dark:text-white truncate mb-0.5">{% verbatim %}{{ r.name }}{% endverbatim %}</h5>
+                        <div class="text-[10px] font-black text-blue-600 dark:text-blue-400">{% verbatim %}{{ state.currency }}{{ r.price.toFixed(2) }}{% endverbatim %}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Summary & Checkout -->
+            <div class="flex-none bg-slate-50 p-3 pt-2 border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] dark:bg-slate-800 dark:border-slate-700" data-kiosk-class="p-6">
+                <div class="flex justify-between items-center mb-0.5 text-slate-500 dark:text-slate-400" data-kiosk-class="text-lg">
+                    <span class="text-[10px]" data-kiosk-class="text-lg">Subtotal</span>
+                    <span class="font-medium text-xs">{% verbatim %}{{ state.currency }}{{ cartSubtotal.toFixed(2) }}{% endverbatim %}</span>
+                </div>
+                
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider dark:text-slate-500" data-kiosk-class="text-sm">Total</span>
+                        <div class="text-xl font-bold text-slate-900 flex items-baseline gap-0.5 dark:text-white" data-kiosk-class="text-4xl">
+                            <span class="text-sm text-slate-500 font-medium">{% verbatim %}{{ state.currency }}{% endverbatim %}</span>
+                            <span>{% verbatim %}{{ cartTotal.toFixed(2) }}{% endverbatim %}</span>
+                        </div>
+                    </div>
+                    <button v-show="state.cart.length > 0" @click="clearCart" class="text-[10px] text-red-500 hover:text-red-700 font-bold px-1.5 py-0.5 hover:bg-red-50 rounded transition-colors" data-kiosk-class="text-lg px-4 py-2">
+                        Clear
+                    </button>
+                </div>
+
+                <!-- Payment Methods -->
+                <div class="grid grid-cols-4 gap-1.5 mb-3" data-kiosk-class="gap-4">
+                    <button v-for="method in ['cash', 'gift_card', 'store_credit', 'loyalty_points', 'credit', 'split', 'stripe', 'paystack']" 
+                            :key="method"
+                            v-show="(method !== 'stripe' || state.paymentConfig?.stripe_enabled) && (method !== 'paystack' || state.paymentConfig?.paystack_enabled)"
+                            @click="setPaymentMethod(method)"
+                            :class="['flex flex-col items-center justify-center gap-0.5 p-1.5 rounded-lg border-2 transition-all duration-200 dark:text-slate-300', state.paymentMethod === method ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'border-slate-200 dark:border-slate-600 text-slate-500']"
+                            data-kiosk-class="py-6">
+                        <span v-if="method === 'cash'" class="material-symbols-outlined text-lg">payments</span>
+                        <span v-if="method === 'gift_card'" class="material-symbols-outlined text-lg">card_giftcard</span>
+                        <span v-if="method === 'store_credit'" class="material-symbols-outlined text-lg">account_balance_wallet</span>
+                        <span v-if="method === 'loyalty_points'" class="material-symbols-outlined text-lg">star</span>
+                        <span v-if="method === 'credit'" class="material-symbols-outlined text-lg">history_edu</span>
+                        <span v-if="method === 'split'" class="material-symbols-outlined text-lg">call_split</span>
+                        <span v-if="method === 'stripe'" class="material-symbols-outlined text-lg">credit_card</span>
+                        <span v-if="method === 'paystack'" class="font-bold text-sm">P</span>
+                        <span class="text-[9px] font-bold capitalize" data-kiosk-class="text-sm">{% verbatim %}{{ method.replace('_', ' ') }}{% endverbatim %}</span>
+                    </button>
+                </div>
+
+                <button @click="processCheckout" :disabled="state.cart.length === 0" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg font-bold text-sm shadow-md shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+                        data-kiosk-class="py-5 text-2xl">
+                    <span>Complete Sale</span>
+                    <svg class="w-4 h-4" data-kiosk-class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                </button>
+            </div>
+        </aside>
+    </div>
+
+
+<!-- Loading Overlay -->
+<div v-show="state.loading" class="fixed inset-0 bg-white/90 backdrop-blur-sm z-[60] flex items-center justify-center" style="display: none;">
+    <div class="text-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-blue-100 border-t-blue-600 mb-4 mx-auto"></div>
+        <h3 class="text-lg font-semibold text-slate-800">{% verbatim %}{{ state.loadingMessage }}{% endverbatim %}</h3>
+    </div>
+</div>
+
+<!-- Gift Card Input Modal -->
+<div v-show="state.activeModal === 'gift_card'" class="fixed inset-0 z-[65] flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+        <h3 class="text-lg font-bold text-slate-800 mb-4">Enter Gift Card Code</h3>
+        <input type="text" id="gift-card-code-input" v-model="state.giftCardCode" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mb-4 uppercase" placeholder="XXXX-XXXX-XXXX">
+        <div class="flex gap-3">
+             <button @click="closeModal" class="flex-1 py-2.5 rounded-lg border border-slate-300 font-medium text-slate-600 hover:bg-slate-50">Cancel</button>
+             <button @click="closeModal" class="flex-1 py-2.5 rounded-lg bg-blue-600 font-medium text-white hover:bg-blue-700">Apply</button>
+        </div>
+    </div>
+</div>
+
+<!-- Batch Selection Modal -->
+<div v-show="state.activeModal === 'batch'" class="fixed inset-0 z-[65] flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4">
+        <h3 class="text-lg font-bold text-slate-800 mb-2">Select Batch</h3>
+        <p class="text-sm text-slate-500 mb-4">{% verbatim %}{{ state.batchProduct?.name }}{% endverbatim %}</p>
+        
+        <div class="max-h-60 overflow-y-auto mb-4 border border-slate-200 rounded-lg divide-y divide-slate-100">
+            <div v-for="batch in state.batchProduct?.batches" :key="batch.id" @click="addToCart(state.batchProduct, batch); closeModal()"
+                 class="p-3 hover:bg-slate-50 cursor-pointer flex justify-between items-center transition-colors">
+                <div>
+                    <p class="font-bold text-sm">{% verbatim %}{{ batch.batch_number }}{% endverbatim %}</p>
+                    <p class="text-[10px] text-slate-500">Exp: {% verbatim %}{{ batch.expiry_date || 'N/A' }}{% endverbatim %}</p>
+                </div>
+                <span class="text-xs font-bold text-blue-600">{% verbatim %}{{ batch.stock }}{% endverbatim %} left</span>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+             <button @click="closeModal" class="flex-1 py-2.5 rounded-lg border border-slate-300 font-medium text-slate-600 hover:bg-slate-50">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Split Payment Modal -->
+<div v-show="state.activeModal === 'split'" class="fixed inset-0 z-[65] flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg mx-4 text-slate-800">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold">Split Payment</h3>
+            <button @click="closeModal" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <p class="text-sm text-slate-500 mb-6">Total Due: <span class="font-bold text-slate-900">{% verbatim %}{{ state.currency }}{{ cartTotal.toFixed(2) }}{% endverbatim %}</span></p>
+        
+        <div class="space-y-4 mb-6 max-h-[50vh] overflow-y-auto pr-2">
+            <div v-for="(p, index) in state.splitPayments" :key="index" class="flex gap-3 items-end p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div class="flex-1">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Method</label>
+                    <select v-model="p.method" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                        <option value="cash">Cash</option>
+                        <option value="card">Card</option>
+                        <option value="gift_card">Gift Card</option>
+                        <option value="store_credit">Store Credit</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Amount</label>
+                    <input type="number" v-model.number="p.amount" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold">
+                </div>
+                <button @click="state.splitPayments.splice(index, 1)" class="p-2 text-red-400 hover:text-red-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <button @click="state.splitPayments.push({method: 'cash', amount: 0})" class="w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 font-bold hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50/30 transition-all mb-6 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Payment Method
+        </button>
+
+        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl mb-6 border border-slate-100">
+             <span class="text-sm font-bold text-slate-600">Remaining to Pay:</span>
+             <span :class="['text-2xl font-black', splitRemaining === 0 ? 'text-emerald-600' : 'text-slate-900']">
+                {% verbatim %}{{ state.currency }}{{ splitRemaining.toFixed(2) }}{% endverbatim %}
+             </span>
+        </div>
+
+        <div class="flex gap-3">
+             <button @click="closeModal" class="flex-1 py-4 rounded-xl border border-slate-300 font-bold text-slate-600 hover:bg-slate-50 transition-all">Cancel</button>
+             <button @click="processCheckout" :disabled="splitRemaining !== 0" class="flex-1 py-4 rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-700 disabled:opacity-50 shadow-lg shadow-blue-200 transition-all transform active:scale-[0.98]">Confirm Payments</button>
+        </div>
+    </div>
+</div>
+
+<!-- Issue Gift Card Modal -->
+<div v-show="state.activeModal === 'issue_gift_card'" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4 text-slate-800">
+        <h3 class="text-xl font-bold mb-4">Issue Gift Card</h3>
+        <div class="space-y-4 mb-6">
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Card Amount</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">{% verbatim %}{{ state.currency }}{% endverbatim %}</span>
+                    <input type="number" v-model.number="state.issueGCAmount" class="w-full pl-8 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-2xl" placeholder="0.00">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Card Code (Optional)</label>
+                <div class="flex gap-2">
+                    <input type="text" v-model="state.issueGCCode" class="flex-1 px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none uppercase font-mono font-bold" placeholder="AUTO-GEN">
+                    <button @click="state.issueGCCode = Math.random().toString(36).substring(2, 10).toUpperCase()" class="p-4 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors text-slate-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-3">
+            <button @click="closeModal" class="flex-1 py-4 rounded-xl border border-slate-300 font-bold text-slate-600 hover:bg-slate-50 transition-all">Cancel</button>
+            <button @click="addGiftCardToCart" class="flex-1 py-4 rounded-xl bg-emerald-600 text-white font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all transform active:scale-[0.98]">Add to Cart</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hardware Connection Modal -->
+<div v-show="state.activeModal === 'hardware'" class="fixed inset-0 z-[65] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4 text-slate-800">
+        <h3 class="text-lg font-bold mb-4">Hardware Settings</h3>
+        
+        <div class="space-y-4 mb-6">
+            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div class="flex items-center gap-3">
+                    <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    <div>
+                        <p class="text-sm font-bold">POS Printer</p>
+                        <p class="text-[10px] text-slate-500">{% verbatim %}{{ state.printerName }}{% endverbatim %}</p>
+                    </div>
+                </div>
+                <button @click="pairPrinter" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors">Pair</button>
+            </div>
+        </div>
+
+        <div class="flex gap-3">
+             <button @click="closeModal" class="flex-1 py-2.5 rounded-lg border border-slate-300 font-medium text-slate-600 hover:bg-slate-50">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div v-show="state.activeModal === 'success'" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-y-auto" style="display: none;">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-4 overflow-hidden transform transition-all">
+        <div class="p-6 text-center">
+            <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-800 mb-2">Payment Successful!</h3>
+            <p class="text-slate-500 text-sm mb-6">Transaction has been recorded successfully. Order ID: {% verbatim %}{{ state.lastOrderId }}{% endverbatim %}</p>
+            
+            <div class="flex flex-col gap-3">
+                <button @click="closeModal(); clearCart()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">New Sale</button>
+                <button @click="printReceipt" class="w-full py-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-all">Print Receipt</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- PIN Login Modal -->
+<div v-show="state.activeModal === 'pin'" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/95 backdrop-blur-md transition-all duration-300">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl p-8 w-full max-w-sm mx-4 transform transition-all scale-100 border border-slate-200 dark:border-slate-700">
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600 dark:text-blue-400">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">Staff Login</h2>
+            <p class="text-slate-500 dark:text-slate-400 mt-2">Enter your 4-6 digit PIN to start</p>
+        </div>
+
+        <!-- PIN Display -->
+        <div class="flex justify-center gap-4 mb-8">
+            <div v-for="i in 6" :key="i" :class="['w-4 h-4 rounded-full border-2 transition-all duration-200', state.pin.length >= i ? 'bg-blue-600 border-blue-600 scale-110 shadow-lg shadow-blue-200' : 'border-slate-300 dark:border-slate-600']"></div>
+        </div>
+
+        <!-- Keypad Grid -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <button v-for="n in ['1','2','3','4','5','6','7','8','9']" :key="n" @click="handlePinInput(n)" class="h-16 rounded-2xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-2xl font-bold text-slate-800 dark:text-white transition-all active:scale-95 border border-slate-100 dark:border-slate-600">{% verbatim %}{{ n }}{% endverbatim %}</button>
+            <button @click="clearPin" class="h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center transition-all border border-red-100 dark:border-red-900/30">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <button @click="handlePinInput('0')" class="h-16 rounded-2xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-2xl font-bold text-slate-800 dark:text-white transition-all border border-slate-100 dark:border-slate-600">0</button>
+            <button @click="deletePin" class="h-16 rounded-2xl bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all border border-slate-100 dark:border-slate-600">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"/></svg>
+            </button>
+        </div>
+
+        <div class="text-center text-red-500 font-medium h-6 mb-4 text-sm">{% verbatim %}{{ state.pinError }}{% endverbatim %}</div>
+        
+        <div class="flex gap-3">
+             <button @click="closeModal" class="flex-1 py-4 rounded-xl border border-slate-300 font-bold text-slate-600 hover:bg-slate-50 transition-all">Cancel</button>
+             <button @click="validatePin" class="flex-1 py-4 rounded-xl bg-blue-600 font-bold text-white hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Login</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 20px;
+    }
+    
+    .payment-btn.active {
+        background-color: #eff6ff; /* blue-50 */
+        border-color: #3b82f6; /* blue-500 */
+        color: #2563eb; /* blue-600 */
+    }
+    .payment-btn:not(.active) {
+        border-color: #e2e8f0; /* slate-200 */
+        color: #64748b; /* slate-500 */
+    }
+    .payment-btn:not(.active):hover {
+        border-color: #cbd5e1; /* slate-300 */
+        background-color: #f8fafc; /* slate-50 */
+    }
+</style>
+
+<script nonce="{{ request.csp_nonce }}" src="{% static 'js/hardware-bridge.js' %}"></script>
+<script nonce="{{ request.csp_nonce }}" src="https://js.stripe.com/v3/"></script>
+<script nonce="{{ request.csp_nonce }}" src="https://js.paystack.co/v1/inline.js"></script>
+<script type="module" nonce="{{ request.csp_nonce }}">
+    import { initVuePOS } from "{% static 'js/pos/vue_app.js' %}?v={% now 'U' %}";
+
+    const config = {
+        branchId: "{{ branch.id }}",
+        apiKey: "{{ pos_api_key }}",
+        posDataUrl: "{% url 'pos_data_api' branch.id %}",
+        products: {{ products_json|safe|default:'[]' }},
+        customers: {{ customers_json|safe|default:'[]' }},
+        categories: {{ categories_json|safe|default:'[]' }},
+        paymentConfig: {{ payment_config|safe }},
+        currency: "{{ branch.currency_symbol|default:'$' }}",
+        currentUser: {
+            name: "{{ request.user.get_full_name|default:request.user.username }}",
+            username: "{{ request.user.username }}"
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const app = initVuePOS(config);
+        
+        // Store API key in IndexedDB for service worker access
+        if (window.posDBReady && config.apiKey) {
+            try {
+                await window.posDBReady;
+                await window.posDB.put('settings', { 
+                    key: 'api_key', 
+                    value: config.apiKey 
+                });
+            } catch (error) {
+                console.error('[Vue POS] Failed to store API key:', error);
+            }
+        }
+
+        // ========================================
+        // CRITICAL: Navigation Prevention for POS
+        // ========================================
+        
+        console.log('[POS] Installing navigation prevention guards...');
+
+        // 1. Prevent form submissions from causing page navigation
+        document.addEventListener('submit', (e) => {
+            // Only prevent if we're in POS context
+            if (window.location.pathname.includes('/pos/')) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.warn('[POS] ⚠️ Form submission prevented to avoid navigation');
+                console.trace('[POS] Form submission trace');
+            }
+        }, true);
+
+        // 2. Prevent accidental clicks on links from navigating away
+        document.addEventListener('click', (e) => {
+            const anchor = e.target.closest('a');
+            if (anchor && anchor.href) {
+                // Allow only specific safe links (e.g., back to dashboard)
+                const allowedPaths = ['/dashboard/', '/logout/'];
+                const isAllowed = allowedPaths.some(path => anchor.href.includes(path)) || 
+                                 anchor.hasAttribute('data-allow-navigation');
+                
+                if (!isAllowed && !anchor.target) {
+                    e.preventDefault();
+                    console.warn('[POS] ⚠️ Navigation prevented:', anchor.href);
+                }
+            }
+        }, true);
+
+        // 3. Monitor History API for unexpected navigation
+        const originalPushState = history.pushState;
+        const originalReplaceState = history.replaceState;
+
+        history.pushState = function(...args) {
+            console.warn('[POS] 📍 history.pushState called:', args[2]);
+            console.trace('[POS] pushState trace');
+            return originalPushState.apply(this, args);
+        };
+
+        history.replaceState = function(...args) {
+            console.warn('[POS] 📍 history.replaceState called:', args[2]);
+            console.trace('[POS] replaceState trace');
+            return originalReplaceState.apply(this, args);
+        };
+
+        window.addEventListener('popstate', (e) => {
+            console.warn('[POS] 📍 popstate event:', e.state);
+            console.trace('[POS] popstate trace');
+        });
+
+        // 4. Monitor for unexpected page unload
+        window.addEventListener('beforeunload', (e) => {
+            console.warn('[POS] 🚪 beforeunload triggered');
+            console.trace('[POS] beforeunload trace');
+        });
+
+        console.log('[POS] ✓ Navigation prevention guards installed');
+    });
+</script>
+    <!-- Hidden Print Frame (Off-screen but technically visible to allowed printing) -->
+    <iframe id="receipt-print-frame" name="receipt-print-frame" style="position:absolute; top:-9999px; left:-9999px; width:1px; height:1px; border:0;"></iframe>
+{% endblock %}
+```

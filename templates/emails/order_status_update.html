@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Order Status Update - {{ order.order_number }}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6; line-height: 1.6;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f4f6;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); padding: 40px 30px; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
+                                Order Status Update
+                            </h1>
+                            <p style="margin: 8px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">
+                                {{ order.branch.name }}
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <p style="margin: 0 0 24px 0; color: #374151; font-size: 16px; line-height: 1.6;">
+                                Hello <strong>{{ order.customer.name }}</strong>,
+                            </p>
+                            
+                            <p style="margin: 0 0 24px 0; color: #374151; font-size: 16px; line-height: 1.6;">
+                                We wanted to let you know that your order status has been updated.
+                            </p>
+                            
+                            <div style="background-color: #F3F4F6; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                                <p style="margin: 0 0 16px 0; color: #1F2937; font-size: 18px; font-weight: 600;">
+                                    {{ status_message }}
+                                </p>
+                                
+                                <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #6B7280; font-size: 14px; font-weight: 500;">
+                                            Order Number:
+                                        </td>
+                                        <td style="padding: 8px 0; color: #1F2937; font-size: 14px; font-weight: 700; text-align: right; font-family: 'Courier New', monospace;">
+                                            {{ order.order_number }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #6B7280; font-size: 14px; font-weight: 500;">
+                                            Current Status:
+                                        </td>
+                                        <td style="padding: 8px 0; text-align: right;">
+                                            <span style="display: inline-block; background-color: {{ status_color }}; color: #ffffff; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                {{ order.get_status_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% if order.total_amount %}
+                                    <tr>
+                                        <td style="padding: 8px 0; color: #6B7280; font-size: 14px; font-weight: 500;">
+                                            Order Total:
+                                        </td>
+                                        <td style="padding: 8px 0; color: #1F2937; font-size: 16px; font-weight: 700; text-align: right;">
+                                            ${{ order.total_amount }}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                            </div>
+                            
+                            {% if order.status == 'ready' %}
+                            <div style="background-color: #ECFDF5; border-left: 4px solid #10B981; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+                                <p style="margin: 0; color: #065F46; font-size: 14px; font-weight: 600; line-height: 1.5;">
+                                    Great news! Your order is ready for pickup. Please visit our store at your earliest convenience to collect your items.
+                                </p>
+                            </div>
+                            {% elif order.status == 'processing' %}
+                            <p style="margin: 0 0 16px 0; color: #6B7280; font-size: 14px; line-height: 1.6;">
+                                Our team is working on preparing your order. We will notify you once it is ready for pickup or delivery.
+                            </p>
+                            {% elif order.status == 'completed' %}
+                            <p style="margin: 0 0 16px 0; color: #6B7280; font-size: 14px; line-height: 1.6;">
+                                Thank you for your purchase! We hope you enjoy your order. We appreciate your business and look forward to serving you again.
+                            </p>
+                            {% endif %}
+                            
+                            <p style="margin: 24px 0 0 0; color: #6B7280; font-size: 14px; line-height: 1.6;">
+                                If you have any questions or concerns about your order, please feel free to contact us. Our team is here to help.
+                            </p>
+                            
+                            <p style="margin: 16px 0 0 0; color: #6B7280; font-size: 14px; line-height: 1.6;">
+                                Best regards,<br>
+                                <strong>{{ order.branch.tenant.name }} Team</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #F9FAFB; padding: 30px; text-align: center; border-top: 1px solid #E5E7EB;">
+                            <p style="margin: 0 0 8px 0; color: #6B7280; font-size: 13px; line-height: 1.5;">
+                                This is an automated notification from {{ order.branch.tenant.name }}
+                            </p>
+                            <p style="margin: 0 0 8px 0; color: #6B7280; font-size: 13px;">
+                                {{ order.branch.name }}
+                            </p>
+                            <p style="margin: 0; color: #9CA3AF; font-size: 12px; line-height: 1.5;">
+                                You received this email because you placed an order with us.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

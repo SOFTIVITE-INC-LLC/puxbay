@@ -1,0 +1,340 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Profit & Loss Statement - {{ request.user.profile.tenant.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Profit & Loss Statement</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                {% if start_date and end_date %}
+                    {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}
+                {% else %}
+                    All Time
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="flex gap-2">
+            <button onclick="window.print()" class="px-4 py-2 bg-slate-600 text-white rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                </svg>
+                Print
+            </button>
+            
+            <!-- Date Range Selector -->
+            <form method="get" class="flex gap-2" id="date-filter-form">
+                <select name="range" id="date-range-select" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white">
+                    <option value="today" {% if date_range == 'today' %}selected{% endif %}>Today</option>
+                    <option value="week" {% if date_range == 'week' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="month" {% if date_range == 'month' %}selected{% endif %}>Last 30 Days</option>
+                    <option value="year" {% if date_range == 'year' %}selected{% endif %}>Last Year</option>
+                    <option value="all" {% if date_range == 'all' %}selected{% endif %}>All Time</option>
+                    <option value="custom" {% if date_range == 'custom' %}selected{% endif %}>Custom Range</option>
+                </select>
+                
+                <div id="custom-date-inputs" class="flex gap-2" style="display: none;">
+                    <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm dark:bg-slate-700 dark:text-white">
+                    <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm dark:bg-slate-700 dark:text-white">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-blue-100 text-sm font-medium uppercase">Gross Revenue</p>
+            <h3 class="text-3xl font-bold mt-2">${{ gross_revenue|floatformat:2 }}</h3>
+            <p class="text-blue-100 text-xs mt-1">{{ revenue_data.order_count }} orders</p>
+        </div>
+        
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-emerald-100 text-sm font-medium uppercase">Gross Profit</p>
+            <h3 class="text-3xl font-bold mt-2">${{ gross_profit|floatformat:2 }}</h3>
+            <p class="text-emerald-100 text-xs mt-1">{{ gross_margin|floatformat:1 }}% margin</p>
+        </div>
+        
+        <div class="bg-gradient-to-br from-red-500 to-pink-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-red-100 text-sm font-medium uppercase">Total Expenses</p>
+            <h3 class="text-3xl font-bold mt-2">${{ expense_data.total_expenses|floatformat:2 }}</h3>
+        </div>
+        
+        <div class="bg-gradient-to-br from-{% if net_profit >= 0 %}purple-500 to-indigo-600{% else %}orange-500 to-red-600{% endif %} rounded-xl shadow-lg p-6 text-white">
+            <p class="{% if net_profit >= 0 %}text-purple-100{% else %}text-orange-100{% endif %} text-sm font-medium uppercase">Net Profit</p>
+            <h3 class="text-3xl font-bold mt-2">${{ net_profit|floatformat:2 }}</h3>
+            <p class="{% if net_profit >= 0 %}text-purple-100{% else %}text-orange-100{% endif %} text-xs mt-1">{{ net_margin|floatformat:1 }}% margin</p>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="border-b border-slate-200 dark:border-slate-700">
+            <nav class="flex space-x-8 px-6" aria-label="Tabs" id="report-tabs">
+                <button type="button" data-tab="summary" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-blue-500 text-blue-600 dark:text-blue-400">
+                    Summary
+                </button>
+                <button type="button" data-tab="revenue" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300">
+                    Revenue Details
+                </button>
+                <button type="button" data-tab="expenses" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300">
+                    Expense Breakdown
+                </button>
+                <button type="button" data-tab="trends" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300">
+                    Trends
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Summary Tab -->
+    <div id="tab-content-summary" class="space-y-6 tab-content">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Financial Summary</h3>
+            
+            <div class="space-y-4">
+                <!-- Revenue Section -->
+                <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Total Revenue</span>
+                        <span class="text-lg font-bold text-slate-900 dark:text-white">${{ revenue_data.total_revenue|floatformat:2 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm text-slate-600 dark:text-slate-400">
+                        <span class="pl-4">Less: Tax Collected</span>
+                        <span>-${{ revenue_data.total_tax|floatformat:2 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                        <span class="font-medium text-slate-700 dark:text-slate-300">Gross Revenue</span>
+                        <span class="font-bold text-slate-900 dark:text-white">${{ gross_revenue|floatformat:2 }}</span>
+                    </div>
+                </div>
+                
+                <!-- COGS Section -->
+                <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Less: Cost of Goods Sold</span>
+                        <span class="text-lg font-bold text-red-600 dark:text-red-400">-${{ cogs|floatformat:2 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                        <span class="font-medium text-emerald-700 dark:text-emerald-400">Gross Profit</span>
+                        <span class="font-bold text-emerald-600 dark:text-emerald-400">${{ gross_profit|floatformat:2 }}</span>
+                    </div>
+                </div>
+                
+                <!-- Operating Expenses -->
+                <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Less: Operating Expenses</span>
+                        <span class="text-lg font-bold text-red-600 dark:text-red-400">-${{ expense_data.total_expenses|floatformat:2 }}</span>
+                    </div>
+                </div>
+                
+                <!-- Net Profit -->
+                <div class="pt-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-bold text-slate-900 dark:text-white">Net Profit</span>
+                        <span class="text-2xl font-bold {% if net_profit >= 0 %}text-emerald-600 dark:text-emerald-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                            ${{ net_profit|floatformat:2 }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center mt-1 text-sm text-slate-600 dark:text-slate-400">
+                        <span>Net Profit Margin</span>
+                        <span class="font-medium">{{ net_margin|floatformat:1 }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Details Tab -->
+    <div id="tab-content-revenue" class="space-y-6 tab-content hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Revenue by Branch</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Branch</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Orders</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Revenue</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">% of Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        {% for branch in branch_performance %}
+                        <tr>
+                            <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{{ branch.branch__name }}</td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-600 dark:text-slate-300">{{ branch.orders }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-blue-600 dark:text-blue-400">${{ branch.revenue|floatformat:2 }}</td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-600 dark:text-slate-300">
+                                {% widthratio branch.revenue revenue_data.total_revenue 100 %}%
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="px-4 py-4 text-center text-sm text-slate-500 dark:text-slate-400">No data</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Breakdown Tab -->
+    <div id="tab-content-expenses" class="space-y-6 tab-content hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Expenses by Category</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Category</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Type</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Amount</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">% of Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        {% for expense in expense_breakdown %}
+                        <tr>
+                            <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{{ expense.category__name }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium
+                                    {% if expense.category__type == 'fixed' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200{% else %}bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200{% endif %}">
+                                    {{ expense.category__type|title }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-red-600 dark:text-red-400">${{ expense.amount|floatformat:2 }}</td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-600 dark:text-slate-300">
+                                {% widthratio expense.amount expense_data.total_expenses 100 %}%
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="px-4 py-4 text-center text-sm text-slate-500 dark:text-slate-400">No expenses recorded</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trends Tab -->
+    <div id="tab-content-trends" class="space-y-6 tab-content hidden">
+        {% if revenue_trend %}
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Revenue Trend</h3>
+            <canvas id="revenueTrendChart" height="80"></canvas>
+        </div>
+        {% else %}
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+            <p class="text-slate-500 dark:text-slate-400">No trend data available. Select a date range to view trends.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Tabs
+        const tabs = document.querySelectorAll('.tab-link');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.tab;
+                
+                // Update Tabs
+                tabs.forEach(t => {
+                   if (t.dataset.tab === target) {
+                       t.className = 'tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-blue-500 text-blue-600 dark:text-blue-400';
+                   } else {
+                       t.className = 'tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300';
+                   }
+                });
+
+                // Update Contents
+                contents.forEach(c => {
+                    if (c.id === `tab-content-${target}`) {
+                        c.classList.remove('hidden');
+                    } else {
+                        c.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // Date Range
+        const form = document.getElementById('date-filter-form');
+        const select = document.getElementById('date-range-select');
+        const customDiv = document.getElementById('custom-date-inputs');
+
+        if (select && customDiv && form) {
+            function updateVisibility() {
+                if (select.value === 'custom') {
+                    customDiv.style.display = 'flex';
+                } else {
+                    customDiv.style.display = 'none';
+                }
+            }
+            
+            // Initial state
+            updateVisibility();
+
+            select.addEventListener('change', () => {
+                updateVisibility();
+                if (select.value !== 'custom') {
+                    form.submit();
+                }
+            });
+        }
+    });
+
+{% if revenue_trend %}
+const revenueTrendCtx = document.getElementById('revenueTrendChart').getContext('2d');
+new Chart(revenueTrendCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for day in revenue_trend %}'{{ day.day|date:"M d" }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Revenue',
+            data: [{% for day in revenue_trend %}{{ day.revenue }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { 
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return '$' + context.parsed.y.toFixed(2);
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { 
+                    callback: function(value) { 
+                        return '$' + value.toFixed(2); 
+                    } 
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

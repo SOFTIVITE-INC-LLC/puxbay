@@ -1,0 +1,43 @@
+Creating test database for alias 'default'...
+
+..F.
+======================================================================
+FAIL: test_sync_order_composite (branches.tests.test_sync.SyncLifecycleTests.test_sync_order_composite)
+Test order synchronization for composite products (bundles)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "E:\Dev\development\softivite\sass-pos\possystem\branches\tests\test_sync.py", line 93, in test_sync_order_composite
+    self.assertEqual(result['status'], 'success', result.get('message'))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'error' != 'success'
+- error
++ success
+ : new row for relation "main_product" violates check constraint "main_product_stock_quantity_check"
+DETAIL:  Failing row contains (72af99a3-4690-4c6e-980c-f2bf508076e6, Bundle, SKU-B, 150.00, -1, null, null, null, null, 0.00, 10, 0.00, 1, f, f, 10, t, f, 2025-12-22 03:13:41.074374+00, 2025-12-22 03:13:41.142281+00, 1a9a972e-069b-41a5-b8fd-53f3945aa82c, faa72e08-b2a9-4626-ba89-384ea9493fcf, a1194dd4-e8b7-4b7b-8b31-8328e6674728, null, null, null, null, null, f, , {}).
+
+
+----------------------------------------------------------------------
+Ran 4 tests in 93.108s
+
+FAILED (failures=1)
+Destroying test database for alias 'default'...
+
+Found 4 test(s).
+System check identified no issues (0 silenced).
+--- SETUP START ---
+Tenant: test
+Branch created
+Profile created
+--- SETUP START ---
+Tenant: test
+Branch created
+Profile created
+--- SETUP START ---
+Tenant: test
+Branch created
+Profile created
+DEBUG: sync_order error (composite): {'status': 'error', 'message': 'new row for relation "main_product" violates check constraint "main_product_stock_quantity_check"\nDETAIL:  Failing row contains (72af99a3-4690-4c6e-980c-f2bf508076e6, Bundle, SKU-B, 150.00, -1, null, null, null, null, 0.00, 10, 0.00, 1, f, f, 10, t, f, 2025-12-22 03:13:41.074374+00, 2025-12-22 03:13:41.142281+00, 1a9a972e-069b-41a5-b8fd-53f3945aa82c, faa72e08-b2a9-4626-ba89-384ea9493fcf, a1194dd4-e8b7-4b7b-8b31-8328e6674728, null, null, null, null, null, f, , {}).\n'}
+--- SETUP START ---
+Tenant: test
+Branch created
+Profile created

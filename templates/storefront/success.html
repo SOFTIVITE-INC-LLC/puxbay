@@ -1,0 +1,124 @@
+{% extends 'storefront/base.html' %}
+{% load storefront_extras %}
+
+{% block title %}Order Successful{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4">
+    <!-- Success Header -->
+    <div class="text-center mb-16 relative">
+        <div class="absolute inset-0 -top-20 pointer-events-none">
+             <!-- Interactive Confetti Effect (Visual) -->
+             <div class="flex justify-center flex-wrap gap-4 opacity-20">
+                 {% for i in "123456789" %}
+                    <span class="material-icons-round text-primary animate-bounce" style="animation-delay: {{ forloop.counter0 }}00ms">celebration</span>
+                 {% endfor %}
+             </div>
+        </div>
+        
+        <div class="w-24 h-24 bg-emerald-500 text-white rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-emerald-200 dark:shadow-none rotate-12">
+            <span class="material-icons-round text-5xl">check_circle</span>
+        </div>
+        <h1 class="text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-4">You're all set!</h1>
+        <p class="text-xl text-gray-500 dark:text-gray-400 font-medium">Your order <span class="text-primary font-bold">#{{ order.order_number }}</span> has been placed successfully.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+        <!-- Next Steps Card -->
+        <div class="glass-card rounded-[2.5rem] p-10 shadow-xl shadow-gray-200/50 dark:shadow-none border border-white dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-8 tracking-tight">What's Next?</h2>
+            
+            <div class="space-y-10">
+                <div class="flex gap-5">
+                    <div class="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                        <span class="material-icons-round">schedule</span>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-gray-900 dark:text-white mb-1">We'll prepare it</h4>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Our staff is currently preparing your items for collection. It usually takes 30-60 minutes.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-5">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center flex-shrink-0">
+                        <span class="material-icons-round">location_on</span>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-gray-900 dark:text-white mb-1">Pick up in store</h4>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Head to <span class="font-bold text-gray-800 dark:text-gray-300">{{ branch.name }}</span> and provide your order number to our checkout staff.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-5">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                        <span class="material-icons-round">mail</span>
+                    </div>
+                    <div>
+                        <h4 class="font-black text-gray-900 dark:text-white mb-1">Confirmation sent</h4>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">A detailed summary has been sent to your email with instructions. Keep it handy!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12">
+                 <a href="{% url 'store_home' tenant.subdomain branch.id %}" class="btn-primary w-full text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2">
+                    Back to Store
+                    <span class="material-icons-round">shopping_bag</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Order Summary Card -->
+        <div class="space-y-8">
+            <div class="glass-card rounded-[2.5rem] p-8 shadow-sm dark:shadow-none border border-gray-100/50 dark:border-gray-800">
+                <h3 class="text-lg font-black text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <span class="material-icons-round text-primary">receipt_long</span>
+                    Order Summary
+                </h3>
+                <div class="space-y-4 mb-8">
+                    {% for item in order.items.all %}
+                    <div class="flex justify-between items-center py-3 border-b border-gray-50 dark:border-gray-800 last:border-0">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs font-black text-primary bg-primary/5 dark:bg-primary/10 px-2 py-1 rounded-md">{{ item.quantity }}x</span>
+                            <p class="text-sm font-bold text-gray-800 dark:text-gray-300">{{ item.product.name }}</p>
+                        </div>
+                        <span class="text-sm font-bold text-gray-900 dark:text-white tabular-nums">${{ item.price|multiply:item.quantity|floatformat:2 }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="pt-4 space-y-3">
+                    <div class="flex justify-between text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
+                        <span>Total Paid</span>
+                        <span class="text-2xl font-black text-gray-900 dark:text-white">${{ order.total_amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                         <span class="text-[10px] font-black text-emerald-500 dark:text-emerald-400 uppercase tracking-widest bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded-md">
+                             {{ order.get_payment_method_display }}
+                         </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help Support -->
+            <div class="p-8 bg-gray-900 rounded-[2.5rem] text-white">
+                 <h4 class="text-sm font-bold mb-3 flex items-center gap-2">
+                     <span class="material-icons-round text-primary">help_outline</span>
+                     Need Help?
+                 </h4>
+                 <p class="text-xs text-white/50 leading-relaxed mb-6">If you have any questions about your order or need to modify it, please contact our support team or call the branch directly.</p>
+                 <div class="grid grid-cols-2 gap-4">
+                     <a href="tel:{{ branch.phone }}" class="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all text-xs font-bold">
+                         <span class="material-icons-round text-sm">phone</span>
+                         Call Branch
+                     </a>
+                     <a href="mailto:support@softivite.com" class="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition-all text-xs font-bold">
+                         <span class="material-icons-round text-sm">support_agent</span>
+                         Support
+                     </a>
+                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

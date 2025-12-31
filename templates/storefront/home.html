@@ -1,0 +1,290 @@
+{% extends 'storefront/base.html' %}
+{% load storefront_extras %}
+{% load cache %}
+
+{% block title %}Explore Products{% endblock %}
+
+{% block content %}
+<!-- Premium Hero Section -->
+<section class="relative overflow-hidden rounded-[2.5rem] bg-gray-950 shadow-2xl mb-16 group">
+    <!-- Animated Gradients -->
+    <div class="absolute inset-0 bg-gradient-to-br from-primary/80 via-purple-600 to-pink-500 opacity-90 transition-all duration-700 group-hover:scale-110"></div>
+    <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
+    <div class="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl"></div>
+    
+    <div class="relative z-10 px-8 py-20 sm:px-16 text-center lg:text-left lg:flex lg:items-center lg:justify-between">
+        <div class="lg:w-3/5">
+            <span class="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold uppercase tracking-widest mb-6">
+                <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"></span>
+                {{ branch.name }} Online
+            </span>
+            <h1 class="text-4xl sm:text-7xl font-extrabold text-white tracking-tight mb-8 leading-[1.1]">
+                Shop Smarter, <br>
+                <span class="text-white/70">Pick Up In Store.</span>
+            </h1>
+            <p class="text-lg sm:text-xl text-indigo-100 max-w-2xl lg:mx-0 mx-auto mb-10 leading-relaxed font-light">
+                {{ store_settings.welcome_message|default:"Experience the future of local shopping. Browse our curated collection and get your items ready for collection in minutes." }}
+            </p>
+        </div>
+
+        
+        <!-- Decorative Element -->
+        <div class="hidden lg:block lg:w-1/3 relative">
+            <div class="w-64 h-64 mx-auto bg-white/10 backdrop-blur-xl border border-white/20 rounded-[3rem] rotate-12 flex items-center justify-center shadow-2xl">
+                 <span class="material-icons-round text-white text-[8rem] opacity-50 -rotate-12 animate-bounce">rocket_launch</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filtering & Content Section -->
+<div class="flex flex-col lg:flex-row gap-12 mt-12">
+    <!-- Sidebar Filters -->
+    <aside class="w-full lg:w-72 shrink-0 space-y-8 order-2 lg:order-1">
+        
+        <!-- Current Search Context -->
+        {% if search_query %}
+        <div class="glass-card rounded-[2rem] p-6 border-primary/20 bg-primary/5">
+            <h3 class="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Search Query</h3>
+            <p class="text-sm text-gray-900 dark:text-white font-bold mb-4">"{{ search_query }}"</p>
+            <a href="?" class="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-primary transition-colors flex items-center gap-1">
+                <span class="material-icons-round text-xs">close</span> Clear Search
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Price Range Filter -->
+        <div class="glass-card rounded-[2rem] p-8">
+            <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-8 text-gray-900 dark:text-white flex items-center gap-2">
+                <span class="material-icons-round text-base text-primary">payments</span>
+                Price Range
+            </h3>
+            <form action="." method="GET" class="space-y-6">
+                {% for key, value in request.GET.items %}
+                    {% if key != 'min_price' and key != 'max_price' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                {% endfor %}
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Min</label>
+                        <input type="number" name="min_price" value="{{ current_min|default:'' }}" 
+                               class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold p-3 focus:ring-4 focus:ring-primary/10 transition-all font-mono text-gray-900 dark:text-white" placeholder="0">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Max</label>
+                        <input type="number" name="max_price" value="{{ current_max|default:'' }}" 
+                               class="w-full bg-gray-50 dark:bg-gray-800 border-none rounded-xl text-sm font-bold p-3 focus:ring-4 focus:ring-primary/10 transition-all font-mono text-gray-900 dark:text-white" placeholder="9k">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-gray-900 dark:bg-primary text-white rounded-xl py-3 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-primary transition-all shadow-xl shadow-gray-200 dark:shadow-none">
+                    Update Price
+                </button>
+            </form>
+        </div>
+
+        <!-- Facets (Brand, Color, Size) -->
+        {% cache 3600 storefront_facets tenant.id branch.id using="storefront" %}
+        <form action="." method="GET" class="space-y-8" id="facet-form">
+            <!-- Persist other filters -->
+            {% for key, value in request.GET.items %}
+                {% if key != 'brand' and key != 'color' and key != 'size' %}
+                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endif %}
+            {% endfor %}
+
+            <!-- Brand Facet -->
+            {% if available_brands %}
+            <div class="glass-card rounded-[2rem] p-8">
+                <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-6 text-gray-900 dark:text-white">Brand</h3>
+                <div class="space-y-4 max-h-56 overflow-y-auto pr-2 scrollbar-hide">
+                    {% for brand in available_brands %}
+                    <label class="flex items-center gap-3 group cursor-pointer">
+                        <input type="checkbox" name="brand" value="{{ brand }}" 
+                               {% if brand in selected_brands %}checked{% endif %}
+                               onchange="this.form.submit()"
+                               class="w-5 h-5 rounded-lg border-gray-200 dark:border-gray-700 text-primary focus:ring-primary/20 transition-all cursor-pointer bg-white dark:bg-gray-800">
+                        <span class="text-sm font-bold text-gray-500 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{{ brand }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Color Facet -->
+            {% if available_colors %}
+            <div class="glass-card rounded-[2rem] p-8">
+                <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-6 text-gray-900 dark:text-white">Color</h3>
+                <div class="flex flex-wrap gap-3">
+                    {% for color in available_colors %}
+                    <label class="relative group cursor-pointer">
+                        <input type="checkbox" name="color" value="{{ color }}" 
+                               {% if color in selected_colors %}checked{% endif %}
+                               onchange="this.form.submit()"
+                               class="peer sr-only">
+                        <span class="block w-8 h-8 rounded-full border-2 border-transparent peer-checked:border-primary peer-checked:scale-110 transition-all shadow-sm group-hover:scale-110" 
+                              style="background-color: {{ color|lower }};"
+                              title="{{ color }}"></span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Size Facet -->
+            {% if available_sizes %}
+            <div class="glass-card rounded-[2rem] p-8">
+                <h3 class="text-xs font-black uppercase tracking-[0.2em] mb-6 text-gray-900 dark:text-white">Size</h3>
+                <div class="grid grid-cols-3 gap-2">
+                    {% for size in available_sizes %}
+                    <label class="cursor-pointer">
+                        <input type="checkbox" name="size" value="{{ size }}" 
+                               {% if size in selected_sizes %}checked{% endif %}
+                               onchange="this.form.submit()"
+                               class="peer sr-only">
+                        <span class="flex items-center justify-center py-2 rounded-xl bg-gray-50 dark:bg-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 peer-checked:bg-primary peer-checked:text-white transition-all hover:bg-gray-100 dark:hover:bg-gray-700">
+                            {{ size }}
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </form>
+        {% endcache %}
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-grow order-1 lg:order-2">
+        <!-- Collection Title & Quick Sort -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-12">
+            <div>
+                <h2 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+                    {% if request.GET.category %}
+                        {% for cat in categories %}{% if cat.id|add:"0" == request.GET.category|add:"0" %}{{ cat.name }}{% endif %}{% endfor %}
+                    {% else %}
+                        Our Collection
+                    {% endif %}
+                </h2>
+                <p class="text-gray-400 mt-2 font-medium">Discover <span class="text-gray-900 dark:text-white font-bold">{{ products.count }}</span> premium items.</p>
+            </div>
+
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest hidden sm:block">Sort:</span>
+                <select onchange="window.location.href = '?sort=' + this.value" 
+                        class="bg-gray-50 dark:bg-gray-800 border-none rounded-2xl text-xs font-black uppercase tracking-widest text-gray-700 dark:text-gray-300 px-6 py-4 focus:ring-4 focus:ring-primary/10 cursor-pointer shadow-sm w-full sm:w-48">
+                    <option value="latest" {% if current_sort == 'latest' %}selected{% endif %}>Latest</option>
+                    <option value="price_low" {% if current_sort == 'price_low' %}selected{% endif %}>Price: Low</option>
+                    <option value="price_high" {% if current_sort == 'price_high' %}selected{% endif %}>Price: High</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        {% cache 600 storefront_product_grid tenant.id branch.id request.GET.urlencode using="storefront" %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
+            {% for product in products %}
+            <div class="group relative flex flex-col bg-white dark:bg-gray-900 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none hover:shadow-[0_20px_50px_rgba(59,130,246,0.1)] transition-all duration-500 border border-gray-100/50 dark:border-gray-800 overflow-hidden transform hover:-translate-y-2">
+                <!-- Badge -->
+                <div class="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                    {% if product.stock_quantity <= 0 %}
+                        <span class="bg-red-500 text-white text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">Out of Stock</span>
+                    {% elif product.stock_quantity < 5 %}
+                        <span class="bg-amber-500 text-white text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg animate-pulse">Low Stock</span>
+                    {% endif %}
+                </div>
+
+                <!-- Image Area -->
+                <a href="{% url 'product_detail' tenant.subdomain branch.id product.id %}" class="aspect-[4/5] relative flex items-center justify-center p-12 overflow-hidden bg-gray-50 dark:bg-gray-800/50">
+                    <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-white dark:from-gray-800 dark:to-gray-900 opacity-50 group-hover:scale-110 transition-transform duration-700"></div>
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="relative z-10 w-full h-full object-contain drop-shadow-2xl group-hover:scale-110 transition-transform duration-700">
+                    {% elif product.image_url %}
+                        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="relative z-10 w-full h-full object-contain drop-shadow-2xl group-hover:scale-110 transition-transform duration-700">
+                    {% else %}
+                        <div class="relative z-10 w-full h-full flex items-center justify-center">
+                            <div class="text-center">
+                                <span class="material-icons-round text-8xl text-gray-300 dark:text-gray-600 mb-4">inventory_2</span>
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">No Image</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-primary/20 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">View Details</span>
+                    </div>
+                </a>
+
+                <!-- Content Area -->
+                <div class="p-8 flex flex-col flex-grow">
+                    <div class="flex-grow">
+                        <a href="{% url 'product_detail' tenant.subdomain branch.id product.id %}" class="block">
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white leading-tight group-hover:text-primary transition-colors mb-2">{{ product.name }}</h3>
+                        </a>
+                        <p class="text-gray-400 text-xs line-clamp-2 leading-relaxed mb-4">{{ product.description|default:"Discover excellence in every detail." }}</p>
+                    </div>
+                    <div class="mt-auto flex items-center justify-between pt-6 border-t border-gray-50/50 dark:border-gray-800/50">
+                        <div class="flex flex-col">
+                            <span class="text-[9px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1">Price</span>
+                            <span class="text-xl font-bold text-gray-900 dark:text-white tabular-nums">${{ product.price }}</span>
+                        </div>
+                        {% if product.stock_quantity > 0 %}
+                        <form action="{% url 'add_to_cart' tenant.subdomain branch.id product.id %}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="w-12 h-12 bg-gray-900 dark:bg-primary text-white rounded-xl flex items-center justify-center hover:bg-primary hover:rotate-6 active:scale-90 transition-all duration-300 shadow-xl shadow-gray-200 dark:shadow-none group/btn">
+                                <span class="material-icons-round text-xl group-hover/btn:animate-bounce">add_shopping_cart</span>
+                            </button>
+                        </form>
+                        {% else %}
+                        <button disabled class="w-12 h-12 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 rounded-xl flex items-center justify-center cursor-not-allowed">
+                            <span class="material-icons-round text-xl">block</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full py-40 glass-card rounded-[3rem] text-center">
+                <div class="w-32 h-32 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse text-gray-300 dark:text-gray-700">
+                    <span class="material-icons-round text-6xl">inventory_2</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">No products found.</h3>
+                <p class="text-gray-500 max-w-md mx-auto text-sm leading-relaxed">Try adjusting your filters or search query to find what you're looking for.</p>
+                <a href="?" class="mt-8 inline-flex items-center gap-2 bg-primary text-white px-8 py-4 rounded-2xl font-bold shadow-2xl hover:brightness-110 transition-all">
+                    Reset All Filters
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endcache %}
+    </div>
+</div>
+
+{% if recently_viewed %}
+<div class="mt-32">
+    <div class="flex items-center justify-between mb-12">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Recently Viewed</h2>
+            <p class="text-gray-400 mt-2">Pick up where you left off.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        {% for p in recently_viewed %}
+        <a href="{% url 'product_detail' tenant.subdomain branch.id p.id %}" class="group block">
+            <div class="aspect-square rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-6 flex items-center justify-center relative overflow-hidden transition-all duration-300 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5 dark:shadow-none">
+                {% if p.image %}
+                    <img src="{{ p.image.url }}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500">
+                {% else %}
+                    <span class="text-4xl font-black text-gray-200 dark:text-gray-700">{{ p.name|slice:":2"|upper }}</span>
+                {% endif %}
+            </div>
+            <h4 class="mt-4 text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">{{ p.name }}</h4>
+            <p class="text-xs font-black text-primary mt-1">${{ p.price }}</p>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

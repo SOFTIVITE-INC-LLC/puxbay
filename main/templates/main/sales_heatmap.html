@@ -1,0 +1,151 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Sales Heatmap - Puxbay{% endblock %}
+{% block page_title %}Sales Heatmap{% endblock %}
+
+{% block extra_css %}
+<style>
+    .heatmap-grid {
+        display: grid;
+        grid-template-columns: 120px repeat(24, 1fr);
+        gap: 2px;
+    }
+    .heatmap-cell {
+        aspect-ratio: 1/1;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    .heatmap-cell:hover {
+        transform: scale(1.1);
+        z-index: 10;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .intensity-0 { background-color: #f1f5f9; }
+    .intensity-1 { background-color: #dbeafe; } /* blue-100 */
+    .intensity-2 { background-color: #bfdbfe; } /* blue-200 */
+    .intensity-3 { background-color: #93c5fd; } /* blue-300 */
+    .intensity-4 { background-color: #60a5fa; } /* blue-400 */
+    .intensity-5 { background-color: #3b82f6; } /* blue-500 */
+    .intensity-6 { background-color: #2563eb; } /* blue-600 */
+    .intensity-7 { background-color: #1d4ed8; } /* blue-700 */
+    .intensity-8 { background-color: #1e40af; } /* blue-800 */
+    .intensity-9 { background-color: #1e3a8a; } /* blue-900 */
+    
+    html.dark .intensity-0 { background-color: #1e293b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header/Filter -->
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <h3 class="text-xl font-black text-slate-900 dark:text-white">Hourly Sales Density</h3>
+                <p class="text-sm text-slate-500">Visualizing peak business hours across all active branches.</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Intensity Legend:</div>
+                <div class="flex items-center gap-1">
+                    <div class="w-3 h-3 rounded bg-blue-50"></div>
+                    <div class="w-3 h-3 rounded bg-blue-200"></div>
+                    <div class="w-3 h-3 rounded bg-blue-400"></div>
+                    <div class="w-3 h-3 rounded bg-blue-600"></div>
+                    <div class="w-3 h-3 rounded bg-blue-800"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Heatmap Grid -->
+    <div class="bg-white rounded-3xl p-8 shadow-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700 overflow-x-auto">
+        <div class="min-w-[1000px]">
+            <!-- X-Axis Labels (Time) -->
+            <div class="heatmap-grid mb-4">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-end">Branch</div>
+                {% for h in "012345678901234567890123"|make_list %}
+                <div class="text-[9px] font-bold text-slate-500 text-center">
+                    {{ forloop.counter0 }}<span class="opacity-50">h</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Branch Rows -->
+            <div id="heatmap-container" class="space-y-4">
+                <!-- Dynamically populated by JS for better control -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Insights Card -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-indigo-600 rounded-3xl p-8 text-white">
+            <h4 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined">lightbulb</span>
+                Peak Hour Advice
+            </h4>
+            <p class="text-indigo-100 text-sm leading-relaxed" id="peak-advice">
+                Analyzing your data...
+            </p>
+        </div>
+        <div class="bg-slate-900 rounded-3xl p-8 text-white">
+             <h4 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined">groups</span>
+                Staffing Optimization
+            </h4>
+            <p class="text-slate-400 text-sm leading-relaxed">
+                Based on your heat density, consider increasing front-of-house staff 30 minutes before your darkest (peak) hours to handle incoming traffic effectively.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const rawData = {{ heatmap_data_json|safe }};
+        const branches = [...new Set(rawData.map(d => d.branch))];
+        const container = document.getElementById('heatmap-container');
+        
+        // Find max value for normalization
+        const maxValue = Math.max(...rawData.map(d => d.value), 1);
+        
+        branches.forEach(branchName => {
+            const row = document.createElement('div');
+            row.className = 'heatmap-grid items-center';
+            
+            // Branch Label
+            const label = document.createElement('div');
+            label.className = 'text-xs font-bold text-slate-700 dark:text-slate-300 truncate pr-2';
+            label.textContent = branchName;
+            row.appendChild(label);
+            
+            // Cells for 24 hours
+            for (let h = 0; h < 24; h++) {
+                const cell = document.createElement('div');
+                const dataPoint = rawData.find(d => d.branch === branchName && d.hour === h);
+                const val = dataPoint ? dataPoint.value : 0;
+                
+                // Calculate intensity 0-9
+                const intensity = Math.min(Math.floor((val / maxValue) * 10), 9);
+                
+                cell.className = `heatmap-cell intensity-${intensity}`;
+                cell.title = `${branchName} - ${h}:00: ${val} sales`;
+                
+                row.appendChild(cell);
+            }
+            
+            container.appendChild(row);
+        });
+        
+        // Simple Peak Hour Logic
+        if (rawData.length > 0) {
+            const peakPoint = rawData.reduce((prev, current) => (prev.value > current.value) ? prev : current);
+            document.getElementById('peak-advice').textContent = 
+                `Your absolute peak sales volume occurs at ${peakPoint.branch} around ${peakPoint.hour}:00. Ensure you have your top-performing team scheduled during this window.`;
+        } else {
+             document.getElementById('peak-advice').textContent = "Not enough data yet to identify peak hours.";
+        }
+    });
+</script>
+{% endblock %}

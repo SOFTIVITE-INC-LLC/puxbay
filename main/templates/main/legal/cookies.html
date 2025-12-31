@@ -1,0 +1,8 @@
+{% extends "main/legal/legal_base.html" %}
+
+{% block last_updated %}{{ document.last_updated|date:"F d, Y" }}{% endblock %}
+{% block h1 %}{{ document.title }}{% endblock %}
+
+{% block legal_content %}
+    {{ document.content|safe }}
+{% endblock %}

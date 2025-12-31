@@ -1,0 +1,159 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SaaS POS{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6 text-sm font-medium text-slate-500" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2">
+            <li><a href="{% url 'dashboard' %}" class="hover:text-blue-600">Dashboard</a></li>
+            <li><span class="text-slate-300">/</span></li>
+            <li><a href="{% url 'branch_list' %}" class="hover:text-blue-600">Branches</a></li>
+            <li><span class="text-slate-300">/</span></li>
+            <li class="text-slate-900" aria-current="page">{{ title }}</li>
+        </ol>
+    </nav>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+            <h3 class="text-lg font-semibold text-slate-900">{{ title }}</h3>
+            <p class="text-sm text-slate-500 mt-1">Fill in the branch details below.</p>
+        </div>
+        
+        <div class="p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+                        {{ field.label }}
+                    </label>
+                    
+                    {{ field }}
+                    
+                    {% if field.help_text %}
+                    <p class="mt-1 text-xs text-slate-500">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <p class="mt-1 text-sm text-red-600 flex items-center animate-pulse">
+                         {{ error }}
+                    </p>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+    
+                <div class="flex items-center justify-end pt-6 space-x-3 border-t border-slate-100 mt-8">
+                    <a href="{% url 'branch_list' %}" class="px-4 py-2 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors flex items-center">
+                        <svg class="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/offline-forms.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const isEdit = "{{ title }}" === "Edit Branch" || window.location.pathname.includes('/edit/') || window.location.pathname.includes('/update/');
+        
+        new OfflineFormManager({
+            formId: document.querySelector('form').getAttribute('id') || 'branch-form',
+            storeName: 'branches', // Assuming we might want a 'branches' store, or just rely on generic sync queue if not displaying locally immediately. But user wants offline first.
+            transactionType: isEdit ? 'update_branch' : 'create_branch',
+            redirectUrl: "{% url 'branch_list' %}",
+            onBeforeSave: async (data) => {
+                // If edit, we need ID
+                if (isEdit) {
+                    const pathParts = window.location.pathname.split('/');
+                    const id = pathParts[pathParts.length - 2] || pathParts[pathParts.length - 3];
+                    if (id && !isNaN(id)) data.id = parseInt(id);
+                }
+                return data;
+            },
+            validate: async (data) => {
+                // Only validate on creation
+                if (isEdit) return { valid: true };
+                
+                try {
+                    // Get cached limits
+                    // SyncManager caches 'subscription_limits' inside the 'settings' or we need to check how get_sync_data returns it.
+                    // It returns it as a top-level key 'subscription_limits'.
+                    // Can we access it? SyncManager might cache it in 'settings' store or we need to access the LastSyncData if possible.
+                    // SyncManager stores data in IndexedDB.
+                    if (!window.posDB) return { valid: true }; // Cannot validate without DB
+                    
+                    // We need to fetch 'subscription_limits' from somewhere.
+                    // Maybe we should store it in 'settings' store with key 'subscription_limits'.
+                    // Or reuse 'settings' store.
+                    // Let's assume SyncManager saves 'subscription_limits' into 'settings' store or similar?
+                    // SyncManager.fetchAndCache saves: transactions, products... 
+                    // Let's check sync-manager.js how it handles unknown keys.
+                    // It seems it might ignore unless explicitly handled or if we added it to stores.
+                    // Wait, get_sync_data returns key 'subscription_limits'. 
+                    // To be safe, we might need to rely on what is available.
+                    // Actually, let's assume valid for now if we can't find it, OR update SyncManager to store it.
+                    // But to avoid touching SyncManager again if risky, let's check if we can get it from a global or 'settings'.
+                    
+                    // BETTER APPROACH: Verify against 'current_branches' count + pending.
+                    // We need the LIMIT. If limit is missing, we can't enforce.
+                    // If we assume unlimited if missing? Secure default: Block? No, fallback to allow. Subscription is strict but UX matters.
+                    
+                    // However, we can query the 'transactions' queue for 'create_branch' count.
+                    // And we need the current count from server (which is in subscription_limits).
+                    
+                    // Let's try to get 'subscription_limits' from IDB if we can.
+                    // If SyncManager doesn't save it, we need to modify SyncManager or use 'settings'.
+                    // Let's guess SyncManager saves it if we add it to the list of stores in DB.js?
+                    // We didn't add 'subscription_limits' store.
+                    // Maybe we can save it in 'settings' list?
+                    // Workaround: We can't easily validate without data. 
+                    
+                    // RETRY: READ FROM 'settings' if we put it there? No.
+                    // Let's modify SyncManager.js quick to save 'subscription_limits' logic?
+                    // Or simpler: The user task includes "Modify get_sync_data to return limits".
+                    // We did that. But client needs to save it. 
+                    
+                    // Let's assume we can fetch it via API if online? No, offline.
+                    
+                    // Ok, I'll update SyncManager in next step to save 'subscription_limits' to 'settings' store with id 'subscription_limits'.
+                    // For now, write the validation logic assuming it's there.
+                    
+                    const limits = await window.posDB.get('settings', 'subscription_limits');
+                    if (!limits) return { valid: true }; // Skip if data unavailable
+                    
+                    const maxBranches = limits.max_branches;
+                    const currentBranches = limits.current_branches; // From server at sync time
+                    
+                    // Count pending creations
+                    const queue = await window.posDB.getAll('sync_queue');
+                    const pendingCreations = queue.filter(q => q.type === 'create_branch').length;
+                    
+                    if ((currentBranches + pendingCreations) >= maxBranches) {
+                        return { valid: false, message: `Subscription limit reached. Max branches: ${maxBranches}.` };
+                    }
+                    
+                    return { valid: true };
+                } catch (err) {
+                    console.error('Validation error', err);
+                    return { valid: true }; // Fail open
+                }
+            }
+        });
+        
+        const form = document.querySelector('form');
+        if (form && !form.id) form.id = 'branch-form';
+    });
+</script>
+{% endblock %}

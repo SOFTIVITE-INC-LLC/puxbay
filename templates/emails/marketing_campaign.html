@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{{ campaign.subject }}</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6; line-height: 1.6;">
+    <!-- Preheader text for better inbox preview -->
+    <div style="display: none; max-height: 0px; overflow: hidden;">
+        {{ campaign.subject }} - {{ tenant_name }}
+    </div>
+    
+    <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f4f6;">
+        <tr>
+            <td style="padding: 40px 20px;">
+                <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background-color: #4F46E5; padding: 40px 30px; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
+                                {{ tenant_name }}
+                            </h1>
+                            {% if campaign.subject %}
+                            <p style="margin: 10px 0 0 0; color: #E0E7FF; font-size: 16px;">
+                                {{ campaign.subject }}
+                            </p>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 1.7;">
+                                Dear {{ customer.name }},
+                            </p>
+                            
+                            <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 1.7;">
+                                We hope this message finds you well. We wanted to reach out to share some important information with you.
+                            </p>
+                            
+                            <!-- Campaign Message -->
+                            <div style="color: #1F2937; font-size: 16px; line-height: 1.7; margin-bottom: 30px;">
+                                {{ campaign.message|linebreaks }}
+                            </div>
+                            
+                            {% if tier_info %}
+                            <!-- Tier Benefits Section -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #F3F4F6; border-radius: 8px; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h3 style="margin: 0 0 10px 0; color: #1F2937; font-size: 18px; font-weight: 600;">
+                                            Your {{ tier_info.name }} Membership Status
+                                        </h3>
+                                        <p style="margin: 0; color: #6B7280; font-size: 14px; line-height: 1.6;">
+                                            Thank you for being a valued {{ tier_info.name }} member. Your continued support means the world to us, and we are committed to providing you with the best service and exclusive benefits.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            {% endif %}
+                            
+                            {% if loyalty_points %}
+                            <!-- Loyalty Points Display -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #FEF3C7; border-radius: 8px; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 20px; text-align: center;">
+                                        <p style="margin: 0 0 8px 0; color: #92400E; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            Your Current Loyalty Points Balance
+                                        </p>
+                                        <p style="margin: 0 0 8px 0; color: #78350F; font-size: 32px; font-weight: 700;">
+                                            {{ loyalty_points }} Points
+                                        </p>
+                                        <p style="margin: 0; color: #92400E; font-size: 13px;">
+                                            Use your points on your next purchase to save money
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            {% endif %}
+                            
+                            <!-- Call to Action -->
+                            {% if cta_url %}
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 30px 0;">
+                                <tr>
+                                    <td style="text-align: center;">
+                                        <a href="{{ cta_url }}" style="display: inline-block; background-color: #4F46E5; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-size: 15px; font-weight: 600;">
+                                            {{ cta_text|default:"Visit Our Store" }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            {% endif %}
+                            
+                            <p style="margin: 30px 0 0 0; color: #6B7280; font-size: 14px; line-height: 1.7;">
+                                We truly appreciate your business and loyalty. If you have any questions or need assistance, please do not hesitate to reach out to our customer service team. We are always here to help.
+                            </p>
+                            
+                            <p style="margin: 20px 0 0 0; color: #6B7280; font-size: 14px; line-height: 1.7;">
+                                Thank you for choosing {{ tenant_name }}. We look forward to serving you again soon.
+                            </p>
+                            
+                            <p style="margin: 20px 0 0 0; color: #6B7280; font-size: 14px; line-height: 1.7;">
+                                Best regards,<br>
+                                <strong style="color: #1F2937;">The {{ tenant_name }} Team</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #F9FAFB; padding: 25px 30px; border-top: 1px solid #E5E7EB;">
+                            <p style="margin: 0 0 10px 0; color: #6B7280; font-size: 12px; line-height: 1.6; text-align: center;">
+                                This email was sent by {{ tenant_name }} to {{ customer.email }}
+                            </p>
+                            
+                            <p style="margin: 0; color: #9CA3AF; font-size: 11px; text-align: center; line-height: 1.5;">
+                                You are receiving this email because you have opted in to receive marketing communications from us.
+                                {% if unsubscribe_url %}
+                                If you no longer wish to receive these emails, you may <a href="{{ unsubscribe_url }}" style="color: #6B7280; text-decoration: underline;">unsubscribe here</a>.
+                                {% else %}
+                                To update your email preferences or unsubscribe, please contact our customer service team or visit your account settings.
+                                {% endif %}
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

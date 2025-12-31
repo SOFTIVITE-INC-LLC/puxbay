@@ -1,0 +1,33 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}New Order Notification{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+<p>Hi {{ user.username }},</p>
+<p>{{ message }}</p>
+
+{% if link %}
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
+    <tbody>
+        <tr>
+            <td align="left">
+                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                    <tbody>
+                        <tr>
+                            <td> <a href="{{ link }}" target="_blank">View details</a> </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table>
+{% endif %}
+
+<p>
+    <small style="color: #94a3b8;">Category: {{ category|title }}</small>
+</p>
+
+<p>Best regards,<br>The Puxbay Team</p>
+{% endblock %}

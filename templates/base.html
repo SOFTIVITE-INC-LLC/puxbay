@@ -1,0 +1,238 @@
+{% load static %}
+{% load main_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Primary Meta Tags -->
+    <title>{% block title %}{{ seo_settings.meta_title|default:"Puxbay - Empowering Retailers" }}{% endblock %}</title>
+    <meta name="title" content="{% block seo_title %}{{ seo_settings.meta_title|default:"Puxbay" }}{% endblock %}">
+    <meta name="description" content="{% block seo_description %}{{ seo_settings.meta_description|default:"Next-gen tools to manage your business efficiently from anywhere." }}{% endblock %}">
+    {% if seo_settings.keywords %}<meta name="keywords" content="{{ seo_settings.keywords }}">{% endif %}
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{% block og_title %}{{ seo_settings.og_title|default:seo_settings.meta_title|default:"Puxbay" }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ seo_settings.og_description|default:seo_settings.meta_description|default:"Empowering retailers with next-gen tools." }}{% endblock %}">
+    {% if seo_settings.og_image %}
+    <meta property="og:image" content="{{ seo_settings.og_image.url }}">
+    {% endif %}
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta property="twitter:title" content="{% block twitter_title %}{{ seo_settings.og_title|default:seo_settings.meta_title|default:"Puxbay" }}{% endblock %}">
+    <meta property="twitter:description" content="{% block twitter_description %}{{ seo_settings.og_description|default:seo_settings.meta_description|default:"Empowering retailers with next-gen tools." }}{% endblock %}">
+    {% if seo_settings.og_image %}
+    <meta property="twitter:image" content="{{ seo_settings.og_image.url }}">
+    {% endif %}
+
+    {% if seo_settings.google_analytics_id %}
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script nonce="{{ request.csp_nonce }}" async src="https://www.googletagmanager.com/gtag/js?id={{ seo_settings.google_analytics_id }}"></script>
+    <script nonce="{{ request.csp_nonce }}">
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '{{ seo_settings.google_analytics_id }}');
+    </script>
+    {% endif %}
+
+    {% if seo_settings.facebook_pixel_id %}
+    <!-- Facebook Pixel Code -->
+    <script nonce="{{ request.csp_nonce }}">
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '{{ seo_settings.facebook_pixel_id }}');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id={{ seo_settings.facebook_pixel_id }}&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Facebook Pixel Code -->
+    {% endif %}
+
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Puxbay",
+      "url": "https://{{ ROOT_DOMAIN }}",
+      "logo": "https://{{ ROOT_DOMAIN }}{% static 'images/puxbay.png' %}",
+      "sameAs": [
+        "https://facebook.com/puxbay",
+        "https://twitter.com/puxbay"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "{{ seo_settings.contact_phone|default:"+233-24-000-0000" }}",
+        "contactType": "customer service",
+        "email": "{{ seo_settings.contact_email|default:"hello@puxbay.com" }}"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Puxbay",
+      "url": "https://{{ ROOT_DOMAIN }}",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://{{ ROOT_DOMAIN }}/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col font-sans text-gray-900 selection:bg-blue-100 selection:text-blue-700">
+    <header class="sticky top-0 z-50 w-full transition-all duration-300 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
+            <a href="http://{{ ROOT_DOMAIN }}/" class="logo flex items-center gap-2">
+                <!-- Simple Logo Icon -->
+                <div class="p-1.5 rounded-lg">
+                    <img src="{% static 'images/puxbay.png' %}" alt="Puxbay Logo" class="h-8 w-auto">
+                </div>
+            </a>
+            
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="http://{{ ROOT_DOMAIN }}/" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Home</a>
+                <a href="http://{{ ROOT_DOMAIN }}/features/" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Features</a>
+                <a href="http://{{ ROOT_DOMAIN }}/pricing/" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Pricing</a>
+                
+                <div class="h-6 w-px bg-gray-200 mx-2"></div>
+
+                {% if user.is_authenticated %}
+                    <a href="{% get_tenant_dashboard_url %}" target="_blank" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Dashboard</a>
+                    <a href="http://{{ ROOT_DOMAIN }}/logout/" class="text-sm font-medium text-gray-600 hover:text-red-600 transition-colors">Logout</a>
+                {% else %}
+                    <a href="http://{{ ROOT_DOMAIN }}/login/" class="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">Login</a>
+                    <a href="http://{{ ROOT_DOMAIN }}/signup/" class="inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-full text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm hover:shadow hover:-translate-y-0.5">
+                        Get Started
+                    </a>
+                {% endif %}
+            </nav>
+            
+            <!-- Mobile menu button -->
+            <button type="button" id="mobile-menu-button" class="md:hidden text-gray-500 hover:text-gray-900 focus:outline-none">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+            <div class="px-4 pt-2 pb-4 space-y-1">
+                <a href="http://{{ ROOT_DOMAIN }}/" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors">Home</a>
+                <a href="http://{{ ROOT_DOMAIN }}/features/" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors">Features</a>
+                <a href="http://{{ ROOT_DOMAIN }}/pricing/" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors">Pricing</a>
+                
+                <div class="border-t border-gray-200 my-2"></div>
+
+                {% if user.is_authenticated %}
+                    <a href="{% get_tenant_dashboard_url %}" target="_blank" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors">Dashboard</a>
+                    <a href="http://{{ ROOT_DOMAIN }}/logout/" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-red-600 hover:bg-gray-50 transition-colors">Logout</a>
+                {% else %}
+                    <a href="http://{{ ROOT_DOMAIN }}/login/" class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-gray-50 transition-colors">Login</a>
+                    <a href="http://{{ ROOT_DOMAIN }}/signup/" class="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors text-center">Get Started</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-slate-950 border-t border-slate-900 text-slate-400">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+                <div class="col-span-2 md:col-span-1">
+                    <div class="logo flex items-center gap-2">
+                        <!-- Simple Logo Icon -->
+                        <div class="bg-white p-3 rounded-lg shadow-sm">
+                            <img src="{% static 'images/puxbay.png' %}" alt="Puxbay Logo" class="h-10 w-auto">
+                        </div>
+                    </div>
+                    <p class="text-sm leading-relaxed max-w-xs">
+                        Empowering retailers with next-gen tools to manage their business efficiently from anywhere in the world.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-white tracking-widest uppercase mb-4">Product</h3>
+                    <ul class="space-y-3">
+                        <li><a href="http://{{ ROOT_DOMAIN }}/features/" class="text-sm hover:text-white transition-colors">Features</a></li>
+                        <li><a href="http://{{ ROOT_DOMAIN }}/pricing/" class="text-sm hover:text-white transition-colors">Pricing</a></li>
+                        <li><a href="http://{{ ROOT_DOMAIN }}/manual/" class="text-sm hover:text-white transition-colors">User Manual</a></li>
+                        
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-white tracking-widest uppercase mb-4">Company</h3>
+                    <ul class="space-y-3">
+                        <li><a href="http://{{ ROOT_DOMAIN }}/about/" class="text-sm hover:text-white transition-colors">About</a></li>
+                        <li><a href="http://{{ ROOT_DOMAIN }}/blog/" class="text-sm hover:text-white transition-colors">Blog</a></li>
+                        
+                        <li><a href="http://{{ ROOT_DOMAIN }}/contact/" class="text-sm hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xs font-bold text-white tracking-widest uppercase mb-4">Legal</h3>
+                    <ul class="space-y-3">
+                        <li><a href="http://{{ ROOT_DOMAIN }}/privacy/" class="text-sm hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="http://{{ ROOT_DOMAIN }}/terms/" class="text-sm hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="http://{{ ROOT_DOMAIN }}/refund-policy/" class="text-sm hover:text-white transition-colors">Refund Policy</a></li>
+                        <li><a href="http://{{ ROOT_DOMAIN }}/cookies/" class="text-sm hover:text-white transition-colors">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center bg-transparent">
+                <p class="text-sm">&copy; {% now "Y" %} Puxbay. All rights reserved.</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-slate-400 hover:text-white transition-colors">
+                        <span class="sr-only">Facebook</span>
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" /></svg>
+                    </a>
+                    <a href="#" class="text-slate-400 hover:text-white transition-colors">
+                        <span class="sr-only">Twitter</span>
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" /></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <script nonce="{{ request.csp_nonce }}">
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

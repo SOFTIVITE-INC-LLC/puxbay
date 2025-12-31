@@ -1,0 +1,191 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Price Distribution Intelligence - Puxbay{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --intel-glass-bg: rgba(255, 255, 255, 0.75);
+        --intel-glass-border: rgba(255, 255, 255, 0.5);
+        --intel-accent: #4f46e5;
+        --intel-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.08);
+    }
+
+    html.dark :root {
+        --intel-glass-bg: rgba(15, 23, 42, 0.7);
+        --intel-glass-border: rgba(255, 255, 255, 0.05);
+        --intel-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+    }
+
+    .intel-card {
+        background: var(--intel-glass-bg);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid var(--intel-glass-border);
+        box-shadow: var(--intel-shadow);
+        border-radius: 2.5rem;
+    }
+
+    .intel-header-font {
+        font-family: 'Outfit', sans-serif;
+        letter-spacing: -0.03em;
+    }
+
+    .premium-field-wrapper {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        background: rgba(255, 255, 255, 0.5);
+    }
+    html.dark .premium-field-wrapper {
+        border-color: rgba(51, 65, 85, 0.5);
+        background: rgba(30, 41, 59, 0.5);
+    }
+    
+    .premium-field-wrapper:focus-within {
+        border-color: var(--intel-accent);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+    }
+    html.dark .premium-field-wrapper:focus-within {
+        background: #0f172a;
+    }
+
+    .signal-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--intel-accent);
+        opacity: 0.3;
+    }
+    .signal-dot.active {
+        opacity: 1;
+        box-shadow: 0 0 10px var(--intel-accent);
+        animation: signal-pulse 1.5s infinite;
+    }
+    @keyframes signal-pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.5); opacity: 0.5; }
+    }
+
+    .advisory-panel {
+        background: linear-gradient(to right, rgba(79, 70, 229, 0.03), rgba(245, 158, 11, 0.03));
+        border: 1px solid rgba(79, 70, 229, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}Network Intelligence{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-4">
+    <!-- Branding Header -->
+    <div class="mb-12 text-center">
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 rounded-full mb-6">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+            <span class="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600 dark:text-indigo-400">Global Sync Protocol</span>
+        </div>
+        <h1 class="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white intel-header-font">Price Distribution Intelligence</h1>
+        <p class="mt-4 text-slate-500 dark:text-slate-400 font-medium max-w-xl mx-auto">Enterprise-wide price synchronization across regional regional database clusters.</p>
+    </div>
+
+    <div class="intel-card overflow-hidden">
+        <!-- Visual Signal Layer -->
+        <div class="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-center gap-4">
+            <div class="flex items-center gap-1.5">
+                <div class="signal-dot"></div>
+                <div class="signal-dot"></div>
+                <div class="signal-dot active"></div>
+                <div class="signal-dot"></div>
+                <div class="signal-dot"></div>
+            </div>
+            <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Active Broadcasting Node</span>
+            <div class="flex items-center gap-1.5">
+                <div class="signal-dot"></div>
+                <div class="signal-dot active"></div>
+                <div class="signal-dot"></div>
+                <div class="signal-dot"></div>
+                <div class="signal-dot"></div>
+            </div>
+        </div>
+
+        <div class="p-10 lg:p-14">
+            <form method="POST" class="space-y-12">
+                {% csrf_token %}
+                
+                <!-- Inputs Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div class="space-y-4">
+                        <label class="block text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1" for="sku">Strategic SKU</label>
+                        <div class="premium-field-wrapper rounded-2xl flex items-center px-5 h-16 group">
+                            <span class="material-symbols-outlined text-slate-400 group-focus-within:text-indigo-500 transition-colors mr-4">barcode_reader</span>
+                            <input type="text" name="sku" id="sku" required placeholder="SKU-XXXX-XXXX"
+                                class="w-full bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600 uppercase tracking-wider">
+                        </div>
+                        <p class="text-[10px] text-slate-400 font-medium ml-2">Exact identifier required for broadcast.</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <label class="block text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1" for="new_price">Unified Unit Price</label>
+                        <div class="premium-field-wrapper rounded-2xl flex items-center px-5 h-16 group">
+                            <span class="material-symbols-outlined text-slate-400 group-focus-within:text-indigo-500 transition-colors mr-4">monetization_on</span>
+                            <input type="number" step="0.01" name="new_price" id="new_price" required placeholder="0.00"
+                                class="w-full bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600">
+                            <span class="text-[10px] font-black text-slate-300 dark:text-slate-700 ml-2 uppercase">Global</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- advisory Panel -->
+                <div class="advisory-panel rounded-3xl p-8 border border-indigo-100 dark:border-indigo-900/30">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
+                            <span class="material-symbols-outlined text-xl">gavel</span>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest mb-1.5">Distribution Advisory</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                                Submitting this request will initiate an asynchronous data broadcast across all authorized regional nodes. 
+                                Updates are <span class="text-indigo-600 dark:text-indigo-400 font-bold">immediately persistent</span> and will override all localized price overrides for the targeted SKU.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA Section -->
+                <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-slate-100 dark:border-slate-800">
+                    <a href="{% url 'command_center' %}" class="text-xs font-black text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors uppercase tracking-[0.2em] flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">close</span>
+                        Abort Sync
+                    </a>
+                    
+                    <button type="submit" class="w-full sm:w-auto px-10 py-5 bg-indigo-600 hover:bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-100 dark:shadow-none transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3">
+                        <span class="material-symbols-outlined text-lg">broadcast_on_home</span>
+                        Initiate Global Broadcast
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Stats Footer (Optional visual flare) -->
+    <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 px-4 text-center">
+        <div>
+            <p class="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase">Node Latency</p>
+            <p class="text-xs font-bold text-slate-400 dark:text-slate-600 mt-0.5">~14ms</p>
+        </div>
+        <div>
+            <p class="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase">Packet Integrity</p>
+            <p class="text-xs font-bold text-slate-400 dark:text-slate-600 mt-0.5">99.99%</p>
+        </div>
+        <div>
+            <p class="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase">Auth Protocol</p>
+            <p class="text-xs font-bold text-slate-400 dark:text-slate-600 mt-0.5">TLS 1.3</p>
+        </div>
+        <div>
+            <p class="text-[10px] font-black text-slate-300 dark:text-slate-700 uppercase">Regional Nodes</p>
+            <p class="text-xs font-bold text-slate-400 dark:text-slate-600 mt-0.5">{{ branch_metrics.count|default:"Multichannel" }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

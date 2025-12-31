@@ -1,0 +1,310 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Puxbay{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Robust Enterprise Styles - Manual CSS for absolute reliability */
+    .standard-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        border: 2px solid #e2e8f0;
+        background-color: #f8fafc;
+        color: #0f172a;
+        font-size: 0.875rem;
+        font-weight: 600;
+        outline: none;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .dark .standard-input {
+        background-color: rgba(15, 23, 42, 0.5);
+        border-color: #334155;
+        color: white;
+    }
+
+    .standard-input:focus {
+        border-color: #2563eb;
+        background-color: white;
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    .dark .standard-input:focus {
+        background-color: #0f172a;
+        border-color: #3b82f6;
+    }
+
+    .field-label {
+        display: block;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+    }
+
+    .dark .field-label {
+        color: #94a3b8;
+    }
+
+    .form-card {
+        background-color: white;
+        border: 2px solid #f1f5f9;
+        border-radius: 1.5rem;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+    }
+
+    .dark .form-card {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+
+    .card-header-simple {
+        padding: 1.25rem 2rem;
+        border-bottom: 2px solid #f8fafc;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .dark .card-header-simple {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+
+    .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="p-8 max-w-[1400px] mx-auto">
+    <!-- Clean Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12">
+        <div class="flex items-center gap-6">
+            <div class="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-600/20">
+                <span class="material-symbols-outlined text-3xl font-bold">{% if supplier %}edit_note{% else %}corporate_fare{% endif %}</span>
+            </div>
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{{ title }}</h1>
+                <p class="text-sm font-bold text-slate-400 mt-1 uppercase tracking-wider">Configure partner identity and trade terms</p>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Stabilized Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <!-- Main Form Column -->
+        <div class="lg:col-span-2 space-y-10">
+            <form method="POST" id="supplierForm" class="space-y-10">
+                {% csrf_token %}
+                
+                <!-- Business Info -->
+                <div class="form-card">
+                    <div class="card-header-simple">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                                <span class="material-symbols-outlined font-bold">business</span>
+                            </div>
+                            <h2 class="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-white">Business Identity</h2>
+                        </div>
+                        <span class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">Core Information</span>
+                    </div>
+                    <div class="p-8 space-y-8">
+                        <div class="field-group">
+                            <label class="field-label" for="id_name">Legal Company Name <span class="text-red-500">*</span></label>
+                            {{ form.name }}
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="field-group">
+                                <label class="field-label" for="id_contact_person">Contact Delegate</label>
+                                {{ form.contact_person }}
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="id_tax_id">Tax ID / Registration</label>
+                                {{ form.tax_id }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="form-card">
+                    <div class="card-header-simple">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600">
+                                <span class="material-symbols-outlined font-bold">alternate_email</span>
+                            </div>
+                            <h2 class="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-white">Contact Nodes</h2>
+                        </div>
+                    </div>
+                    <div class="p-8 space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="field-group">
+                                <label class="field-label" for="id_email">Corporate Email Address</label>
+                                {{ form.email }}
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="id_phone">Primary Contact Line</label>
+                                {{ form.phone }}
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label class="field-label" for="id_address">Global Office Address</label>
+                            {{ form.address }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Settings -->
+                <div class="form-card">
+                    <div class="card-header-simple">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600">
+                                <span class="material-symbols-outlined font-bold">payments</span>
+                            </div>
+                            <h2 class="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-white">Financial Mandate</h2>
+                        </div>
+                    </div>
+                    <div class="p-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-end">
+                            <div class="field-group md:col-span-2 lg:col-span-1">
+                                <label class="field-label" for="id_payment_terms">Settlement Terms</label>
+                                {{ form.payment_terms }}
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="id_credit_limit">Exposure Limit ($)</label>
+                                {{ form.credit_limit }}
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label" for="id_outstanding_balance">Current Balance ($)</label>
+                                {{ form.outstanding_balance }}
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border-2 border-slate-100 dark:border-slate-800">
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-tight">Status</span>
+                                    <span id="status-text-ui" class="text-xs font-black text-emerald-600 dark:text-emerald-400">ENABLED</span>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="is_active" id="id_is_active" {% if form.is_active.value|default:True %}checked{% endif %} class="sr-only peer">
+                                    <div class="w-12 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar Summary -->
+        <div class="lg:col-span-1">
+            <div class="sticky top-8 space-y-6">
+                <!-- Simple Summary Card -->
+                <div class="form-card bg-slate-900 border-none text-white p-8">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded bg-white/10 flex items-center justify-center text-blue-400">
+                            <span class="material-symbols-outlined">visibility</span>
+                        </div>
+                        <h3 class="font-bold flex-1">Profile Preview</h3>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Company Name</p>
+                            <p id="preview-name" class="text-lg font-bold">---</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Fiscal ID</p>
+                                <p id="preview-tax" class="text-sm">---</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Terms</p>
+                                <p id="preview-terms" class="text-sm">---</p>
+                            </div>
+                        </div>
+                        <div class="pt-4 border-t border-white/5">
+                            <p id="preview-email" class="text-sm text-blue-400 truncate opacity-70">No email provided</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Box -->
+                <div class="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-xl flex gap-4">
+                    <span class="material-symbols-outlined text-blue-500">info</span>
+                    <p class="text-xs text-blue-800 dark:text-blue-300">
+                        Ensure company details match your legal documentation to prevent issues during payment processing.
+                    </p>
+                </div>
+                <div class="flex items-center gap-4">
+            <a href="{% url 'supplier_list' %}" class="px-6 py-3 text-sm font-black text-slate-400 hover:text-slate-900 dark:hover:text-white uppercase tracking-widest transition-all">
+                Cancel
+            </a>
+            <button type="submit" form="supplierForm" class="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-sm font-black uppercase tracking-widest shadow-xl shadow-blue-600/20 transition-all hover:-translate-y-0.5 active:scale-95">
+                {% if supplier %}Save Changes{% else %}Create Supplier{% endif %}
+            </button>
+        </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = {
+            name: document.getElementById('id_name'),
+            tax: document.getElementById('id_tax_id'),
+            email: document.getElementById('id_email'),
+            terms: document.getElementById('id_payment_terms'),
+            active: document.getElementById('id_is_active'),
+            balance: document.getElementById('id_outstanding_balance')
+        };
+
+        const previews = {
+            name: document.getElementById('preview-name'),
+            tax: document.getElementById('preview-tax'),
+            email: document.getElementById('preview-email'),
+            terms: document.getElementById('preview-terms')
+        };
+
+        const statusLabelUI = document.getElementById('status-text-ui');
+
+        function updatePreview() {
+            if (previews.name) previews.name.innerText = inputs.name.value || '---';
+            if (previews.tax) previews.tax.innerText = inputs.tax.value || '---';
+            if (previews.email) previews.email.innerText = inputs.email.value || 'No email provided';
+            
+            if (inputs.terms) {
+                const termsText = inputs.terms.value || '---';
+                previews.terms.innerText = termsText;
+            }
+
+            if (inputs.active) {
+                const isActive = inputs.active.checked;
+                if (statusLabelUI) {
+                    statusLabelUI.innerText = isActive ? 'ENABLED' : 'DISABLED';
+                    statusLabelUI.className = isActive ? 'text-xs font-black text-emerald-600 dark:text-emerald-400' : 'text-xs font-black text-red-600';
+                }
+            }
+        }
+
+        Object.values(inputs).forEach(input => {
+            if (input) {
+                input.addEventListener('input', updatePreview);
+                input.addEventListener('change', updatePreview);
+            }
+        });
+
+        updatePreview();
+    });
+</script>
+{% endblock %}

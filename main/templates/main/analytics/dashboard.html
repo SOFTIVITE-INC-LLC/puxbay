@@ -1,0 +1,465 @@
+{% extends 'dashboard_base.html' %}
+{% load static currency_tags %}
+
+{% block title %}{{ title }} - {{ branch.name|default:"Company Wide" }}{% endblock %}
+
+{% block page_title %}Analytics Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        transition: all 0.3s ease;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header Controls -->
+<div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div class="flex items-center gap-3">
+        <!-- Branch Selector -->
+        {% if branches|length > 1 %}
+        <div class="relative">
+            <select onchange="window.location.href=this.value" class="appearance-none bg-white border border-slate-200 text-slate-700 py-2.5 pl-4 pr-10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium shadow-sm cursor-pointer">
+                <option value="{% url 'analytics_dashboard' %}" {% if not branch %}selected{% endif %}>🏢 All Branches</option>
+                {% for b in branches %}
+                <option value="{% url 'analytics_dashboard_branch' b.id %}" {% if branch.id == b.id %}selected{% endif %}>📍 {{ b.name }}</option>
+                {% endfor %}
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Period Selector -->
+        <div class="flex bg-white rounded-lg p-1 border border-slate-200 shadow-sm">
+            <a href="?period=day" class="px-3 py-1.5 text-sm font-medium rounded-md {% if period == 'day' %}bg-blue-50 text-blue-600{% else %}text-slate-600 hover:bg-slate-50{% endif %}">Day</a>
+            <a href="?period=week" class="px-3 py-1.5 text-sm font-medium rounded-md {% if period == 'week' %}bg-blue-50 text-blue-600{% else %}text-slate-600 hover:bg-slate-50{% endif %}">Week</a>
+            <a href="?period=month" class="px-3 py-1.5 text-sm font-medium rounded-md {% if period == 'month' %}bg-blue-50 text-blue-600{% else %}text-slate-600 hover:bg-slate-50{% endif %}">Month</a>
+            <a href="?period=year" class="px-3 py-1.5 text-sm font-medium rounded-md {% if period == 'year' %}bg-blue-50 text-blue-600{% else %}text-slate-600 hover:bg-slate-50{% endif %}">Year</a>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-3">
+        <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 hover:border-slate-300 font-medium transition-colors shadow-sm text-sm">
+            <span class="material-symbols-outlined text-[18px]">print</span>
+            Export PDF
+        </button>
+    </div>
+</div>
+
+<!-- Key Metrics Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Revenue -->
+    <div class="metric-card bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+            <div class="p-3 bg-blue-50 rounded-xl">
+                <span class="material-symbols-outlined text-blue-600">payments</span>
+            </div>
+            {% if sales_trends.revenue_growth >= 0 %}
+            <span class="flex items-center text-sm font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
+                <span class="material-symbols-outlined text-[16px] mr-1">trending_up</span>
+                {{ sales_trends.revenue_growth|floatformat:1 }}%
+            </span>
+            {% else %}
+            <span class="flex items-center text-sm font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">
+                <span class="material-symbols-outlined text-[16px] mr-1">trending_down</span>
+                {{ sales_trends.revenue_growth|floatformat:1 }}%
+            </span>
+            {% endif %}
+        </div>
+        <p class="text-sm font-medium text-slate-500 mb-1">Total Revenue</p>
+        <h3 class="text-2xl font-bold text-slate-800">{{ current_currency.symbol }}{{ sales_trends.current_revenue|to_currency:current_currency_code }}</h3>
+        <p class="text-xs text-slate-400 mt-2">vs {{ current_currency.symbol }}{{ sales_trends.previous_revenue|to_currency:current_currency_code }} last {{ period }}</p>
+    </div>
+
+    <!-- Orders -->
+    <div class="metric-card bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+            <div class="p-3 bg-indigo-50 rounded-xl">
+                <span class="material-symbols-outlined text-indigo-600">shopping_cart</span>
+            </div>
+            {% if sales_trends.order_growth >= 0 %}
+            <span class="flex items-center text-sm font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
+                <span class="material-symbols-outlined text-[16px] mr-1">trending_up</span>
+                {{ sales_trends.order_growth|floatformat:1 }}%
+            </span>
+            {% else %}
+            <span class="flex items-center text-sm font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">
+                <span class="material-symbols-outlined text-[16px] mr-1">trending_down</span>
+                {{ sales_trends.order_growth|floatformat:1 }}%
+            </span>
+            {% endif %}
+        </div>
+        <p class="text-sm font-medium text-slate-500 mb-1">Total Orders</p>
+        <h3 class="text-2xl font-bold text-slate-800">{{ sales_trends.current_orders }}</h3>
+        <p class="text-xs text-slate-400 mt-2">vs {{ sales_trends.previous_orders }} last {{ period }}</p>
+    </div>
+
+    <!-- Customers -->
+    <div class="metric-card bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+            <div class="p-3 bg-purple-50 rounded-xl">
+                <span class="material-symbols-outlined text-purple-600">group</span>
+            </div>
+            <span class="flex items-center text-sm font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">
+                {{ customer_metrics.active_customers }} Active
+            </span>
+        </div>
+        <p class="text-sm font-medium text-slate-500 mb-1">Avg. Order Value</p>
+        <h3 class="text-2xl font-bold text-slate-800">{{ current_currency.symbol }}{{ customer_metrics.avg_order_value|to_currency:current_currency_code }}</h3>
+        <p class="text-xs text-slate-400 mt-2">{{ customer_metrics.total_customers }} total customers</p>
+    </div>
+
+    <!-- Inventory -->
+    <div class="metric-card bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+            <div class="p-3 bg-orange-50 rounded-xl">
+                <span class="material-symbols-outlined text-orange-600">inventory_2</span>
+            </div>
+            {% if real_time.low_stock_count > 0 %}
+            <span class="flex items-center text-sm font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full">
+                {{ real_time.low_stock_count }} Low Stock
+            </span>
+            {% else %}
+            <span class="flex items-center text-sm font-bold text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
+                Healthy
+            </span>
+            {% endif %}
+        </div>
+        <p class="text-sm font-medium text-slate-500 mb-1">Inventory Value</p>
+        <h3 class="text-2xl font-bold text-slate-800">{{ current_currency.symbol }}{{ real_time.inventory_value|to_currency:current_currency_code }}</h3>
+        <p class="text-xs text-slate-400 mt-2">{{ real_time.total_products }} unique products</p>
+    </div>
+</div>
+
+<!-- Main Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+    <!-- Sales Trend Chart -->
+    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h3 class="text-lg font-bold text-slate-800">Sales Trend</h3>
+                <p class="text-sm text-slate-500">Revenue over the last {{ period }}</p>
+            </div>
+        </div>
+        <div class="h-80 relative">
+            <canvas id="salesTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Revenue Breakdown -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h3 class="text-lg font-bold text-slate-800">Revenue by Category</h3>
+                <p class="text-sm text-slate-500">Top revenue sources</p>
+            </div>
+        </div>
+        <div class="h-64 relative mb-4">
+            <canvas id="categoryChart"></canvas>
+        </div>
+        <!-- Legend/List -->
+        <div class="space-y-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+            {% for item in revenue_breakdown.by_category %}
+            <div class="flex items-center justify-between text-sm">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full" style="background-color: hsl({{ forloop.counter0|add:200 }}, 70%, 50%)"></span>
+                    <span class="text-slate-600">{{ item.name }}</span>
+                </div>
+                <span class="font-medium text-slate-800">{{ current_currency.symbol }}{{ item.revenue|to_currency:current_currency_code }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Data Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Top Products -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h3 class="text-lg font-bold text-slate-800">Top Products</h3>
+                <p class="text-sm text-slate-500">Best performing items by revenue</p>
+            </div>
+            <a href="{% url 'company_product_report' %}" class="text-sm text-blue-600 font-medium hover:underline">View All</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-xs text-slate-500 uppercase border-b border-slate-100">
+                        <th class="py-3 font-semibold">Product</th>
+                        <th class="py-3 font-semibold text-right">Sold</th>
+                        <th class="py-3 font-semibold text-right">Revenue</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for product in top_products.by_revenue|slice:":5" %}
+                    <tr class="group hover:bg-slate-50 transition-colors">
+                        <td class="py-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-400">
+                                    <span class="material-symbols-outlined text-[18px]">inventory_2</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-800">{{ product.name }}</p>
+                                    <p class="text-xs text-slate-400">{{ product.sku }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3 text-right text-sm text-slate-600">{{ product.quantity }}</td>
+                        <td class="py-3 text-right text-sm font-bold text-slate-800">{{ current_currency.symbol }}{{ product.revenue|to_currency:current_currency_code }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Top Customers -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h3 class="text-lg font-bold text-slate-800">Top Customers</h3>
+                <p class="text-sm text-slate-500">Most valuable customers</p>
+            </div>
+            <button class="text-sm text-blue-600 font-medium hover:underline">View All</button>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-xs text-slate-500 uppercase border-b border-slate-100">
+                        <th class="py-3 font-semibold">Customer</th>
+                        <th class="py-3 font-semibold text-right">Orders</th>
+                        <th class="py-3 font-semibold text-right">Total Spent</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    {% for customer in customer_metrics.top_customers|slice:":5" %}
+                    <tr class="group hover:bg-slate-50 transition-colors">
+                        <td class="py-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs">
+                                    {{ forloop.counter }}
+                                </div>
+                                <span class="text-sm font-medium text-slate-800">Customer #{{ customer.customer_id }}</span>
+                            </div>
+                        </td>
+                        <td class="py-3 text-right text-sm text-slate-600">{{ customer.order_count }}</td>
+                        <td class="py-3 text-right text-sm font-bold text-slate-800">{{ current_currency.symbol }}{{ customer.total_spent|to_currency:current_currency_code }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Today's Performance -->
+    <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+        <h3 class="text-lg font-bold mb-1">Today's Performance</h3>
+        <p class="text-indigo-100 text-sm mb-6">{{ now|date:"l, F j, Y" }}</p>
+        
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <p class="text-indigo-100 text-xs uppercase tracking-wide font-semibold mb-1">Revenue</p>
+                <p class="text-2xl font-bold">{{ current_currency.symbol }}{{ real_time.today_revenue|to_currency:current_currency_code }}</p>
+            </div>
+            <div>
+                <p class="text-indigo-100 text-xs uppercase tracking-wide font-semibold mb-1">Orders</p>
+                <p class="text-2xl font-bold">{{ real_time.today_orders }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment Methods -->
+    <div class="md:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+        <h3 class="text-lg font-bold text-slate-800 mb-4">Payment Methods</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {% for method in revenue_breakdown.by_payment_method %}
+            <div class="bg-slate-50 rounded-lg p-4">
+                <p class="text-xs text-slate-500 uppercase mb-1">{{ method.method }}</p>
+                <p class="text-lg font-bold text-slate-800">{{ current_currency.symbol }}{{ method.revenue|to_currency:current_currency_code }}</p>
+                <p class="text-xs text-slate-400">{{ method.count }} transactions</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ request.csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script nonce="{{ request.csp_nonce }}">
+    // Prepare Data from Django
+    const exchangeRate = {{ current_currency.exchange_rate|default:1.0 }};
+    const currencySymbol = "{{ current_currency.symbol }}";
+    
+    const rawSalesData = {{ sales_trends.daily_data|safe }};
+    const salesData = rawSalesData.map(d => ({
+        ...d,
+        revenue: d.revenue * exchangeRate
+    }));
+
+    const rawCategoryData = {{ revenue_breakdown.by_category|safe }};
+    const categoryData = rawCategoryData.map(d => ({
+        ...d,
+        revenue: d.revenue * exchangeRate
+    }));
+
+    // Sales Trend Chart
+    const ctxSales = document.getElementById('salesTrendChart').getContext('2d');
+    
+    // Gradient
+    const gradientSales = ctxSales.createLinearGradient(0, 0, 0, 400);
+    gradientSales.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+    gradientSales.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+    new Chart(ctxSales, {
+        type: 'line',
+        data: {
+            labels: salesData.map(d => {
+                const date = new Date(d.date);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }),
+            datasets: [{
+                label: 'Revenue',
+                data: salesData.map(d => d.revenue),
+                borderColor: '#3b82f6',
+                backgroundColor: gradientSales,
+                borderWidth: 2,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#3b82f6',
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Orders',
+                data: salesData.map(d => d.orders),
+                borderColor: '#8b5cf6',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                yAxisID: 'y1',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        usePointStyle: true,
+                        boxWidth: 8
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    titleColor: '#1e293b',
+                    bodyColor: '#475569',
+                    borderColor: '#e2e8f0',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                if (context.datasetIndex === 0) {
+                                    label += new Intl.NumberFormat('en-US', { style: 'currency', currency: '{{ current_currency_code }}' }).format(context.parsed.y);
+                                } else {
+                                    label += context.parsed.y;
+                                }
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f1f5f9',
+                        drawBorder: false,
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return currencySymbol + value;
+                        }
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: false,
+                    position: 'right',
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Category Pie Chart
+    const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+    const categoryColors = categoryData.map((_, i) => `hsl(${200 + i * 20}, 70%, 50%)`);
+
+    new Chart(ctxCategory, {
+        type: 'doughnut',
+        data: {
+            labels: categoryData.map(d => d.name),
+            datasets: [{
+                data: categoryData.map(d => d.revenue),
+                backgroundColor: categoryColors,
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '75%',
+            plugins: {
+                legend: {
+                    display: false // Using custom legend
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let value = context.parsed;
+                            return new Intl.NumberFormat('en-US', { style: 'currency', currency: '{{ current_currency_code }}' }).format(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

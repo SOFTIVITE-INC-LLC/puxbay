@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Puxbay{% endblock %}</title>
+    
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+    <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob { animation: blob 7s infinite; }
+        .animation-delay-2000 { animation-delay: 2s; }
+        .animation-delay-4000 { animation-delay: 4s; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+    <!-- Rich Background Decoration -->
+    <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+         <div class="absolute -top-24 -left-24 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+         <div class="absolute top-1/4 -right-24 w-96 h-96 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+         <div class="absolute -bottom-24 left-1/4 w-[500px] h-[500px] bg-sky-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-4000"></div>
+    </div>
+
+    <div class="relative z-10 w-full max-w-md mx-auto">
+        <!-- Brand / Header Section -->
+        <div class="text-center mb-10">
+            <div class="inline-block relative">
+                <div class="absolute inset-0 bg-blue-600 blur-2xl opacity-20 rounded-full"></div>
+                <div class="relative bg-white p-5 rounded-[2.5rem] shadow-2xl shadow-blue-500/10 border border-white/80 transform transition-all hover:scale-105 duration-500">
+                    {% block logo %}
+                        {% if request.tenant and request.tenant.logo %}
+                            <img src="{{ request.tenant.logo.url }}" alt="{{ request.tenant.name }}" class="h-14 w-auto max-w-[180px] object-contain">
+                        {% else %}
+                            <img src="{% static 'images/puxbay.png' %}" alt="Puxbay Logo" class="h-10 w-auto">
+                        {% endif %}
+                    {% endblock %}
+                </div>
+            </div>
+            
+            <h2 class="mt-8 text-4xl font-extrabold tracking-tight text-slate-900">
+                {% block heading %}Welcome Back{% endblock %}
+            </h2>
+            <p class="mt-3 text-slate-500 font-medium">
+                {% block subheading %}{% if request.tenant %}Log in to your {{ request.tenant.name }} account{% else %}Sign in to continue to Puxbay{% endif %}{% endblock %}
+            </p>
+        </div>
+
+        <!-- Glass Container -->
+        <div class="bg-white/70 backdrop-blur-2xl py-10 px-6 sm:px-12 shadow-[0_20px_50px_rgba(0,0,0,0.05)] sm:rounded-[2.5rem] border border-white/60 ring-1 ring-black/[0.02]">
+            {% block content %}
+            {% endblock %}
+        </div>
+        
+        <!-- Footer Links -->
+        <div class="mt-8 text-center">
+            {% block footer_links %}
+            <a href="{% url 'login' %}" class="inline-flex items-center gap-2 px-6 py-2 rounded-full text-sm font-semibold text-slate-500 hover:text-blue-600 hover:bg-white/50 transition-all duration-300">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Sign In
+            </a>
+            {% endblock %}
+        </div>
+    </div>
+</body>
+</html>
+

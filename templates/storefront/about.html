@@ -1,0 +1,50 @@
+{% extends 'storefront/base.html' %}
+
+{% block title %}About Us{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-16 px-4">
+    <div class="text-center mb-16">
+        <h1 class="text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-4">About {{ store_settings.store_name|default:tenant.name }}</h1>
+        <p class="text-xl text-gray-500 dark:text-gray-400 font-medium">Your trusted online shopping destination</p>
+    </div>
+
+    <div class="prose prose-lg max-w-none">
+        <div class="glass-card rounded-[3rem] p-12 mb-8 dark:border-gray-800">
+            <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-6">Our Story</h2>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed mb-6">
+                {{ store_settings.about_text|default:"Welcome to our store! We're dedicated to providing you with the best products and exceptional customer service. Our mission is to make your shopping experience seamless, enjoyable, and rewarding." }}
+            </p>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                We carefully curate our product selection to ensure quality and value for our customers. Whether you're shopping for everyday essentials or special items, we're here to serve you with excellence.
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8 mb-12">
+            <div class="glass-card rounded-3xl p-8 text-center dark:border-gray-800">
+                <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="material-icons-round text-primary text-3xl">verified</span>
+                </div>
+                <h3 class="font-black text-gray-900 dark:text-white mb-2">Quality Products</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Carefully selected items that meet our high standards</p>
+            </div>
+
+            <div class="glass-card rounded-3xl p-8 text-center dark:border-gray-800">
+                <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="material-icons-round text-primary text-3xl">support_agent</span>
+                </div>
+                <h3 class="font-black text-gray-900 dark:text-white mb-2">Customer Support</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Dedicated team ready to assist you</p>
+            </div>
+
+            <div class="glass-card rounded-3xl p-8 text-center dark:border-gray-800">
+                <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <span class="material-icons-round text-primary text-3xl">local_shipping</span>
+                </div>
+                <h3 class="font-black text-gray-900 dark:text-white mb-2">Fast Pickup</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Quick and convenient order fulfillment</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

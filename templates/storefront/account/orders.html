@@ -1,0 +1,111 @@
+{% extends 'storefront/base.html' %}
+
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto py-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+        <div>
+            <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Your Orders</h1>
+            <p class="text-gray-500 dark:text-gray-400 font-medium">Keep track of your purchases and pickup statuses</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="glass-card rounded-2xl px-6 py-3 flex items-center gap-3 dark:border-gray-800">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ orders.count }} Total Orders</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Filter/Tabs (Visual Only for now) -->
+    <div class="flex items-center gap-2 mb-8 overflow-x-auto scrollbar-hide pb-2">
+        <button class="px-6 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all bg-gray-900 dark:bg-primary text-white shadow-lg dark:shadow-none">All</button>
+        <button class="px-6 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white">Pending</button>
+        <button class="px-6 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white">Completed</button>
+        <button class="px-6 py-2.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white">Cancelled</button>
+    </div>
+
+    {% if orders %}
+    <div class="space-y-6">
+        {% for order in orders %}
+        <div class="group glass-card rounded-[2.5rem] p-8 shadow-sm dark:shadow-none border border-white dark:border-gray-800 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-none transition-all duration-500">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+                <!-- Order Info -->
+                <div class="flex items-center gap-6">
+                    <div class="w-16 h-16 rounded-[1.5rem] bg-primary/5 text-primary flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-500">
+                        <span class="material-icons-round text-3xl">receipt_long</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-3 mb-1">
+                            <h3 class="text-xl font-black text-gray-900 dark:text-white">#{{ order.order_number }}</h3>
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest 
+                                {% if order.status == 'completed' %}bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400
+                                {% elif order.status == 'pending' %}bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400
+                                {% elif order.status == 'cancelled' %}bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400
+                                {% else %}bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400{% endif %}">
+                                {{ order.status }}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-400 font-medium">Placed on {{ order.created_at|date:"F j, Y" }} at {{ order.created_at|date:"g:i A" }}</p>
+                    </div>
+                </div>
+
+                <!-- Order Stats -->
+                <div class="flex flex-wrap items-center gap-12 w-full md:w-auto">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Amount</span>
+                        <span class="text-xl font-black text-gray-900 dark:text-white tabular-nums">${{ order.total_amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Items Count</span>
+                        <span class="text-xl font-black text-gray-900 dark:text-white tabular-nums pointer-events-none">{{ order.items.count }}</span>
+                    </div>
+                    <div class="md:ml-4">
+                        <a href="{% url 'track_order' tenant.subdomain branch.id %}" class="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-gray-900 dark:bg-primary text-white font-bold text-sm hover:bg-primary transition-all duration-300 shadow-xl shadow-gray-200 dark:shadow-none">
+                            Details
+                            <span class="material-icons-round text-sm">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick View Items (Horizontal avatars) -->
+            <div class="mt-8 pt-8 border-t border-gray-50 dark:border-gray-800 flex items-center gap-3">
+                <div class="flex -space-x-3">
+                    {% for item in order.items.all|slice:":5" %}
+                    <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-gray-900 flex items-center justify-center text-[10px] font-black text-gray-400 dark:text-gray-500 overflow-hidden" title="{{ item.product.name }}">
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" class="w-full h-full object-contain">
+                        {% else %}
+                            {{ item.product.name|slice:":2"|upper }}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% if order.items.count > 5 %}
+                    <div class="w-10 h-10 rounded-xl bg-primary text-white border-2 border-white dark:border-gray-900 flex items-center justify-center text-[10px] font-black">
+                        +{{ order.items.count|add:"-5" }}
+                    </div>
+                    {% endif %}
+                </div>
+                <p class="text-xs text-gray-400 font-medium ml-2">Click details for full item list and collection timing.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white dark:bg-gray-900 rounded-[3rem] p-20 text-center border border-gray-100 dark:border-gray-800">
+        <div class="w-24 h-24 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-200 dark:text-gray-700">
+            <span class="material-icons-round text-5xl">shopping_cart_checkout</span>
+        </div>
+        <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">No orders yet.</h2>
+        <p class="text-lg text-gray-500 dark:text-gray-400 mb-10 max-w-sm mx-auto leading-relaxed">Your journey with us begins with your first order. Ready to browse?</p>
+        <a href="{% url 'store_home' tenant.subdomain branch.id %}" class="btn-primary inline-flex items-center gap-3 text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-2xl">
+            Explore Collection
+            <span class="material-icons-round">explore</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Features - Puxbay SaaS POS Solution{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" />
+<link rel="stylesheet" href="{% static 'css/material-symbols-outlined.css' %}" />
+<style>
+    :root {
+        --brand-blue: #2563eb;
+        --brand-indigo: #4338ca;
+        --glass-bg: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.4);
+    }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .hero-gradient {
+        background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%);
+    }
+
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    }
+
+    .animate-reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .animate-reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .feature-icon {
+        background: linear-gradient(135deg, var(--brand-blue), var(--brand-indigo));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .mesh-gradient {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            radial-gradient(at 0% 0%, hsla(224,96%,62%,0.15) 0, transparent 50%), 
+            radial-gradient(at 100% 0%, hsla(273,96%,62%,0.15) 0, transparent 50%), 
+            radial-gradient(at 100% 100%, hsla(322,96%,62%,0.15) 0, transparent 50%), 
+            radial-gradient(at 0% 100%, hsla(21,96%,62%,0.15) 0, transparent 50%);
+        pointer-events: none;
+    }
+
+    .category-group:hover .category-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .floating {
+        animation: floating 3s ease-in-out infinite;
+    }
+
+    @keyframes floating {
+        0% { transform: translate(0,  0px); }
+        50%  { transform: translate(0, -15px); }
+        100% { transform: translate(0, -0px); }   
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen">
+    <!-- Hero Section -->
+    <section class="relative hero-gradient pt-32 pb-40 overflow-hidden rounded-[3rem] mb-20 shadow-2xl mx-2 md:mx-4">
+        <div class="mesh-gradient"></div>
+        
+        <!-- Background Elements -->
+        <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] floating"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px] floating" style="animation-delay: -1.5s"></div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-semibold mb-8 animate-reveal">
+                <span class="mr-2">✨</span> New: AI-Powered Stock Forecasting
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-8 tracking-tighter animate-reveal" style="transition-delay: 0.1s">
+                Ultimate Power for <br/>
+                <span class="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">Modern Business</span>
+            </h1>
+            
+            <p class="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto mb-12 leading-relaxed animate-reveal" style="transition-delay: 0.2s">
+                Explore a comprehensive suite of enterprise-grade tools designed to scale your operations, 
+                supercharge your sales, and provide deep insights like never before.
+            </p>
+
+            <div class="flex flex-wrap justify-center gap-6 animate-reveal" style="transition-delay: 0.3s">
+                <a href="{% url 'signup' %}" class="px-10 py-5 bg-white text-slate-950 font-extrabold rounded-2xl hover:bg-blue-50 transition-all hover:scale-105 shadow-xl shadow-white/5">
+                    Start Your Trial
+                </a>
+                <a href="#core-operations" class="px-10 py-5 bg-slate-900/50 backdrop-blur-md text-white font-extrabold rounded-2xl border border-white/10 hover:bg-slate-900 transition-all">
+                    Browse All Features
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detailed Features Layout -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-48">
+        {% for group in feature_groups %}
+        <section id="{{ group.name|slugify }}" class="pt-24 mb-48 animate-reveal">
+            <div class="flex items-center gap-6 mb-16 border-b border-slate-200 pb-10">
+                <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center category-icon transition-all duration-500 shadow-xl">
+                    <span class="material-symbols-outlined text-2xl">{{ group.icon }}</span>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">{{ group.name }}</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {% for feature in group.features %}
+                <div class="glass-card rounded-[2rem] p-8 group hover:scale-[1.02] transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10">
+                    <div class="mb-8 p-4 rounded-2xl bg-blue-50 w-fit group-hover:bg-blue-100 transition-colors">
+                        <span class="material-symbols-outlined text-3xl feature-icon">{{ feature.icon }}</span>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-slate-900 mb-4">{{ feature.title }}</h3>
+                    <p class="text-slate-600 leading-relaxed text-lg">{{ feature.desc }}</p>
+                    
+                    <div class="mt-8 pt-6 border-t border-slate-100 flex items-center text-blue-600 text-sm font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                        Learn more 
+                        <span class="material-symbols-outlined text-xs ml-1">arrow_forward</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endfor %}
+    </div>
+
+    <!-- Final CTA -->
+    <section class="max-w-7xl mx-auto px-4 mb-48">
+        <div class="relative bg-gradient-to-br from-blue-600 to-indigo-800 rounded-[4rem] p-12 md:p-24 overflow-hidden shadow-2xl text-center">
+            <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-150"></div>
+            
+            <div class="relative z-10 max-w-3xl mx-auto">
+                <h2 class="text-4xl md:text-6xl font-black text-white mb-8">Ready to evolve?</h2>
+                <p class="text-xl text-blue-100 mb-12 font-medium">Join 2,000+ businesses running on Puxbay. No credit card required for your 14-day full access trial.</p>
+                
+                <div class="flex flex-wrap justify-center gap-6">
+                    <a href="{% url 'signup' %}" class="px-12 py-6 bg-white text-blue-600 font-black rounded-3xl hover:shadow-2xl transition-all hover:scale-105 active:scale-95 leading-none">
+                        Create Your Store
+                    </a>
+                </div>
+                
+                <p class="mt-10 text-blue-200/60 text-sm font-semibold uppercase tracking-widest">Available for iOS, Android, and Desktop</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script nonce="{{ request.csp_nonce }}">
+    // Reveal animation logic
+    const observerOptions = {
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.animate-reveal').forEach((el) => {
+        observer.observe(el);
+    });
+
+    // Header transparency logic
+    window.addEventListener('scroll', () => {
+        const header = document.querySelector('header');
+        if (window.scrollY > 50) {
+            header.classList.add('shadow-lg', 'bg-white/95');
+            header.classList.remove('bg-white/80');
+        } else {
+            header.classList.remove('shadow-lg', 'bg-white/95');
+            header.classList.add('bg-white/80');
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'storefront/base.html' %}
+
+{% block title %}My Wishlist{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+        <div>
+            <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Your Wishlist</h1>
+            <p class="text-gray-500 dark:text-gray-400 font-medium">Save your favorite items for later</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="glass-card rounded-2xl px-6 py-3 flex items-center gap-3 dark:border-gray-800">
+                <span class="w-2 h-2 rounded-full bg-primary"></span>
+                <span class="text-sm font-bold text-gray-700 dark:text-gray-300">{{ wishlist_items.count }} Items</span>
+            </div>
+        </div>
+    </div>
+
+    {% if wishlist_items %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for item in wishlist_items %}
+        <div class="group glass-card rounded-[2.5rem] overflow-hidden shadow-sm dark:shadow-none border border-white dark:border-gray-800 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-none transition-all duration-500">
+            <!-- Product Image -->
+            <div class="relative aspect-square bg-gray-50 dark:bg-gray-800/50 p-8">
+                <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-500/5 opacity-50"></div>
+                <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="relative z-10 w-full h-full object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-700">
+                
+                <!-- Remove from Wishlist -->
+                <button onclick="toggleWishlist('{{ item.product.id }}')" class="absolute top-4 right-4 z-20 w-12 h-12 rounded-full bg-white dark:bg-gray-900 shadow-lg dark:shadow-none flex items-center justify-center text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all">
+                    <span class="material-icons-round">favorite</span>
+                </button>
+            </div>
+
+            <!-- Product Info -->
+            <div class="p-6">
+                <h3 class="text-lg font-black text-gray-900 dark:text-white mb-2 line-clamp-2">{{ item.product.name }}</h3>
+                <p class="text-2xl font-black text-primary mb-4">${{ item.product.price }}</p>
+                
+                <div class="flex gap-3">
+                    <a href="{% url 'product_detail' tenant.subdomain branch.id item.product.id %}" class="flex-1 bg-gray-900 dark:bg-primary hover:bg-primary text-white py-3 rounded-2xl font-bold text-sm text-center transition-all">
+                        View Details
+                    </a>
+                    <form action="{% url 'add_to_cart' tenant.subdomain branch.id item.product.id %}" method="POST" class="flex-1">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full bg-primary/10 dark:bg-gray-800 hover:bg-primary dark:hover:bg-primary hover:text-white text-primary dark:text-gray-300 py-3 rounded-2xl font-bold text-sm transition-all">
+                            Add to Cart
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white dark:bg-gray-900 rounded-[3rem] p-20 text-center border border-gray-100 dark:border-gray-800">
+        <div class="w-24 h-24 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-8 text-gray-200 dark:text-gray-700">
+            <span class="material-icons-round text-5xl">favorite_border</span>
+        </div>
+        <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-3 tracking-tight">Your wishlist is empty</h2>
+        <p class="text-lg text-gray-500 dark:text-gray-400 mb-10 max-w-sm mx-auto leading-relaxed">Start adding products you love to your wishlist!</p>
+        <a href="{% url 'store_home' tenant.subdomain branch.id %}" class="btn-primary inline-flex items-center gap-3 text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-2xl">
+            Browse Products
+            <span class="material-icons-round">explore</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleWishlist(productId) {
+    fetch(`{% url 'toggle_wishlist' tenant.subdomain branch.id '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', productId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Reload page to update wishlist (usually it's removed from here)
+            window.location.reload();
+        }
+    });
+}
+</script>
+{% endblock %}

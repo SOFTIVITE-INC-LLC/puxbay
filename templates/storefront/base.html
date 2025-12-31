@@ -1,0 +1,654 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} | {{ store_settings.store_name|default:tenant.name }}</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="{% static 'css/material-icons-round.css' %}" rel="stylesheet">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="{% url 'storefront_manifest' tenant.subdomain branch.id %}">
+    <meta name="theme-color" content="{{ store_settings.primary_color|default:'#3b82f6' }}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{ store_settings.store_name|default:tenant.name }}">
+    {% if store_settings.logo_image %}
+    <link rel="apple-touch-icon" href="{{ store_settings.logo_image.url }}">
+    {% endif %}
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block meta_description %}Shop premium products at {{ store_settings.store_name|default:tenant.name }}. Fast checkout, secure payments, and excellent customer service.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}online store, shop, {{ store_settings.store_name|default:tenant.name }}, ecommerce{% endblock %}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{% block og_title %}{{ store_settings.store_name|default:tenant.name }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Shop premium products at {{ store_settings.store_name|default:tenant.name }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{% if store_settings.banner_image %}{{ request.scheme }}://{{ request.get_host }}{{ store_settings.banner_image.url }}{% elif store_settings.logo_image %}{{ request.scheme }}://{{ request.get_host }}{{ store_settings.logo_image.url }}{% endif %}{% endblock %}">
+    <meta property="og:site_name" content="{{ store_settings.store_name|default:tenant.name }}">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="{% block twitter_card %}summary_large_image{% endblock %}">
+    <meta name="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ store_settings.store_name|default:tenant.name }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Shop premium products at {{ store_settings.store_name|default:tenant.name }}{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{% if store_settings.banner_image %}{{ request.scheme }}://{{ request.get_host }}{{ store_settings.banner_image.url }}{% elif store_settings.logo_image %}{{ request.scheme }}://{{ request.get_host }}{{ store_settings.logo_image.url }}{% endif %}{% endblock %}">
+    
+    {% block extra_meta %}{% endblock %}
+    
+    <script nonce="{{ request.csp_nonce }}">
+        // Inline script to prevent FOUC
+        (function() {
+            const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
+    <!-- Styling -->
+    <link href="{% static 'css/tailwind.css' %}" rel="stylesheet">
+    <script nonce="{{ request.csp_nonce }}">
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '{{ store_settings.primary_color|default:"#3b82f6" }}',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --primary: {{ store_settings.primary_color|default:"#3b82f6" }};
+            --bg-main: #ffffff;
+            --bg-surface: #f8fafc;
+            --bg-nav: rgba(255, 255, 255, 0.85);
+            --text-base: #0f172a;
+            --text-dim: #64748b;
+            --border-base: rgba(0, 0, 0, 0.08);
+            --card-glass: rgba(255, 255, 255, 0.7);
+        }
+
+        .dark {
+            --bg-main: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-nav: rgba(15, 23, 42, 0.85);
+            --text-base: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border-base: rgba(255, 255, 255, 0.08);
+            --card-glass: rgba(30, 41, 59, 0.7);
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-base);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.03) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.03) 0px, transparent 50%);
+        }
+        .glass-card {
+            background: var(--card-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-base);
+        }
+        .skeleton {
+            background: #f1f5f9;
+            background: linear-gradient(110deg, #f1f5f9 8%, #e2e8f0 18%, #f1f5f9 33%);
+            background-size: 200% 100%;
+            animation: 1.5s shine linear infinite;
+        }
+        .dark .skeleton {
+            background: #1e293b;
+            background: linear-gradient(110deg, #1e293b 8%, #334155 18%, #1e293b 33%);
+            background-size: 200% 100%;
+        }
+
+        @keyframes shine {
+            to {
+                background-position-x: -200%;
+            }
+        }
+        .glass-nav {
+            background: var(--bg-nav);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-base);
+        }
+        .btn-primary {
+            background: var(--primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.3);
+            filter: brightness(1.1);
+        }
+        .nav-link {
+            position: relative;
+            transition: all 0.3s;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+        .nav-link:hover::after { width: 100%; }
+        
+        /* Hide Scrollbar */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col pt-[116px] sm:pt-[132px]">
+    
+    <!-- Announcement Bar -->
+    <div class="fixed top-0 left-0 right-0 z-[60] bg-gray-950 text-white py-2 text-center overflow-hidden">
+        <div class="flex justify-center items-center gap-6 text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] whitespace-nowrap animate-pulse">
+            <span>🎉 Grand Opening: Free Pickup on all orders</span>
+            <span class="hidden md:inline">•</span>
+            <span class="hidden md:inline">🕒 Same-day processing before 2 PM</span>
+            <span class="hidden md:inline">•</span>
+            <span class="hidden md:inline">💎 Quality Guaranteed</span>
+        </div>
+    </div>
+
+    <!-- PWA Install Banner -->
+    <div id="pwa-install-banner" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-[100] animate-in slide-in-from-bottom-8 duration-500">
+        <div class="bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-3xl p-6 shadow-2xl border border-white/10">
+            <div class="flex items-start gap-4">
+                <div class="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center shrink-0">
+                    <span class="material-icons-round text-primary text-2xl">get_app</span>
+                </div>
+                <div class="flex-grow">
+                    <h4 class="font-black text-sm mb-1">Install {{ store_settings.store_name|default:tenant.name }}</h4>
+                    <p class="text-xs text-white/60 leading-relaxed mb-4">Get faster access and shop offline with our app</p>
+                    <div class="flex gap-2">
+                        <button id="pwa-install-btn" class="px-4 py-2 bg-primary hover:bg-primary/90 rounded-xl text-xs font-bold transition-all">
+                            Install Now
+                        </button>
+                        <button id="pwa-dismiss-btn" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all">
+                            Not Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="fixed top-8 sm:top-10 left-0 right-0 z-50 glass-nav shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Top Nav Row -->
+            <div class="h-16 sm:h-20 flex justify-between items-center gap-8">
+                <!-- Logo -->
+                <a href="{% url 'store_home' tenant.subdomain branch.id %}" class="flex items-center gap-3 shrink-0 group">
+                    {% if store_settings.logo_image %}
+                        <img src="{{ store_settings.logo_image.url }}" alt="{{ store_settings.store_name }}" class="h-8 sm:h-10 w-auto rounded-lg shadow-sm">
+                    {% else %}
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                            <span class="material-icons-round text-base sm:text-lg">shopping_bag</span>
+                        </div>
+                    {% endif %}
+                    <span class="text-lg sm:text-xl font-black text-gray-900 dark:text-white tracking-tight">{{ store_settings.store_name|default:tenant.name }}</span>
+                </a>
+
+                <!-- Desktop Central Search -->
+                <div class="hidden lg:flex flex-grow max-w-xl relative">
+                    <form action="{% url 'store_home' tenant.subdomain branch.id %}" method="GET" class="w-full relative group" id="desktop-search-form">
+                        <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 group-focus-within:text-primary transition-colors">
+                            <span class="material-icons-round text-xl">search</span>
+                        </span>
+                        <input type="text" name="search" id="desktop-search-input" autocomplete="off"
+                               value="{{ request.GET.search|default:'' }}"
+                               placeholder="Search for premium products..."
+                               class="w-full pl-12 pr-4 py-3 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700/50 focus:bg-white dark:focus:bg-gray-800 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500">
+                        
+                        <!-- Search Results Dropdown -->
+                        <div id="search-results" class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden hidden z-[70] transition-all duration-300">
+                             <!-- Results injected by JS -->
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right Actions -->
+                <div class="flex items-center gap-2 sm:gap-6">
+                    {% if customer %}
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle" class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:text-primary transition-all duration-300 shadow-sm border border-gray-100 dark:border-gray-700">
+                        <span id="theme-toggle-icon" class="material-icons-round text-xl">dark_mode</span>
+                    </button>
+
+                    <div class="hidden sm:flex items-center gap-3">
+                        <div class="text-right">
+                             <span class="block text-[10px] text-gray-400 font-black uppercase tracking-widest leading-none mb-1">Account</span>
+                             <a href="{% url 'customer_profile' tenant.subdomain branch.id %}" class="block text-sm font-bold text-gray-900 dark:text-white hover:text-primary transition-colors">{{ customer.name|truncatechars:12 }}</a>
+                        </div>
+                        <!-- Loyalty Points -->
+                        <div class="h-8 w-px bg-gray-100 dark:bg-gray-800 mx-1"></div>
+                        <div class="flex flex-col items-end min-w-[60px]">
+                            <div class="flex items-center gap-1">
+                                <span class="material-icons-round text-primary text-[10px]">stars</span>
+                                <span class="text-[9px] text-primary font-black uppercase tracking-widest leading-none">Points</span>
+                            </div>
+                            <span class="text-xs font-bold text-gray-900 dark:text-white">{{ customer.loyalty_points|default:0|floatformat:0 }}</span>
+                        </div>
+                        <a href="{% url 'customer_profile' tenant.subdomain branch.id %}" class="w-10 h-10 rounded-full bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-primary hover:text-white hover:scale-110 transition-all duration-300 shadow-sm border border-gray-100 dark:border-gray-700">
+                            <span class="material-icons-round text-xl">person</span>
+                        </a>
+                    </div>
+                    {% else %}
+                    <!-- Theme Toggle -->
+                    <button id="theme-toggle" class="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 hover:text-primary transition-all duration-300 shadow-sm border border-gray-100 dark:border-gray-700 mr-2">
+                        <span id="theme-toggle-icon" class="material-icons-round text-xl">dark_mode</span>
+                    </button>
+                    <a href="{% url 'customer_login' tenant.subdomain branch.id %}" class="hidden sm:flex items-center gap-2 text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-primary transition-all">
+                        <span class="material-icons-round text-lg">login</span>
+                        Sign In
+                    </a>
+                    {% endif %}
+
+                    <!-- Cart -->
+                    <a href="{% url 'store_cart' tenant.subdomain branch.id %}" class="relative w-10 h-10 sm:w-12 sm:h-12 glass-card rounded-2xl flex items-center justify-center text-gray-700 hover:text-primary transition-all duration-300 group shadow-sm">
+                        <span class="material-icons-round text-xl sm:text-2xl">shopping_cart</span>
+                        {% if cart_preview %}
+                            <span class="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-black flex items-center justify-center rounded-full shadow-lg border-2 border-white animate-bounce">
+                                {{ cart_preview|length }}
+                            </span>
+                        {% endif %}
+                    </a>
+                    
+                    <!-- Mobile Menu Button -->
+                    <button class="lg:hidden w-10 h-10 rounded-xl flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
+                        <span class="material-icons-round">menu</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Mobile Search Bar -->
+            <div class="lg:hidden pb-4">
+                <form action="{% url 'store_home' tenant.subdomain branch.id %}" method="GET" class="relative group">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">
+                        <span class="material-icons-round text-lg">search</span>
+                    </span>
+                    <input type="text" name="search" value="{{ request.GET.search|default:'' }}"
+                           placeholder="Search products..."
+                           class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-50 border border-gray-100 focus:bg-white focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium text-xs text-gray-900">
+                </form>
+            </div>
+        </div>
+
+        <!-- Sub-Nav Categories (Desktop) -->
+        <div class="hidden lg:block border-t border-gray-50 dark:border-gray-800">
+            <div class="max-w-7xl mx-auto px-8 h-12 flex items-center gap-10">
+                <a href="{% url 'store_home' tenant.subdomain branch.id %}" class="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <span class="material-icons-round text-sm">grid_view</span>
+                    All Collections
+                </a>
+                <div class="h-4 w-px bg-gray-100"></div>
+                <nav class="flex items-center gap-8">
+                     {% if categories %}
+                        {% for category in categories|slice:":5" %}
+                        <a href="{% url 'store_home' tenant.subdomain branch.id %}?category={{ category.id }}" class="text-xs font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors nav-link">
+                            {{ category.name }}
+                        </a>
+                        {% endfor %}
+                     {% endif %}
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+            {% if messages %}
+                <div class="max-w-4xl mx-auto mb-10 space-y-4">
+                    {% for message in messages %}
+                        <div class="p-5 rounded-3xl flex items-center gap-4 {% if message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-100{% elif message.tags == 'error' %}bg-rose-50 text-rose-700 border border-rose-100{% else %}bg-blue-50 text-blue-700 border border-blue-100{% endif %} glass-card shadow-sm">
+                            <div class="shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center 
+                                {% if message.tags == 'success' %}bg-emerald-100{% elif message.tags == 'error' %}bg-rose-100{% else %}bg-blue-100{% endif %}">
+                                <span class="material-icons-round text-xl">
+                                    {% if message.tags == 'success' %}check_circle{% elif message.tags == 'error' %}error{% else %}info{% endif %}
+                                </span>
+                            </div>
+                            <p class="text-sm font-bold">{{ message }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-950 text-white pt-24 pb-12 overflow-hidden relative">
+        <!-- Decor -->
+        <div class="absolute -top-24 -left-24 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-24 -right-24 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <!-- Newsletter Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-24 pb-24 border-b border-white/5">
+                <div>
+                    <h3 class="text-3xl sm:text-4xl font-black tracking-tight mb-4">Stay in the loop.</h3>
+                    <p class="text-white/50 font-medium leading-relaxed max-w-md">Subscribe to get notified about new arrivals, exclusive discounts, and store updates.</p>
+                </div>
+                <form id="newsletter-form" class="flex flex-col sm:flex-row gap-4">
+                    {% csrf_token %}
+                    <div class="flex-grow relative">
+                        <span class="absolute inset-y-0 left-0 pl-5 flex items-center text-white/30">
+                            <span class="material-icons-round text-xl">mail</span>
+                        </span>
+                        <input type="email" id="newsletter-email" name="email" required placeholder="Your best email address..." 
+                               class="w-full pl-14 pr-4 py-5 rounded-2xl bg-white/5 border border-white/10 focus:bg-white/10 focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all font-bold text-white placeholder-white/20">
+                    </div>
+                    <button type="submit" id="newsletter-btn" class="bg-primary hover:bg-primary-dark px-8 py-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl transition-all">
+                        Subscribe
+                    </button>
+                </form>
+                <div id="newsletter-msg" class="hidden mt-4 text-xs font-bold uppercase tracking-widest text-emerald-400"></div>
+            </div>
+
+            <!-- Footer Links -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-12 sm:gap-16 mb-24">
+                <!-- Branding -->
+                <div class="col-span-2 md:col-span-1">
+                    <div class="flex items-center gap-2 mb-8">
+                        <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg">
+                            <span class="material-icons-round">shopping_bag</span>
+                        </div>
+                        <span class="text-2xl font-black text-white tracking-tight">{{ store_settings.store_name|default:tenant.name }}</span>
+                    </div>
+                    <p class="text-sm text-white/40 leading-relaxed font-medium mb-10">
+                        {{ store_settings.about_text|truncatewords:25|default:"Redefining the local shopping experience with a focus on quality, speed, and customer satisfaction." }}
+                    </p>
+                    <!-- Social -->
+                    <div class="flex items-center gap-4">
+                        <a href="#" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-primary transition-all group">
+                             <svg class="w-5 h-5 fill-white/30 group-hover:fill-white transition-colors" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-primary transition-all group">
+                             <svg class="w-5 h-5 fill-white/30 group-hover:fill-white transition-colors" viewBox="0 0 24 24"><path d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"/></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Collections -->
+                <div>
+                    <h4 class="text-xs font-black uppercase tracking-[0.2em] mb-10 text-primary">Collections</h4>
+                    <ul class="space-y-6">
+                        <li><a href="{% url 'store_home' tenant.subdomain branch.id %}" class="text-sm font-bold text-white/50 hover:text-white transition-colors">All Items</a></li>
+                        {% for category in categories|slice:":4" %}
+                        <li><a href="{% url 'store_home' tenant.subdomain branch.id %}?category={{ category.id }}" class="text-sm font-bold text-white/50 hover:text-white transition-colors">{{ category.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Customer Service -->
+                <div>
+                    <h4 class="text-xs font-black uppercase tracking-[0.2em] mb-10 text-primary">Support</h4>
+                    <ul class="space-y-6">
+                        <li><a href="{% url 'store_shipping' tenant.subdomain branch.id %}" class="text-sm font-bold text-white/50 hover:text-white transition-colors">Shipping & Pickup</a></li>
+                        <li><a href="{% url 'store_returns' tenant.subdomain branch.id %}" class="text-sm font-bold text-white/50 hover:text-white transition-colors">Returns & Exchanges</a></li>
+                        <li><a href="{% url 'customer_orders' tenant.subdomain branch.id %}" class="text-sm font-bold text-white/50 hover:text-white transition-colors">Order History</a></li>
+                        <li><a href="{% url 'track_order' tenant.subdomain branch.id %}" class="text-sm font-bold text-white/50 hover:text-white transition-colors">Track Order</a></li>
+                        <li><a href="{% url 'customer_wishlist' tenant.subdomain branch.id %}" class="text-sm font-bold text-white/50 hover:text-white transition-colors">Wishlist</a></li>
+                    </ul>
+                </div>
+
+                <!-- Legal -->
+                <div>
+                    <h4 class="text-xs font-black uppercase tracking-[0.2em] mb-10 text-primary">Company</h4>
+                    <ul class="space-y-6">
+                        <li><a href="{% url 'store_about' tenant.subdomain branch.id %}" class="text-sm font-bold text-white/50 hover:text-white transition-colors">About Us</a></li>
+                        <li><a href="{% url 'store_privacy' tenant.subdomain branch.id %}" class="text-sm font-bold text-white/50 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="{% url 'store_terms' tenant.subdomain branch.id %}" class="text-sm font-bold text-white/50 hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="{% url 'store_contact' tenant.subdomain branch.id %}" class="text-sm font-bold text-white/50 hover:text-white transition-colors">Contact Support</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Row -->
+            <div class="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
+                <p class="text-[10px] sm:text-xs font-bold text-white/20 uppercase tracking-[0.2em]">
+                    &copy; {% now "Y" %} {{ store_settings.store_name|default:tenant.name }}. All rights reserved.
+                </p>
+                
+                <!-- Payment Icons (Placeholders) -->
+                <div class="flex items-center gap-4 opacity-30 brightness-150 grayscale">
+                    <span class="material-icons-round text-2xl">payments</span>
+                    <span class="material-icons-round text-2xl">credit_card</span>
+                    <span class="material-icons-round text-2xl">account_balance</span>
+                    <span class="material-icons-round text-2xl">contactless</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">Powered by</span>
+                    <span class="text-xs font-black text-white/40 tracking-tight">Puxbay</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Nav Bar (Bottom) -->
+    <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 px-6 py-4 flex lg:hidden justify-between items-center shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+        <a href="{% url 'store_home' tenant.subdomain branch.id %}" class="flex flex-col items-center gap-1 text-primary">
+            <span class="material-icons-round text-2xl">home</span>
+            <span class="text-[10px] font-black uppercase tracking-widest">Home</span>
+        </a>
+        <button class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500">
+            <span class="material-icons-round text-2xl">search</span>
+            <span class="text-[10px] font-black uppercase tracking-widest">Search</span>
+        </button>
+        <a href="{% url 'store_cart' tenant.subdomain branch.id %}" class="relative flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500">
+            <span class="material-icons-round text-2xl">shopping_cart</span>
+            <span class="text-[10px] font-black uppercase tracking-widest">Cart</span>
+            {% if cart_preview %}
+            <span class="absolute -top-1 right-0 w-4 h-4 bg-primary text-white text-[8px] font-bold flex items-center justify-center rounded-full border border-white">{{ cart_preview|length }}</span>
+            {% endif %}
+        </a>
+        <a href="{% url 'customer_profile' tenant.subdomain branch.id %}" class="flex flex-col items-center gap-1 text-gray-400 dark:text-gray-500">
+            <span class="material-icons-round text-2xl">person</span>
+            <span class="text-[10px] font-black uppercase tracking-widest">Profile</span>
+        </a>
+    </nav>
+
+    {% block extra_js %}
+    <script nonce="{{ request.csp_nonce }}">
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("{% static 'pwa/sw.js' %}")
+                    .then(reg => console.log('SW Registered', reg))
+                    .catch(err => console.log('SW Failed', err));
+            });
+        }
+
+        const searchInput = document.getElementById('desktop-search-input');
+        const resultsBox = document.getElementById('search-results');
+        let searchTimeout;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value;
+                
+                clearTimeout(searchTimeout);
+                if (query.length < 2) {
+                    resultsBox.classList.add('hidden');
+                    return;
+                }
+
+                // Show Skeleton Loader
+                resultsBox.innerHTML = `
+                    <div class="p-2 space-y-2">
+                        <div class="flex items-center gap-4 p-3"><div class="w-12 h-12 rounded-lg skeleton shrink-0"></div><div class="flex-grow space-y-2"><div class="h-4 w-3/4 skeleton rounded"></div><div class="h-3 w-1/4 skeleton rounded"></div></div></div>
+                        <div class="flex items-center gap-4 p-3"><div class="w-12 h-12 rounded-lg skeleton shrink-0"></div><div class="flex-grow space-y-2"><div class="h-4 w-2/3 skeleton rounded"></div><div class="h-3 w-1/4 skeleton rounded"></div></div></div>
+                    </div>
+                `;
+                resultsBox.classList.remove('hidden');
+
+                searchTimeout = setTimeout(() => {
+                    fetch(`{% url 'api_search' tenant.subdomain branch.id %}?q=${query}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.results.length > 0) {
+                                let html = '<div class="p-2 space-y-1">';
+                                data.results.forEach(p => {
+                                    html += `
+                                        <a href="${p.url}" class="flex items-center gap-4 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all group">
+                                            <div class="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0">
+                                                ${p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-gray-400"><span class="material-icons-round">image</span></div>'}
+                                            </div>
+                                            <div class="flex-grow min-w-0">
+                                                <h4 class="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">${p.name}</h4>
+                                                <p class="text-xs font-black text-primary">${branch.currency_symbol || '$'}${p.price}</p>
+                                            </div>
+                                            <span class="material-icons-round text-gray-300 dark:text-gray-600 group-hover:text-primary group-hover:translate-x-1 transition-all">chevron_right</span>
+                                        </a>
+                                    `;
+                                });
+                                html += '</div>';
+                                resultsBox.innerHTML = html;
+                                resultsBox.classList.remove('hidden');
+                            } else {
+                                resultsBox.innerHTML = '<div class="p-8 text-center text-gray-400 font-medium text-sm">No products found for this search.</div>';
+                                resultsBox.classList.remove('hidden');
+                            }
+                        });
+                }, 300);
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !resultsBox.contains(e.target)) {
+                    resultsBox.classList.add('hidden');
+                }
+            });
+        }
+
+        // Newsletter Signup
+        const newsForm = document.getElementById('newsletter-form');
+        if (newsForm) {
+            newsForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('newsletter-email').value;
+                const btn = document.getElementById('newsletter-btn');
+                const msg = document.getElementById('newsletter-msg');
+                const csrf = newsForm.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                btn.disabled = true;
+                btn.innerHTML = 'Subscribing...';
+
+                const formData = new FormData();
+                formData.append('email', email);
+                formData.append('csrfmiddlewaretoken', csrf);
+
+                fetch(`{% url 'subscribe_newsletter' tenant.subdomain branch.id %}`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    msg.innerHTML = data.message;
+                    msg.classList.remove('hidden');
+                    if (data.status === 'success') {
+                        newsForm.classList.add('hidden');
+                        msg.classList.add('text-emerald-400');
+                        msg.classList.remove('text-rose-400');
+                    } else {
+                        btn.disabled = false;
+                        btn.innerHTML = 'Subscribe';
+                        msg.classList.add('text-rose-400');
+                        msg.classList.remove('text-emerald-400');
+                    }
+                });
+            });
+        }
+        
+        // PWA Install Prompt
+        let deferredPrompt;
+        const installBanner = document.getElementById('pwa-install-banner');
+        const installBtn = document.getElementById('pwa-install-btn');
+        const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if (installBanner && !localStorage.getItem('pwa-dismissed')) {
+                installBanner.classList.remove('hidden');
+            }
+        });
+
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installBanner.classList.add('hidden');
+                    }
+                    deferredPrompt = null;
+                }
+            });
+        }
+
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                installBanner.classList.add('hidden');
+                localStorage.setItem('pwa-dismissed', 'true');
+            });
+        }
+
+        // Theme Management
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeToggleIcon = document.getElementById('theme-toggle-icon');
+
+        function updateThemeIcon(theme) {
+            if (themeToggleIcon) {
+                themeToggleIcon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+            }
+        }
+
+        // Set initial icon
+        updateThemeIcon(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                const isDark = document.documentElement.classList.toggle('dark');
+                const theme = isDark ? 'dark' : 'light';
+                localStorage.setItem('theme', theme);
+                updateThemeIcon(theme);
+            });
+        }
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+    {% endblock %}
+</body>
+</html>

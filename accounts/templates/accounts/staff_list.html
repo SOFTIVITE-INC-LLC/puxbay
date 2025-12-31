@@ -1,0 +1,137 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Staff - SaaS POS{% endblock %}
+
+{% block page_title %}Staff Management{% endblock %}
+
+{% block content %}
+<div class="md:flex md:items-center md:justify-between mb-8">
+    <div class="flex-1 min-w-0">
+        <h2 class="text-2xl font-bold leading-7 text-slate-900 sm:text-3xl sm:truncate">
+            Staff Members
+        </h2>
+        <p class="mt-1 text-sm text-slate-500">
+            Manage your team members and their branch assignments.
+        </p>
+    </div>
+    <div class="mt-4 flex md:mt-0 md:ml-4">
+        <a href="{% url 'staff_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:-translate-y-0.5">
+            <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            Add New Staff
+        </a>
+    </div>
+</div>
+
+<div class="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Name</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Role</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Assigned Branch</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Joined</th>
+                    <th scope="col" class="relative px-6 py-3">
+                        <span class="sr-only">Actions</span>
+                    </th>
+                </tr>
+            </thead>
+            <tbody id="staff-list-body" class="bg-white divide-y divide-slate-200">
+                {% for profile in staff_profiles %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <span class="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold border border-slate-200">
+                                    {{ profile.user.username|make_list|first|upper }}
+                                </span>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-slate-900">{{ profile.user.username }}</div>
+                                <div class="text-sm text-slate-500">{{ profile.user.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
+                            {{ profile.get_role_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        {% if profile.branch %}
+                        <a href="{% url 'branch_dashboard' profile.branch.id %}" class="text-blue-600 hover:underline">{{ profile.branch.name }}</a>
+                        {% else %}
+                        <span class="text-slate-400">Not Assigned</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        {{ profile.user.date_joined|date:"M d, Y" }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <a href="{% url 'staff_update' profile.pk %}" class="text-blue-600 hover:text-blue-900 mr-4">Edit</a>
+                        <form action="{% url 'staff_delete' profile.pk %}" method="post" class="inline">
+                             {% csrf_token %}
+                             <button type="submit" class="text-red-600 hover:text-red-900 bg-transparent border-0 cursor-pointer" onclick="return confirm('Are you sure you want to remove this staff member?');">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center text-slate-500">
+                        <p class="text-lg font-medium text-slate-900">No staff members found</p>
+                        <p>Start adding staff to manage your branches.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/offline-forms.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        new OfflineListInjector({
+            containerId: 'staff-list-body',
+            storeName: 'staff',
+            emptyStateId: null,
+            templateFunc: (item) => `
+                <tr class="bg-yellow-50 hover:bg-yellow-100 transition-colors" data-offline-id="${item.id}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <span class="h-10 w-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 font-bold border border-yellow-200 animate-pulse">
+                                    ${(item.username || '?').charAt(0).toUpperCase()}
+                                </span>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-slate-900">${item.username}</div>
+                                <div class="text-sm text-slate-500">${item.email}<span class="ml-2 text-xs text-yellow-600">(Pending Sync)</span></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 capitalize">
+                            ${item.role}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        <span class="text-slate-400">Pending Assignment</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        Just now
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <!-- Actions disabled for pending items -->
+                    </td>
+                </tr>
+            `
+        });
+    });
+</script>
+{% endblock %}

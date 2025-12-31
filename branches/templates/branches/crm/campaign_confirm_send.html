@@ -1,0 +1,67 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Confirm Send - {{ branch.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white dark:bg-gray-800 shadow sm:rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div class="px-4 py-5 sm:px-6 bg-green-50 dark:bg-green-900/20 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white flex items-center">
+               <svg class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Confirm Send Campaign
+            </h3>
+        </div>
+        <div class="px-4 py-5 sm:p-6">
+            <div class="mb-4">
+                <h4 class="text-base font-medium text-gray-900 dark:text-white">{{ campaign.name }}</h4>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Subject: {{ campaign.subject }}
+                </p>
+            </div>
+            
+            <div class="border-t border-b border-gray-200 dark:border-gray-700 py-4 mb-6">
+                <div class="flex justify-between items-center">
+                     <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Target Audience</span>
+                     <span class="text-sm text-gray-900 dark:text-white">
+                         {% if campaign.target_tier %}{{ campaign.target_tier.name }} Tier{% else %}All Customers{% endif %}
+                     </span>
+                </div>
+                 <div class="flex justify-between items-center mt-2">
+                     <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Estimated Recipients</span>
+                     <span class="text-sm font-bold text-gray-900 dark:text-white">{{ recipient_count }}</span>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md mb-6">
+                 <div class="flex">
+                    <div class="flex-shrink-0">
+                         <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                         <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">Confirmation Required</h3>
+                         <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                                <p>This action will immediately queue emails/SMS for sending and cannot be undone.</p>
+                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" class="mt-5">
+                {% csrf_token %}
+                <div class="flex justify-end gap-3">
+                    <a href="{% url 'campaign_list' branch.id %}" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600">
+                        Cancel
+                    </a>
+                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-900">
+                        Send Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

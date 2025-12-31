@@ -1,0 +1,44 @@
+{% extends 'dashboard_base.html' %}
+
+{% block content %}
+<div class="p-6 max-w-2xl mx-auto">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-xl border border-slate-200 dark:border-slate-700">
+        <h2 class="text-2xl font-black text-slate-900 dark:text-white mb-2">Request Shift Swap</h2>
+        <p class="text-slate-500 dark:text-slate-400 mb-8 text-sm">You are requesting a swap for your shift on <strong>{{ shift.start_time|date:"l, M d" }}</strong>.</p>
+        
+        <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 mb-8 flex items-center justify-between">
+            <div>
+                <div class="text-lg font-black text-slate-900 dark:text-white">{{ shift.start_time|time:"H:i" }} - {{ shift.end_time|time:"H:i" }}</div>
+            </div>
+            <span class="material-icons-round text-3xl text-blue-500">schedule</span>
+        </div>
+
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Target Staff Member (Optional)</label>
+                <select name="target_staff" class="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-2xl p-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all">
+                    <option value="">Post to Open Bidding Table</option>
+                    {% for staff in branch.staff_set.all %}
+                        {% if staff != request.user.profile %}
+                            <option value="{{ staff.id }}">{{ staff.user.get_full_name|default:staff.user.username }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <p class="mt-2 text-[10px] text-slate-400">If you don't select a staff member, the shift will be available for anyone to bid on.</p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Notes / Reason</label>
+                <textarea name="notes" rows="4" placeholder="e.g., Family emergency, need to swap for Saturday..." class="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-2xl p-4 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
+            </div>
+
+            <div class="flex gap-4 pt-4">
+                <a href="{% url 'staff_portal' branch_id %}" class="flex-1 px-6 py-4 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white font-bold rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all text-center">Cancel</a>
+                <button type="submit" class="flex-1 px-6 py-4 bg-blue-600 text-white font-black rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all">Send Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

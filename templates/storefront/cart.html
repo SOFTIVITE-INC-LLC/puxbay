@@ -1,0 +1,184 @@
+{% extends 'storefront/base.html' %}
+{% load storefront_extras %}
+
+{% block title %}Shopping Cart{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center gap-6 mb-12">
+        <a href="{% url 'store_home' tenant.subdomain branch.id %}" class="group w-14 h-14 flex items-center justify-center glass-card rounded-2xl hover:bg-gray-900 hover:text-white transition-all duration-300 shadow-sm">
+            <span class="material-icons-round">arrow_back</span>
+        </a>
+        <div>
+            <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Shopping Bag</h1>
+            <p class="text-gray-500 dark:text-gray-400 font-medium">Review your items before proceeding to secure checkout</p>
+        </div>
+    </div>
+
+    {% if cart_items %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <!-- Cart Items List -->
+        <div class="lg:col-span-2 space-y-6">
+            {% for item in cart_items %}
+            <div class="group bg-white dark:bg-gray-900 rounded-[2.5rem] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] dark:shadow-none border border-gray-100/50 dark:border-gray-800 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-none transition-all duration-500 flex flex-col sm:flex-row items-center gap-8 relative overflow-hidden">
+                
+                <!-- Background Decor -->
+                <div class="absolute -right-12 -bottom-12 w-32 h-32 bg-gray-50 dark:bg-gray-800 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+
+                <!-- Product Image/Icon Placeholder -->
+                <div class="w-32 h-32 glass-card rounded-3xl flex items-center justify-center flex-shrink-0 relative z-10 p-4 overflow-hidden">
+                    <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="w-full h-full object-contain relative z-10">
+                    <div class="absolute inset-0 bg-primary/5 opacity-50"></div>
+                </div>
+
+                <!-- Product Details -->
+                <div class="flex-grow relative z-10 w-full">
+                    <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white leading-tight mb-1">{{ item.product.name }}</h3>
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">SKU: {{ item.product.sku|default:"N/A" }}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-black text-2xl text-gray-900 dark:text-white tabular-nums">${{ item.subtotal|floatformat:2 }}</span>
+                            <p class="text-gray-400 text-xs font-medium">Unit: ${{ item.product.price }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between mt-6">
+                         <!-- Quantity Controls -->
+                        <div class="flex items-center bg-gray-50 dark:bg-gray-800 rounded-xl p-1 border border-gray-100 dark:border-gray-700">
+                            <form action="{% url 'update_cart' tenant.subdomain branch.id item.product.id %}" method="POST" class="flex items-center">
+                                {% csrf_token %}
+                                <button type="button" onclick="this.nextElementSibling.stepDown(); this.form.submit()" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all">
+                                    <span class="material-icons-round text-sm">remove</span>
+                                </button>
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" 
+                                       class="w-12 bg-transparent border-none text-center font-bold text-gray-900 dark:text-white focus:ring-0 p-0 text-sm"
+                                       onchange="this.form.submit()">
+                                <button type="button" onclick="this.previousElementSibling.stepUp(); this.form.submit()" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white dark:hover:bg-gray-700 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all">
+                                    <span class="material-icons-round text-sm">add</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <a href="{% url 'remove_from_cart' tenant.subdomain branch.id item.product.id %}" 
+                           class="group/del text-gray-400 hover:text-rose-500 p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all duration-300">
+                            <span class="material-icons-round">delete_outline</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Summary Card -->
+        <div class="lg:col-span-1">
+            <div class="glass-card rounded-[2.5rem] p-8 shadow-2xl shadow-gray-200/50 dark:shadow-none border border-white dark:border-gray-800 sticky top-28">
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-8 tracking-tight">Summary</h2>
+                
+                <div class="space-y-5 mb-10">
+                    <div class="flex justify-between items-center text-gray-500 dark:text-gray-400 font-medium">
+                        <span class="text-sm">Subtotal</span>
+                        <span class="text-lg font-bold text-gray-900 dark:text-white">${{ total_amount|floatformat:2 }}</span>
+                    </div>
+
+                    {% if request.session.applied_coupon %}
+                        {% with coupon=request.session.applied_coupon %}
+                        <div class="flex justify-between items-center text-emerald-600 font-medium bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] text-emerald-400 font-black uppercase tracking-widest">Voucher Applied</span>
+                                <span class="text-sm font-bold">{{ coupon.code }}</span>
+                            </div>
+                            <div class="flex flex-col items-end">
+                                <a href="{% url 'remove_coupon' tenant.subdomain branch.id %}" class="text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-rose-500 transition-colors">Remove</a>
+                                <span class="text-sm font-black">- 
+                                    {% if coupon.discount_type == 'percentage' %}
+                                        ${{ total_amount|multiply:coupon.value|divide:100|floatformat:2 }}
+                                    {% else %}
+                                        ${{ coupon.value|floatformat:2 }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endwith %}
+                    {% else %}
+                        <!-- Coupon Form -->
+                        <form action="{% url 'apply_coupon' tenant.subdomain branch.id %}" method="POST" class="mt-4">
+                            {% csrf_token %}
+                            <div class="flex gap-2">
+                                <input type="text" name="code" placeholder="Enter Voucher Code" 
+                                       class="flex-grow bg-gray-50 dark:bg-gray-800 border-gray-100 dark:border-gray-700 rounded-xl px-4 py-2.5 text-xs font-bold focus:ring-primary focus:border-primary text-gray-900 dark:text-white">
+                                <button type="submit" class="px-4 py-2.5 bg-gray-900 dark:bg-primary text-white rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-primary transition-all">Apply</button>
+                            </div>
+                        </form>
+{% endif %}
+
+                    <div class="flex justify-between items-center text-gray-500 font-medium">
+                         <div class="flex items-center gap-1.5">
+                             <span class="text-sm">Service Fee</span>
+                             <span class="material-icons-round text-xs cursor-help" title="Store processing fee">info</span>
+                         </div>
+                         <span class="text-sm font-bold text-emerald-500 uppercase tracking-widest">Free</span>
+                    </div>
+
+                    <div class="pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-between items-end">
+                        <span class="font-bold text-gray-900 dark:text-white">Total Due</span>
+                        <div class="text-right">
+                             <span class="block text-3xl font-black text-primary tabular-nums">
+                                 {% if request.session.applied_coupon %}
+                                     {% with coupon=request.session.applied_coupon %}
+                                         {% if coupon.discount_type == 'percentage' %}
+                                             ${{ total_amount|subtract_percentage:coupon.value|floatformat:2 }}
+                                         {% else %}
+                                             ${{ total_amount|subtract:coupon.value|floatformat:2 }}
+                                         {% endif %}
+                                     {% endwith %}
+                                 {% else %}
+                                     ${{ total_amount|floatformat:2 }}
+                                 {% endif %}
+                             </span>
+                             <span class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Inclusive of all taxes</span>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{% url 'store_checkout' tenant.subdomain branch.id %}" class="btn-primary flex items-center justify-center gap-3 w-full text-white py-5 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20">
+                    Secure Checkout
+                    <span class="material-icons-round">arrow_forward</span>
+                </a>
+                
+                <!-- Trust Badges -->
+                <div class="mt-8 pt-8 border-t border-gray-100/50 dark:border-gray-800/50 grid grid-cols-2 gap-4">
+                    <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        <span class="material-icons-round text-emerald-400 text-sm">verified_user</span>
+                        Secure
+                    </div>
+                    <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right justify-end">
+                        <span class="material-icons-round text-emerald-400 text-sm">local_shipping</span>
+                        Quick Pickup
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white dark:bg-gray-900 rounded-[3rem] shadow-sm dark:shadow-none border border-gray-200/50 dark:border-gray-800 p-20 text-center max-w-2xl mx-auto mt-12 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-gray-50/50 dark:from-gray-800/50 to-white dark:to-gray-900 pointer-events-none"></div>
+        <div class="relative z-10">
+            <div class="w-32 h-32 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-10 border border-gray-100 dark:border-gray-700 shadow-inner dark:shadow-none">
+                <span class="material-icons-round text-7xl text-gray-200 dark:text-gray-700">shopping_bag</span>
+            </div>
+            <h2 class="text-4xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">Your bag is empty.</h2>
+            <p class="text-lg text-gray-500 dark:text-gray-400 mb-12 max-w-xs mx-auto leading-relaxed">Give it some love by adding some quality items from our store.</p>
+            <a href="{% url 'store_home' tenant.subdomain branch.id %}" class="btn-primary inline-flex items-center gap-3 text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-2xl">
+                Keep Exploring
+                <span class="material-icons-round">explore</span>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

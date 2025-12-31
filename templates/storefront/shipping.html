@@ -1,0 +1,105 @@
+{% extends 'storefront/base.html' %}
+
+{% block title %}Shipping & Pickup{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-16 px-4">
+    <div class="text-center mb-16">
+        <h1 class="text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-4">Shipping & Pickup</h1>
+        <p class="text-xl text-gray-500 dark:text-gray-400 font-medium">Fast and convenient order fulfillment</p>
+    </div>
+
+    <div class="space-y-8">
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <div class="flex items-start gap-6 mb-6">
+                <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
+                    <span class="material-icons-round text-primary text-3xl">store</span>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-4">In-Store Pickup</h2>
+                    <p class="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+                        Our primary fulfillment method is in-store pickup. After placing your order online, we'll prepare your items for collection at your selected branch.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 space-y-4">
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-primary mt-1">schedule</span>
+                    <div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-1">Preparation Time</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Orders are typically ready within 30-60 minutes during business hours</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-primary mt-1">notifications</span>
+                    <div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-1">Pickup Notification</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">You'll receive an email when your order is ready for collection</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-primary mt-1">badge</span>
+                    <div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-1">What to Bring</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Your order number and a valid ID</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if store_settings.allow_delivery %}
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <div class="flex items-start gap-6 mb-6">
+                <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
+                    <span class="material-icons-round text-primary text-3xl">local_shipping</span>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-4">Home Delivery</h2>
+                    <p class="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+                        We offer delivery services to your doorstep for added convenience.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6 space-y-4">
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-primary mt-1">payments</span>
+                    <div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-1">Delivery Fee</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${{ store_settings.delivery_fee|floatformat:2 }} per order</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-primary mt-1">shopping_cart</span>
+                    <div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-1">Minimum Order</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${{ store_settings.min_order_amount|floatformat:2 }} minimum for delivery</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3">
+                    <span class="material-icons-round text-primary mt-1">schedule</span>
+                    <div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-1">Delivery Time</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Same-day or next-day delivery available</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-6">Pickup Locations</h2>
+            <div class="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-6">
+                <h3 class="font-bold text-gray-900 dark:text-white mb-2">{{ branch.name }}</h3>
+                {% if branch.address %}
+                <p class="text-gray-600 dark:text-gray-400 mb-3">{{ branch.address }}</p>
+                {% endif %}
+                {% if branch.phone %}
+                <p class="text-sm text-gray-500 dark:text-gray-500">Phone: <a href="tel:{{ branch.phone }}" class="text-primary hover:underline">{{ branch.phone }}</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

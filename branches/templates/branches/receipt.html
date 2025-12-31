@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt {{ order.order_number|default:order.id }}</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            color: #000;
+            background: #fff;
+            padding: 20px;
+            max-width: 350px; /* Typical thermal printer width approx 80mm */
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+        }
+        .store-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .meta {
+            margin-bottom: 15px;
+            font-size: 12px;
+        }
+        .meta div {
+            display: flex;
+            justify-content: space-between;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th {
+            text-align: left;
+            border-bottom: 1px solid #000;
+            padding: 5px 0;
+        }
+        td {
+            padding: 5px 0;
+            vertical-align: top;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .totals {
+            border-top: 1px dashed #000;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            border-top: 1px dashed #000;
+            padding-top: 10px;
+        }
+        @media print {
+            @page {
+                margin: 0;
+                size: auto;
+            }
+            body {
+                padding: 10px; /* Safe margin for thermal printers */
+                margin: 0;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+        .btn-print {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: #000;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-family: sans-serif;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <a href="#" onclick="window.print(); return false;" class="btn-print no-print">Print Receipt</a>
+
+    <div class="header">
+        {% if branch.logo %}
+            <img src="{{ branch.logo.url }}" alt="{{ branch.name }} Logo" style="max-width: 150px; max-height: 80px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">
+        {% endif %}
+        <div class="store-name">{{ branch.name }}</div>
+        <div>{{ branch.address|default:"" }}</div>
+        <div>{{ branch.phone|default:"" }}</div>
+    </div>
+
+    <div class="meta">
+        <div>
+            <span>Order #:</span>
+            <span>{{ order.order_number|default:order.id }}</span>
+        </div>
+        <div>
+            <span>Date:</span>
+            <span>{{ order.created_at|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div>
+            <span>Cashier:</span>
+            <span>{{ order.cashier.user.username }}</span>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 45%;">Item</th>
+                <th class="text-right">Qty</th>
+                <th class="text-right">Price</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td class="text-right">{{ item.quantity }}</td>
+                <td class="text-right">{{ item.price }}</td>
+                <td class="text-right">{{ item.get_total_item_price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="totals">
+        <div class="total-row">
+            <span>TOTAL</span>
+            <span>${{ order.total_amount }}</span>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Thank you for shopping with us!</p>
+        <p>Please keep this receipt for returns.</p>
+        
+        <div style="margin-top: 20px; padding: 15px; border: 1px solid #eee; border-radius: 8px;">
+            <div style="font-weight: bold; margin-bottom: 5px;">Join MyWallet</div>
+            <div style="font-size: 10px; color: #666; margin-bottom: 10px;">Track points & receipts on your phone</div>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ request.scheme }}://{{ request.get_host }}/wallet/login/" alt="QR Code" style="width: 100px; height: 100px;">
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // Auto-print on load with a slight delay to ensure rendering
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        }
+    </script>
+</body>
+</html>

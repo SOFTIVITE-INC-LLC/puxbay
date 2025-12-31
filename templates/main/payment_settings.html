@@ -1,0 +1,203 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Payment Gateway Settings - {{ request.user.profile.tenant.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Payment Gateway Settings</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure payment methods for online transactions</p>
+        </div>
+        
+        <a href="{% url 'payment_method_create' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Payment Method
+        </a>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+        <div class="flex items-start">
+            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="ml-3">
+                <h4 class="text-sm font-medium text-blue-900 dark:text-blue-200">Payment Gateway Configuration</h4>
+                <div class="mt-2 text-sm text-blue-800 dark:text-blue-300">
+                    <p>API keys and secrets should be configured as environment variables for security:</p>
+                    <ul class="list-disc list-inside mt-2 space-y-1">
+                        <li><code class="bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded">STRIPE_SECRET_KEY</code> - Your Stripe secret key</li>
+                        <li><code class="bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded">STRIPE_WEBHOOK_SECRET</code> - Stripe webhook secret</li>
+                        <li><code class="bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded">PAYPAL_CLIENT_ID</code> - PayPal client ID</li>
+                        <li><code class="bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded">PAYPAL_CLIENT_SECRET</code> - PayPal client secret</li>
+                        <li><code class="bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded">PAYPAL_MODE</code> - 'sandbox' or 'live'</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Methods -->
+    <div class="space-y-4">
+        {% for method in payment_methods %}
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <div class="flex items-start justify-between">
+                <div class="flex items-start gap-4">
+                    <!-- Provider Icon -->
+                    <div class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center
+                        {% if method.provider == 'stripe' %}bg-indigo-100 dark:bg-indigo-900
+                        {% elif method.provider == 'paypal' %}bg-blue-100 dark:bg-blue-900
+                        {% elif method.provider == 'cash' %}bg-emerald-100 dark:bg-emerald-900
+                        {% elif method.provider == 'card' %}bg-purple-100 dark:bg-purple-900
+                        {% else %}bg-slate-100 dark:bg-slate-700{% endif %}">
+                        {% if method.provider == 'stripe' %}
+                        <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/>
+                        </svg>
+                        {% elif method.provider == 'paypal' %}
+                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.93 4.778-4.005 7.201-9.138 7.201h-2.19a.563.563 0 0 0-.556.479l-1.187 7.527h-.506l-.24 1.516a.56.56 0 0 0 .554.647h3.882c.46 0 .85-.334.922-.788.06-.26.76-4.852.816-5.09a.932.932 0 0 1 .923-.788h.58c3.76 0 6.705-1.528 7.565-5.946.36-1.847.174-3.388-.777-4.471z"/>
+                        </svg>
+                        {% else %}
+                        <svg class="w-6 h-6 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                        </svg>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Method Info -->
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ method.name }}</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ method.get_provider_display }}</p>
+                        {% if method.api_key_hint %}
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                            API Key: ****{{ method.api_key_hint }}
+                        </p>
+                        {% endif %}
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium
+                                {% if method.is_active %}bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200
+                                {% else %}bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200{% endif %}">
+                                {% if method.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">
+                                Added {{ method.created_at|date:"M d, Y" }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex items-center gap-2">
+                    {% if method.provider in 'stripe,paypal' %}
+                    <button onclick="testConnection({{ method.id }})" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                        Test Connection
+                    </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'payment_method_update' method.pk %}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </a>
+                    
+                    <a href="{% url 'payment_method_delete' method.pk %}" class="text-red-600 hover:text-red-800 dark:text-red-400">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
+            <svg class="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+            </svg>
+            <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-2">No Payment Methods Configured</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Add your first payment gateway to start accepting online payments</p>
+            <a href="{% url 'payment_method_create' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Payment Method
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Webhook URLs -->
+    {% if payment_methods %}
+    <div class="bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Webhook URLs</h3>
+        <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Configure these URLs in your payment gateway dashboards:</p>
+        
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Stripe Webhook URL</label>
+                <div class="flex gap-2">
+                    <input type="text" readonly value="https://{{ request.get_host }}/financial/webhooks/stripe/" class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-900 dark:text-white">
+                    <button onclick="copyToClipboard(this)" class="px-3 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-300 dark:hover:bg-slate-600">
+                        Copy
+                    </button>
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">PayPal Webhook URL</label>
+                <div class="flex gap-2">
+                    <input type="text" readonly value="https://{{ request.get_host }}/financial/webhooks/paypal/" class="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm text-slate-900 dark:text-white">
+                    <button onclick="copyToClipboard(this)" class="px-3 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm hover:bg-slate-300 dark:hover:bg-slate-600">
+                        Copy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function testConnection(methodId) {
+    const button = event.target;
+    button.disabled = true;
+    button.textContent = 'Testing...';
+    
+    fetch(`/financial/payments/methods/${methodId}/test/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showToast('✓ Connection successful! Test payment created.', 'success', 5000);
+            } else {
+                showToast('✗ Connection failed: ' + (data.message || data.error || 'Unknown error'), 'error', 5000);
+            }
+        })
+        .catch(error => {
+            showToast('✗ Connection test failed: ' + error.message, 'error', 5000);
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.textContent = 'Test Connection';
+        });
+}
+
+function copyToClipboard(button) {
+    const input = button.previousElementSibling;
+    input.select();
+    document.execCommand('copy');
+    
+    const originalText = button.textContent;
+    button.textContent = 'Copied!';
+    setTimeout(() => {
+        button.textContent = originalText;
+    }, 2000);
+}
+</script>
+{% endblock %}

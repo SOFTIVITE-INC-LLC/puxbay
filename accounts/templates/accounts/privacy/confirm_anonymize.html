@@ -1,0 +1,41 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Confirm Anonymization{% endblock %}
+
+{% block page_title %}GDPR Action{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-10">
+    <div class="bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden">
+        <div class="p-6 bg-red-50 border-b border-red-100">
+            <h2 class="text-xl font-bold text-red-800 flex items-center gap-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Confirm Anonymization
+            </h2>
+        </div>
+        
+        <div class="p-6 space-y-4">
+            <p class="text-slate-700">You are about to permanently anonymize data for customer <span class="font-bold text-slate-900">{{ customer.name }}</span>.</p>
+            
+            <div class="bg-slate-100 p-4 rounded-lg text-sm text-slate-600">
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Name will be replaced with a generic ID.</li>
+                    <li>Email, phone, and address will be removed/redacted.</li>
+                    <li>Order history will be retained for financial reporting but unlinked from PII.</li>
+                    <li>Loyalty points will be typically lost or inaccessible.</li>
+                </ul>
+            </div>
+            
+            <p class="font-medium text-red-600 text-sm">This action cannot be undone.</p>
+            
+            <form method="post" class="mt-6 flex gap-4">
+                {% csrf_token %}
+                <a href="{% url 'privacy_dashboard' %}" class="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 font-medium">Cancel</a>
+                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium shadow-sm">
+                    Yes, Anonymize Data
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

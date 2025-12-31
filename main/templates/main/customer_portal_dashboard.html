@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Rewards - {{ tenant.name }}</title>
+    {% load static %}
+    <link href="{% static 'css/tailwind.css' %}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/material-symbols-outlined.css' %}" />
+    <style>
+        body { font-family: 'Outfit', sans-serif; }
+    </style>
+</head>
+<body class="bg-white min-h-screen">
+    <!-- Header -->
+    <header class="p-6 flex items-center justify-between border-b border-slate-50">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-indigo-600 text-3xl">loyalty</span>
+            <span class="font-black text-xl text-slate-900">{{ tenant.name }}</span>
+        </div>
+        <a href="{% url 'customer_portal_login' %}" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center">
+            <span class="material-symbols-outlined text-slate-400 text-lg">logout</span>
+        </a>
+    </header>
+
+    <main class="p-6 space-y-8 max-w-2xl mx-auto">
+        <!-- Profile Section -->
+        <div>
+            <h1 class="text-3xl font-black text-slate-900 mb-1">Hello, {{ customer.name }}</h1>
+            <div class="flex items-center gap-2">
+                {% if customer.tier %}
+                <span class="px-3 py-1 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-widest">{{ customer.tier.name }} Tier</span>
+                {% else %}
+                <span class="px-3 py-1 bg-slate-200 text-slate-700 rounded-full text-[10px] font-black uppercase tracking-widest">Standard Tier</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Wallet Cards -->
+        <div class="grid grid-cols-2 gap-4">
+            <div class="bg-indigo-50 border border-indigo-100 rounded-3xl p-6">
+                <span class="material-symbols-outlined text-indigo-600 mb-3">stars</span>
+                <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Loyalty Points</p>
+                <h3 class="text-3xl font-black text-indigo-900">{{ customer.loyalty_points|floatformat:0 }}</h3>
+            </div>
+            
+            <div class="bg-slate-900 rounded-3xl p-6 text-white">
+                <span class="material-symbols-outlined text-blue-400 mb-3">account_balance_wallet</span>
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Store Credit</p>
+                <h3 class="text-3xl font-black">${{ customer.store_credit_balance|floatformat:2 }}</h3>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div>
+            <h4 class="text-sm font-black text-slate-900 mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">history</span>
+                Recent Purchases
+            </h4>
+            <div class="space-y-4">
+                {% for order in recent_orders %}
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div>
+                        <p class="text-xs font-black text-slate-800">{{ order.order_number }}</p>
+                        <p class="text-[10px] text-slate-400">{{ order.created_at|date:"M d, Y" }}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-black text-slate-900">${{ order.total_amount }}</p>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase">{{ order.status }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="py-12 text-center text-slate-400 text-xs italic">
+                    No recent purchases found.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Promotion Banner -->
+        <div class="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[2rem] p-8 text-white relative overflow-hidden">
+            <div class="relative z-10">
+                <h4 class="text-lg font-black mb-1">Earn More Points</h4>
+                <p class="text-indigo-100 text-xs opacity-75">Tell your friends about {{ tenant.name }} and earn 50 bonus points on their first visit!</p>
+            </div>
+            <span class="material-symbols-outlined absolute -right-4 -bottom-4 text-9xl text-white/10 rotate-12">redeem</span>
+        </div>
+    </main>
+
+    <footer class="p-12 text-center">
+        <p class="text-[10px] font-black text-slate-300 uppercase tracking-widest">Thank you for being a valued customer</p>
+    </footer>
+</body>
+</html>

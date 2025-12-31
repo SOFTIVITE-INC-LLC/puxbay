@@ -1,0 +1,178 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Expenses - {{ branch.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Expense Tracking</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ branch.name }} Expenses</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'branch_expense_create' branch.id %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Add Expense
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-gradient-to-br from-red-500 to-pink-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-red-100 text-sm font-medium uppercase">Total Expenses</p>
+            <h3 class="text-3xl font-bold mt-2">${{ summary.total_amount|floatformat:2 }}</h3>
+            <p class="text-red-100 text-xs mt-1">{{ summary.expense_count }} transactions</p>
+        </div>
+        
+        {% for category in category_breakdown|slice:":2" %}
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase">{{ category.category__name }}</p>
+            <h3 class="text-2xl font-bold mt-2 text-slate-900 dark:text-white">${{ category.total|floatformat:2 }}</h3>
+            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium mt-2
+                {% if category.category__type == 'fixed' %}bg-blue-100 text-blue-800{% else %}bg-purple-100 text-purple-800{% endif %}">
+                {{ category.category__type|title }}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Category</label>
+                <select name="category" class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if filters.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Start Date</label>
+                <input type="date" name="start_date" value="{{ filters.start_date }}" class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">End Date</label>
+                <input type="date" name="end_date" value="{{ filters.end_date }}" class="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white">
+            </div>
+            
+            <div class="flex gap-2 items-end">
+                <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                    Apply
+                </button>
+                <a href="{% url 'branch_expense_list' branch.id %}" class="px-6 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Expenses Table -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Expense Records</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                <thead class="bg-slate-50 dark:bg-slate-900">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Description</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Amount</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="expense-list-body" class="divide-y divide-slate-100 dark:divide-slate-700">
+                    {% for expense in expenses %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td class="px-6 py-4 text-sm text-slate-900 dark:text-white">{{ expense.date|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium
+                                {% if expense.category.type == 'fixed' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200{% else %}bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200{% endif %}">
+                                {{ expense.category.name }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">
+                            {{ expense.description|truncatewords:10 }}
+                            {% if expense.receipt_file %}
+                            <a href="{{ expense.receipt_file.url }}" target="_blank" class="ml-2 text-blue-600 hover:text-blue-800">
+                                <svg class="w-4 h-4 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                </svg>
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-bold text-right text-red-600 dark:text-red-400">${{ expense.amount|floatformat:2 }}</td>
+                        <td class="px-6 py-4 text-sm text-right">
+                            <div class="flex justify-end gap-2">
+                                <a href="{% url 'branch_expense_update' branch.id expense.pk %}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </a>
+                                <a href="{% url 'branch_expense_delete' branch.id expense.pk %}" class="text-red-600 hover:text-red-800 dark:text-red-400">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                            No expenses found. <a href="{% url 'branch_expense_create' branch.id %}" class="text-blue-600 hover:text-blue-800">Add your first expense</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/offline-forms.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        new OfflineListInjector({
+            containerId: 'expense-list-body',
+            storeName: 'expenses',
+            emptyStateId: null,
+            templateFunc: (item) => `
+                <tr class="bg-yellow-50 dark:bg-yellow-900/10" data-offline-id="${item.id}">
+                    <td class="px-6 py-4 text-sm text-slate-900 dark:text-white">
+                        ${new Date(item.date).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800 animate-pulse">
+                            ${item.category_name || 'Uncategorized'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">
+                        ${item.description}
+                        <span class="ml-2 text-xs text-yellow-600">(Pending Sync)</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm font-bold text-right text-red-600 dark:text-red-400">
+                        $${parseFloat(item.amount).toFixed(2)}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-right">
+                        <!-- Actions disabled for pending items -->
+                    </td>
+                </tr>
+            `
+        });
+    });
+</script>
+{% endblock %}

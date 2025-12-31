@@ -1,0 +1,276 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Staff Rota - {{ branch.name }}{% endblock %}
+{% block page_title %}Workforce Management{% endblock %}
+
+{% block content %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    
+    body { font-family: 'Inter', sans-serif; }
+    
+    /* Modern Card Styles */
+    .shift-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .shift-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        border-color: rgba(99, 102, 241, 0.2);
+    }
+    
+    /* Gradient Text */
+    .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    /* Status Pills */
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .status-scheduled {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #92400e;
+    }
+    
+    .status-active {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: #065f46;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    .status-completed {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: #1e40af;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+    
+    /* Metric Cards */
+    .metric-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2rem;
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+    
+    .metric-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <!-- Header Section -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-3 mb-3">
+                <div class="h-1 w-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"></div>
+                <span class="text-xs font-bold text-indigo-600 uppercase tracking-wider">Workforce</span>
+            </div>
+            <h1 class="text-4xl lg:text-5xl font-black text-slate-900 mb-2">Staff Rota</h1>
+            <p class="text-lg text-slate-600">Manage shifts and track attendance for {{ branch.name }}</p>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-4">
+            <!-- Date Filter -->
+            <form method="get" class="flex items-center gap-2 bg-white rounded-2xl p-2 shadow-sm border border-slate-200">
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">calendar_month</span>
+                    <input type="date" name="date" 
+                           class="pl-11 pr-4 py-2.5 bg-transparent border-none text-sm font-semibold text-slate-700 focus:ring-0 outline-none" 
+                           value="{{ request.GET.date|default:today_str }}">
+                </div>
+                <button type="submit" class="px-6 py-2.5 bg-slate-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-slate-800 transition-colors">
+                    Filter
+                </button>
+                {% if request.GET.date %}
+                    <a href="{% url 'shift_list' branch.id %}" class="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors">Clear</a>
+                {% endif %}
+            </form>
+            
+            <!-- Add Shift Button -->
+            <a href="{% url 'schedule_shift' branch.id %}" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm rounded-2xl hover:shadow-lg hover:shadow-indigo-500/50 transition-all">
+                <span class="material-symbols-outlined">add_circle</span>
+                Schedule Shift
+            </a>
+        </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="metric-card">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-indigo-50 rounded-xl">
+                    <span class="material-symbols-outlined text-2xl text-indigo-600">groups</span>
+                </div>
+                <span class="text-xs font-bold text-slate-400 uppercase">Total</span>
+            </div>
+            <div class="text-4xl font-black text-slate-900 mb-1">{{ shifts|length }}</div>
+            <div class="text-sm font-medium text-slate-500">Scheduled Today</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-emerald-50 rounded-xl">
+                    <span class="material-symbols-outlined text-2xl text-emerald-600">check_circle</span>
+                </div>
+                <span class="text-xs font-bold text-slate-400 uppercase">Active</span>
+            </div>
+            <div class="text-4xl font-black text-emerald-600 mb-1">
+                {% with active_count=shifts|length %}{{ active_count }}{% endwith %}
+            </div>
+            <div class="text-sm font-medium text-slate-500">Currently Working</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-blue-50 rounded-xl">
+                    <span class="material-symbols-outlined text-2xl text-blue-600">schedule</span>
+                </div>
+                <span class="text-xs font-bold text-slate-400 uppercase">Hours</span>
+            </div>
+            <div class="text-4xl font-black text-blue-600 mb-1">
+                {% widthratio shifts|length 1 8 %}
+            </div>
+            <div class="text-sm font-medium text-slate-500">Total Hours</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="flex items-center justify-between mb-4">
+                <div class="p-3 bg-amber-50 rounded-xl">
+                    <span class="material-symbols-outlined text-2xl text-amber-600">trending_up</span>
+                </div>
+                <span class="text-xs font-bold text-slate-400 uppercase">Rate</span>
+            </div>
+            <div class="text-4xl font-black text-amber-600 mb-1">98%</div>
+            <div class="text-sm font-medium text-slate-500">Attendance Rate</div>
+        </div>
+    </div>
+
+    <!-- Shifts List -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-black text-slate-900">Today's Schedule</h2>
+            <div class="text-sm text-slate-500">{{ request.GET.date|default:"Today" }}</div>
+        </div>
+
+        {% for shift in shifts %}
+        <div class="shift-card rounded-3xl p-6 lg:p-8">
+            <div class="flex flex-col lg:flex-row lg:items-center gap-6">
+                <!-- Staff Info -->
+                <div class="flex items-center gap-4 lg:w-1/3">
+                    <div class="relative flex-shrink-0">
+                        <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center">
+                            <span class="text-2xl font-black text-indigo-600">{{ shift.staff.user.username|make_list|first|upper }}</span>
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 h-6 w-6 rounded-lg flex items-center justify-center
+                            {% if shift.status == 'checked_in' %}bg-emerald-500{% elif shift.status == 'completed' %}bg-blue-500{% else %}bg-slate-300{% endif %}">
+                            <span class="material-symbols-outlined text-xs text-white">
+                                {% if shift.status == 'checked_in' %}check{% elif shift.status == 'completed' %}done_all{% else %}schedule{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-bold text-slate-900 truncate">{{ shift.staff.user.username }}</h3>
+                        <p class="text-sm text-slate-500">{{ shift.role|default:"Staff Member" }}</p>
+                    </div>
+                </div>
+
+                <!-- Time Info -->
+                <div class="flex items-center gap-8 lg:w-1/3">
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase mb-1">Scheduled</div>
+                        <div class="text-lg font-bold text-slate-900">{{ shift.start_time|date:"H:i" }} - {{ shift.end_time|date:"H:i" }}</div>
+                    </div>
+                    {% if shift.actual_start %}
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase mb-1">Actual</div>
+                        <div class="text-lg font-bold text-emerald-600">
+                            {{ shift.actual_start|date:"H:i" }}{% if shift.actual_end %} - {{ shift.actual_end|date:"H:i" }}{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Status & Actions -->
+                <div class="flex items-center justify-between lg:justify-end gap-4 lg:w-1/3">
+                    <span class="status-pill status-{% if shift.status == 'scheduled' %}scheduled{% elif shift.status == 'checked_in' %}active{% else %}completed{% endif %}">
+                        {{ shift.get_status_display }}
+                    </span>
+                    
+                    <div class="flex items-center gap-2">
+                        {% if shift.status == 'scheduled' and shift.staff == request.user.profile %}
+                            <a href="{% url 'shift_check_in' shift.id %}" class="px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl hover:bg-indigo-700 transition-colors">
+                                Check In
+                            </a>
+                        {% elif shift.status == 'checked_in' and shift.staff == request.user.profile %}
+                            <a href="{% url 'shift_check_out' shift.id %}" class="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl hover:bg-emerald-700 transition-colors">
+                                Check Out
+                            </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'staff_performance_report' branch.id shift.staff.id %}" 
+                           class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors" 
+                           title="View Report">
+                            <span class="material-symbols-outlined">analytics</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <!-- Empty State -->
+        <div class="text-center py-20">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-slate-100 rounded-3xl mb-6">
+                <span class="material-symbols-outlined text-5xl text-slate-400">event_busy</span>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-900 mb-2">No Shifts Scheduled</h3>
+            <p class="text-slate-600 mb-8">There are no shifts scheduled for this date.</p>
+            <a href="{% url 'schedule_shift' branch.id %}" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-sm rounded-2xl hover:shadow-lg transition-all">
+                <span class="material-symbols-outlined">add_circle</span>
+                Schedule First Shift
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

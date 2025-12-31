@@ -1,0 +1,166 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Webhook Debugger - Puxbay{% endblock %}
+{% block page_title %}Webhook Debugger{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Stats Banner -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                    <span class="material-symbols-outlined font-bold">sync_alt</span>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Recent Events</h4>
+                    <p class="text-2xl font-black text-slate-900 dark:text-white">{{ stats.total }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600 dark:bg-green-900/30 dark:text-green-400">
+                    <span class="material-symbols-outlined font-bold">check_circle</span>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Successful</h4>
+                    <p class="text-2xl font-black text-slate-900 dark:text-white">{{ stats.success }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                    <span class="material-symbols-outlined font-bold">error</span>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Failed</h4>
+                    <p class="text-2xl font-black text-slate-900 dark:text-white">{{ stats.failed }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Endpoints -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Active Endpoints</h3>
+            <a href="{% url 'developer_settings' %}" class="text-sm text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 transition-all">
+                Manage Endpoints
+                <span class="material-symbols-outlined text-xs">open_in_new</span>
+            </a>
+        </div>
+        <div class="divide-y divide-slate-100 dark:divide-slate-700">
+            {% for ep in endpoints %}
+            <div class="p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 dark:bg-slate-700">
+                        <span class="material-symbols-outlined">webhook</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ ep.url }}</p>
+                        <p class="text-[10px] text-slate-500 font-mono">Events: {{ ep.events|join:", " }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    {% if ep.is_active %}
+                        <span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-black rounded-full uppercase dark:bg-green-900/30 dark:text-green-400">Active</span>
+                    {% else %}
+                        <span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-black rounded-full uppercase dark:bg-slate-900/30 dark:text-slate-400">Paused</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="p-8 text-center text-slate-400 italic">No active webhook endpoints.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Delivery Logs -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Delivery History (Last 50)</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-700">
+                        <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Time</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Type</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Status</th>
+                        <th class="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    {% for log in logs %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <p class="text-xs font-bold text-slate-900 dark:text-white">{{ log.timestamp|date:"M d, H:i:s" }}</p>
+                            <p class="text-[10px] text-slate-500">{{ log.timestamp|timesince }} ago</p>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 bg-slate-100 text-slate-700 text-[10px] font-bold rounded-md dark:bg-slate-700 dark:text-slate-300">
+                                {{ log.event_type }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if log.status_code >= 200 and log.status_code < 300 %}
+                                <div class="flex items-center gap-2 text-green-600 font-black text-sm">
+                                    <span class="w-2 h-2 rounded-full bg-green-600"></span>
+                                    {{ log.status_code }}
+                                </div>
+                            {% else %}
+                                <div class="flex items-center gap-2 text-red-600 font-black text-sm">
+                                    <span class="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                                    {{ log.status_code|default:"Error" }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <button onclick="togglePayload('{{ log.id }}')" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg transition-all text-slate-500">
+                                <span class="material-symbols-outlined text-sm">visibility</span>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr id="payload-{{ log.id }}" class="hidden bg-slate-900">
+                        <td colspan="4" class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h5 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Request Payload</h5>
+                                    <pre class="bg-black/50 p-4 rounded-xl text-[11px] text-green-400 font-mono overflow-x-auto max-h-60">{{ log.payload|json_script:"js-"|slice:"31:-9" }}</pre>
+                                </div>
+                                <div>
+                                    <h5 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Response Body</h5>
+                                    <pre class="bg-black/50 p-4 rounded-xl text-[11px] text-slate-300 font-mono overflow-x-auto max-h-60">{{ log.response_body|default:"No response body" }}</pre>
+                                    {% if log.error_message %}
+                                        <div class="mt-4 p-3 bg-red-900/30 border border-red-900/50 rounded-lg text-red-400 text-[11px]">
+                                            <p class="font-bold">Error:</p>
+                                            {{ log.error_message }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-slate-500 italic">No delivery attempts found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePayload(id) {
+        const el = document.getElementById(`payload-${id}`);
+        el.classList.toggle('hidden');
+    }
+</script>
+{% endblock %}

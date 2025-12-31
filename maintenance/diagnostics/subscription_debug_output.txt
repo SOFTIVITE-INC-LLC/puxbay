@@ -1,0 +1,45 @@
+============================================================
+SUBSCRIPTION DEBUG
+============================================================
+
+Total tenants: 3
+
+
+Tenant: Eduxkope (ID: ec94a078-b431-4b86-92d0-9e50bff3310d)
+------------------------------------------------------------
+[OK] Has subscription relationship
+  - Subscription ID: 319d445f-d232-445a-a9e1-1c1676b53407
+  - Status: active
+  - Plan: Growth Monthly ($79.00/monthly)
+  - Current period end: 2026-01-25 22:55:57.039913+00:00
+  - Now: 2025-12-27 01:27:52.777702+00:00
+  - Period end is in future: True
+  - is_subscription_active() result: True
+
+  Debug checks:
+    - Status in ['active', 'trialing']: True
+    - Has plan: True
+    - Period end > now: True
+
+Tenant: Puxbay (ID: 15d2be85-f5cb-4152-9ee3-fe88155bb393)
+------------------------------------------------------------
+[ERROR] No subscription found
+  - is_subscription_active() result: False
+
+Tenant: Softivite LLC (ID: 740dda62-b69d-4078-93bf-fbca066cb6c2)
+------------------------------------------------------------
+[OK] Has subscription relationship
+  - Subscription ID: 9ab5d05f-1ee3-4d53-9ca2-35397389c433
+  - Status: active
+  - Plan: Enterprise Monthly ($199.00/monthly)
+  - Current period end: 2026-01-25 23:05:53.098738+00:00
+  - Now: 2025-12-27 01:27:52.787614+00:00
+  - Period end is in future: True
+  - is_subscription_active() result: True
+
+  Debug checks:
+    - Status in ['active', 'trialing']: True
+    - Has plan: True
+    - Period end > now: True
+
+============================================================

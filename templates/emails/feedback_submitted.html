@@ -1,0 +1,47 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<div style="padding: 20px; font-family: sans-serif; line-height: 1.6; color: #333;">
+    <h2 style="color: #2563eb; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+        New Feedback Report: {{ feedback.get_report_type_display }}
+    </h2>
+    
+    <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
+        <p style="margin: 0; font-weight: bold; color: #1f2937;">Subject:</p>
+        <p style="margin: 5px 0 0 0; font-size: 1.1em; color: #111827;">{{ feedback.subject }}</p>
+    </div>
+
+    <div style="margin-bottom: 25px;">
+        <h3 style="font-size: 14px; text-transform: uppercase; color: #6b7280; letter-spacing: 1px; margin-bottom: 10px;">Submission Details</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #4b5563; font-weight: 500;">Tenant:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; text-align: right; color: #111827;">{{ feedback.tenant.name }} ({{ feedback.tenant.id }})</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #4b5563; font-weight: 500;">User:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; text-align: right; color: #111827;">{{ feedback.user.get_full_name|default:feedback.user.username }} ({{ feedback.user.email }})</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; color: #4b5563; font-weight: 500;">Priority:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #f3f4f6; text-align: right;">
+                    <span style="background-color: {% if feedback.priority == 'urgent' or feedback.priority == 'high' %}#fee2e2; color: #991b1b;{% else %}#eff6ff; color: #1e40af;{% endif %} padding: 2px 8px; rounded: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase;">
+                        {{ feedback.get_priority_display }}
+                    </span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="margin-bottom: 30px;">
+        <h3 style="font-size: 14px; text-transform: uppercase; color: #6b7280; letter-spacing: 1px; margin-bottom: 10px;">Message</h3>
+        <div style="white-space: pre-wrap; background-color: #f3f4f6; padding: 20px; border-radius: 8px; border-left: 4px solid #2563eb; color: #374151;">{{ feedback.message }}</div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px;">
+        <a href="{{ admin_url }}" style="background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);">
+            Review in Admin Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

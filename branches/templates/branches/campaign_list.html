@@ -1,0 +1,123 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Marketing Campaigns{% endblock %}
+{% block page_title %}Marketing Campaigns{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800">Marketing Campaigns</h2>
+            <p class="text-slate-500">Manage email and SMS campaigns to engage your customers.</p>
+        </div>
+        <a href="{% url 'company_campaign_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Campaign
+        </a>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+             <div class="flex items-center gap-3">
+                <div class="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium uppercase">Total Emails</p>
+                    <p class="text-lg font-bold text-slate-900">{{ campaigns.count }}</p>
+                </div>
+             </div>
+         </div>
+         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+             <div class="flex items-center gap-3">
+                <div class="p-2 bg-green-100 rounded-lg text-green-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium uppercase">Active</p>
+                    <p class="text-lg font-bold text-slate-900">{{ campaigns|length }}</p>
+                </div>
+             </div>
+         </div>
+         <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+             <div class="flex items-center gap-3">
+                <div class="p-2 bg-purple-100 rounded-lg text-purple-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-medium uppercase">Scheduled</p>
+                    <p class="text-lg font-bold text-slate-900">0</p>
+                </div>
+             </div>
+         </div>
+    </div>
+
+    <!-- Campaign List -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <ul role="list" class="divide-y divide-slate-200">
+            {% for campaign in campaigns %}
+            <li class="hover:bg-slate-50 transition-colors">
+                <div class="px-6 py-5 flex items-center justify-between">
+                    <div class="flex items-center min-w-0 gap-4">
+                        <div class="flex-shrink-0">
+                            {% if campaign.campaign_type == 'email' %}
+                            <span class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            </span>
+                            {% else %}
+                            <span class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-semibold text-slate-900 truncate">{{ campaign.name }}</h3>
+                            <p class="text-sm text-slate-500 truncate mt-0.5">
+                                {{ campaign.subject|default:"No Subject" }} • {{ campaign.get_status_display }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <div class="text-right hidden sm:block">
+                            <p class="text-sm font-medium text-slate-900">
+                                {{ campaign.created_at|date:"M d, Y" }}
+                            </p>
+                            <p class="text-xs text-slate-500">
+                                Created
+                            </p>
+                        </div>
+                        <div class="relative flex-shrink-0">
+                            <button class="p-2 text-slate-400 hover:text-slate-500 rounded-full hover:bg-slate-100">
+                                <span class="sr-only">Options</span>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            {% empty %}
+            <li class="px-6 py-12 text-center text-slate-500">
+                <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-slate-900">No campaigns</h3>
+                <p class="mt-1 text-sm text-slate-500">Get started by creating a new email or SMS campaign.</p>
+                <div class="mt-6">
+                    <a href="{% url 'company_campaign_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        New Campaign
+                    </a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

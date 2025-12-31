@@ -1,0 +1,181 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ title }} - {{ branch.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Inventory Overview</h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Monitor stock levels, expiry dates, and product movements.</p>
+        </div>
+        <div class="flex gap-3">
+             <a href="{% url 'stock_movement_list' branch_id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+                <svg class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                Audit Trail
+            </a>
+            <a href="{% url 'stock_receive' branch_id %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Receive Stock
+            </a>
+            <a href="{% url 'stocktake_list' branch_id %}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+                <svg class="h-5 w-5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                Stocktake
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <!-- Low Stock -->
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-2xl border border-gray-100 dark:border-gray-700">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                         <div class="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                            <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                            </svg>
+                         </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Low Stock Alert</dt>
+                            <dd>
+                                <div class="text-lg font-bold text-gray-900 dark:text-white">{{ low_stock_products|length }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+             <div class="bg-gray-50 dark:bg-gray-700/30 px-5 py-3">
+                <div class="text-sm">
+                    <a href="{% url 'product_list' branch_id %}?filter=low_stock" class="font-medium text-red-600 hover:text-red-500">View all items</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expiring Soon -->
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-2xl border border-gray-100 dark:border-gray-700">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                         <div class="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-full">
+                            <svg class="h-6 w-6 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                         </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Expiring (30 Days)</dt>
+                            <dd>
+                                <div class="text-lg font-bold text-gray-900 dark:text-white">{{ expiring_soon|length }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+             <div class="bg-gray-50 dark:bg-gray-700/30 px-5 py-3">
+                <div class="text-sm">
+                    <a href="{% url 'batch_list' branch_id %}?filter=expiring" class="font-medium text-yellow-600 hover:text-yellow-500">Check batches</a>
+                </div>
+            </div>
+        </div>
+        
+         <!-- Expired -->
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-2xl border border-gray-100 dark:border-gray-700">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                         <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
+                            <svg class="h-6 w-6 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                         </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Expired Stock</dt>
+                            <dd>
+                                <div class="text-lg font-bold text-gray-900 dark:text-white">{{ expired_batches|length }}</div>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+             <div class="bg-gray-50 dark:bg-gray-700/30 px-5 py-3">
+                <div class="text-sm">
+                    <a href="{% url 'batch_list' branch_id %}?filter=expired" class="font-medium text-gray-600 hover:text-gray-500">Process disposal</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Low Stock List -->
+        <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-100 dark:border-gray-700">
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">Critical Stock Levels</h3>
+                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    Action Needed
+                </span>
+            </div>
+            <ul class="divide-y divide-gray-100 dark:divide-gray-700">
+                {% for product in low_stock_products %}
+                <li class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div>
+                             <p class="text-sm font-medium text-gray-900 dark:text-white">{{ product.name }}</p>
+                             <p class="text-xs text-gray-500">SKU: {{ product.sku }}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-sm font-bold text-red-600">{{ product.stock_quantity }} left</span>
+                            <span class="text-xs text-gray-400">Reorder at {{ product.low_stock_threshold }}</span>
+                        </div>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="px-6 py-8 text-center text-sm text-gray-500">
+                    All stock levels are healthy.
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Expiring Batches List -->
+        <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-100 dark:border-gray-700">
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                 <h3 class="text-lg font-bold text-gray-900 dark:text-white">Expiring Soon</h3>
+            </div>
+            <ul class="divide-y divide-gray-100 dark:divide-gray-700">
+                {% for batch in expiring_soon %}
+                <li class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <div class="flex items-center justify-between">
+                         <div>
+                             <p class="text-sm font-medium text-gray-900 dark:text-white">{{ batch.product.name }}</p>
+                             <p class="text-xs text-gray-500">Batch: {{ batch.batch_number }}</p>
+                        </div>
+                        <div class="text-right">
+                             <span class="block text-sm font-bold text-yellow-600">{{ batch.expiry_date }}</span>
+                             <span class="text-xs text-gray-400">{{ batch.quantity }} units</span>
+                        </div>
+                    </div>
+                </li>
+                 {% empty %}
+                <li class="px-6 py-8 text-center text-sm text-gray-500">
+                    No items expiring in the next 30 days.
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

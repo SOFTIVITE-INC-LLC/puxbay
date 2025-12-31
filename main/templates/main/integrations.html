@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Integrations - Connect Your Favorite Tools{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-slate-50 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-4xl font-extrabold text-slate-900 sm:text-5xl">Connect with the tools you love.</h1>
+        <p class="mt-4 text-xl text-slate-500 max-w-2xl mx-auto">
+            Puxbay plays nicely with your favorite accounting, marketing, and e-commerce software. Centralize your operations in one place.
+        </p>
+        <div class="mt-8 max-w-xl mx-auto">
+            <div class="relative rounded-md shadow-sm">
+                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                     <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <input type="text" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-lg border-gray-300 rounded-lg p-4" placeholder="Search integrations (e.g., QuickBooks, Shopify)">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Integration Catalog -->
+<div class="bg-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Categories -->
+        <div class="flex flex-wrap justify-center gap-2 mb-12">
+            <button class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium text-sm">All</button>
+            <button class="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors">Accounting</button>
+            <button class="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors">E-commerce</button>
+            <button class="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors">Marketing</button>
+            <button class="px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors">Payments</button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- Integration 1 -->
+            <div class="group relative bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-blue-300">
+                <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 bg-green-50 rounded-lg flex items-center justify-center text-green-600 font-bold text-xl">Qb</div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-gray-900">QuickBooks</h3>
+                        <p class="text-xs text-gray-500 uppercase tracking-wide">Accounting</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">
+                    Automatically sync your daily sales and tax data. Close your books faster and with fewer errors.
+                </p>
+                <a href="#" class="text-blue-600 text-sm font-medium hover:text-blue-800 flex items-center">
+                    Learn more <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+
+            <!-- Integration 2 -->
+             <div class="group relative bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-blue-300">
+                <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 font-bold text-xl">X</div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-gray-900">Xero</h3>
+                        <p class="text-xs text-gray-500 uppercase tracking-wide">Accounting</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">
+                    Seamless reconciliation of your POS transactions. Map summary accounts easily.
+                </p>
+                <a href="#" class="text-blue-600 text-sm font-medium hover:text-blue-800 flex items-center">
+                    Learn more <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+
+            <!-- Integration 3 -->
+             <div class="group relative bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-blue-300">
+                <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center text-green-800 font-bold text-xl">S</div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-gray-900">Shopify</h3>
+                        <p class="text-xs text-gray-500 uppercase tracking-wide">E-commerce</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">
+                    Sync inventory levels between your brick-and-mortar store and your online shop in real-time.
+                </p>
+                <a href="#" class="text-blue-600 text-sm font-medium hover:text-blue-800 flex items-center">
+                    Learn more <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+            
+            <!-- Integration 4 -->
+             <div class="group relative bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-blue-300">
+                <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 bg-yellow-50 rounded-lg flex items-center justify-center text-yellow-600 font-bold text-xl">Mc</div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-gray-900">Mailchimp</h3>
+                        <p class="text-xs text-gray-500 uppercase tracking-wide">Marketing</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">
+                    Capture customer emails at checkout and sync them to your marketing lists automatically.
+                </p>
+                <a href="#" class="text-blue-600 text-sm font-medium hover:text-blue-800 flex items-center">
+                    Learn more <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+
+            <!-- Integration 5 -->
+             <div class="group relative bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-blue-300">
+                <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 bg-purple-50 rounded-lg flex items-center justify-center text-purple-600 font-bold text-xl">St</div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-gray-900">Stripe</h3>
+                        <p class="text-xs text-gray-500 uppercase tracking-wide">Payments</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">
+                    Accept payments online and in-store with one unified provider. Transparent pricing.
+                </p>
+                <a href="#" class="text-blue-600 text-sm font-medium hover:text-blue-800 flex items-center">
+                    Learn more <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+
+             <!-- Integration 6 -->
+             <div class="group relative bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-blue-300">
+                <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 font-bold text-xl">Wc</div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-gray-900">WooCommerce</h3>
+                        <p class="text-xs text-gray-500 uppercase tracking-wide">E-commerce</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 text-sm mb-4">
+                    The open-source e-commerce platform for WordPress. Fully integrated with our inventory system.
+                </p>
+                <a href="#" class="text-blue-600 text-sm font-medium hover:text-blue-800 flex items-center">
+                    Learn more <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+
+            <!-- Integration 7 (API) -->
+             <div class="group relative bg-slate-900 border border-slate-800 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-blue-500/50">
+                <div class="flex items-center mb-4">
+                    <div class="h-12 w-12 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-white">Custom API</h3>
+                        <p class="text-xs text-blue-400 uppercase tracking-wide font-semibold">Developers</p>
+                    </div>
+                </div>
+                <p class="text-slate-400 text-sm mb-4">
+                    Build your own custom tools or connect propriety systems using our robust REST API with full Swagger documentation.
+                </p>
+                <div class="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <p class="text-xs text-blue-300">
+                        <span class="font-bold">Note:</span> All API calls must use your tenant's specific subdomain (e.g., <code>tenant.puxbay.com</code>). API keys are bound to subdomains.
+                    </p>
+                </div>
+                <div class="flex flex-col space-y-2 mt-4">
+                    <a href="/docs/swagger/" target="_blank" class="text-blue-400 text-sm font-medium hover:text-blue-300 flex items-center">
+                        Explore API Docs <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                    <a href="{% url 'signup' %}?type=developer" class="text-indigo-400 text-sm font-medium hover:text-indigo-300 flex items-center">
+                        Register as Developer <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

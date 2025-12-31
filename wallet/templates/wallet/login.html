@@ -1,0 +1,36 @@
+{% extends 'wallet/base.html' %}
+
+{% block content %}
+<div class="mt-8 animate-fade-in">
+    <div class="mb-10 text-center">
+        <div class="w-16 h-16 premium-gradient rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-xl shadow-indigo-500/20">
+            <span class="material-icons-round text-3xl text-white">account_balance_wallet</span>
+        </div>
+        <h2 class="text-3xl font-bold mb-2">MyWallet</h2>
+        <p class="text-slate-400">Access your loyalty points & history</p>
+    </div>
+
+    <div class="glass-card p-8">
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label for="phone" class="block text-sm font-medium text-slate-400 mb-2">Phone Number</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 material-icons-round text-slate-500">phone</span>
+                    <input type="tel" name="phone" id="phone" required
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-slate-600"
+                        placeholder="Enter your phone number">
+                </div>
+            </div>
+
+            <button type="submit" class="w-full premium-gradient py-4 rounded-xl font-bold shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all">
+                Continue
+            </button>
+        </form>
+    </div>
+
+    <p class="mt-8 text-center text-xs text-slate-500 px-6">
+        By continuing, you agree to our terms. We will verify your membership with the merchant.
+    </p>
+</div>
+{% endblock %}

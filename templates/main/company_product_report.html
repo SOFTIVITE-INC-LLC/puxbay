@@ -1,0 +1,518 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Product Report - {{ request.user.profile.tenant.name }}{% endblock %}
+
+{% block extra_css %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header & Filters -->
+    <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white">{{ request.user.profile.tenant.name }} - Product Analytics</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                {% if start_date and end_date %}
+                    Period: <span class="font-medium text-slate-700 dark:text-slate-300">{{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}</span>
+                {% else %}
+                    Showing: <span class="font-medium text-slate-700 dark:text-slate-300">All Time Data</span>
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="flex flex-wrap gap-2 items-center">
+            <!-- Date Filter Form -->
+            <form method="get" class="flex flex-wrap gap-2 items-center" id="date-filter-form">
+                <div class="relative">
+                    <select name="range" id="date-range-select" class="pl-4 pr-10 py-2 border border-slate-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 dark:border-slate-600 dark:text-white appearance-none cursor-pointer">
+                        <option value="today" {% if date_range == 'today' %}selected{% endif %}>Today</option>
+                        <option value="week" {% if date_range == 'week' %}selected{% endif %}>Last 7 Days</option>
+                        <option value="month" {% if date_range == 'month' %}selected{% endif %}>Last 30 Days</option>
+                        <option value="year" {% if date_range == 'year' %}selected{% endif %}>Last Year</option>
+                        <option value="all" {% if date_range == 'all' %}selected{% endif %}>All Time</option>
+                        <option value="custom" {% if date_range == 'custom' %}selected{% endif %}>Custom Range</option>
+                    </select>
+                </div>
+                
+                <div id="custom-date-inputs" class="flex gap-2 hidden">
+                    <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="px-3 py-2 border border-slate-300 rounded-lg text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white">
+                    <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="px-3 py-2 border border-slate-300 rounded-lg text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">Apply</button>
+                </div>
+            </form>
+
+            <div class="h-6 w-px bg-slate-300 dark:bg-slate-600 mx-2 hidden md:block"></div>
+
+            <!-- Print -->
+            <button onclick="window.print()" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors flex items-center gap-2 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                </svg>
+                Print
+            </button>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="border-b border-slate-200 dark:border-slate-700">
+        <nav class="flex space-x-8" aria-label="Tabs" id="report-tabs">
+            <button type="button" data-tab="inventory" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400">
+                Inventory Status
+            </button>
+            <button type="button" data-tab="performance" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200">
+                Sales Performance
+            </button>
+            <button type="button" data-tab="profitability" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200">
+                Profit Margins
+            </button>
+            <button type="button" data-tab="alerts" class="tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200">
+                Stock Alerts
+                {% if low_stock_count > 0 or out_of_stock_count > 0 %}
+                <span class="ml-2 bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs dark:bg-red-900/30 dark:text-red-400">{{ low_stock_count|add:out_of_stock_count }}</span>
+                {% endif %}
+            </button>
+        </nav>
+    </div>
+
+    <!-- Tab Contents -->
+    
+    <!-- 1. Inventory Status Tab -->
+    <div id="tab-content-inventory" class="space-y-6 tab-content animate-fade-in">
+        
+        <!-- Metrics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Inventory Value -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 dark:bg-slate-800 dark:border-slate-700 transition-all hover:shadow-md">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Inventory Value</p>
+                        <h3 class="text-3xl font-bold text-slate-800 mt-2 dark:text-white">${{ inventory_value|floatformat:2 }}</h3>
+                    </div>
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl dark:bg-blue-900/30 dark:text-blue-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center text-sm text-slate-500 dark:text-slate-400">
+                    <span> across {{ total_products }} products</span>
+                </div>
+            </div>
+
+            <!-- Low Stock -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 dark:bg-slate-800 dark:border-slate-700 transition-all hover:shadow-md">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Low Stock Items</p>
+                        <h3 class="text-3xl font-bold text-slate-800 mt-2 dark:text-white">{{ low_stock_count }}</h3>
+                    </div>
+                    <div class="p-3 bg-amber-50 text-amber-600 rounded-xl dark:bg-amber-900/30 dark:text-amber-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                </div>
+                <div class="mt-4">
+                     {% if low_stock_count > 0 %}
+                    <a href="#" onclick="document.querySelector('[data-tab=alerts]').click()" class="text-sm font-medium text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300 flex items-center gap-1">
+                        View details <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                    {% else %}
+                    <span class="text-sm text-green-600 flex items-center gap-1 dark:text-green-400">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Stock levels healthy
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Out of Stock -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 dark:bg-slate-800 dark:border-slate-700 transition-all hover:shadow-md">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Out of Stock</p>
+                        <h3 class="text-3xl font-bold text-slate-800 mt-2 dark:text-white">{{ out_of_stock_count }}</h3>
+                    </div>
+                    <div class="p-3 bg-red-50 text-red-600 rounded-xl dark:bg-red-900/30 dark:text-red-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                    </div>
+                </div>
+                <div class="mt-4">
+                     {% if out_of_stock_count > 0 %}
+                    <a href="#" onclick="document.querySelector('[data-tab=alerts]').click()" class="text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-1">
+                        View items <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                    {% else %}
+                    <span class="text-sm text-green-600 flex items-center gap-1 dark:text-green-400">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        All items in stock
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- 2. Sales Performance Tab -->
+    <div id="tab-content-performance" class="space-y-6 tab-content hidden animate-fade-in">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Best Sellers Chart -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col dark:bg-slate-800 dark:border-slate-700">
+                <h4 class="text-lg font-bold text-slate-800 mb-6 dark:text-white">Top 10 Best Sellers (Volume)</h4>
+                <div class="flex-1 relative min-h-[300px]">
+                    <canvas id="bestSellersChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Revenue by Category -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col dark:bg-slate-800 dark:border-slate-700">
+                <h4 class="text-lg font-bold text-slate-800 mb-6 dark:text-white">Revenue by Category</h4>
+                <div class="flex-1 relative min-h-[300px] flex items-center justify-center">
+                    {% if revenue_by_category %}
+                    <canvas id="categoryChart"></canvas>
+                    {% else %}
+                    <div class="text-center">
+                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 text-slate-400 mb-3 dark:bg-slate-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                        </div>
+                        <p class="text-slate-500 dark:text-slate-400">No category sales data found for this period.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Best Sellers Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 lg:col-span-2 dark:bg-slate-800 dark:border-slate-700">
+                 <h4 class="text-lg font-bold text-slate-800 mb-4 dark:text-white">Best Sellers Detail</h4>
+                 <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-700/50">
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase dark:text-slate-400 rounded-l-lg">Product</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Quantity Sold</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase dark:text-slate-400 rounded-r-lg">Total Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                            {% for product in best_sellers %}
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                                <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{{ product.product__name }}</td>
+                                <td class="px-4 py-3 text-right text-sm font-bold text-slate-700 dark:text-slate-300">{{ product.quantity_sold }}</td>
+                                <td class="px-4 py-3 text-right text-sm font-bold text-blue-600 dark:text-blue-400">${{ product.revenue|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No sales transactions found for this period.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                 </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 3. Profitability Tab -->
+    <div id="tab-content-profitability" class="space-y-6 tab-content hidden animate-fade-in">
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 dark:bg-slate-800 dark:border-slate-700">
+            <div class="flex items-center justify-between mb-6">
+                 <h4 class="text-lg font-bold text-slate-800 dark:text-white">Profit Margins by Product</h4>
+                 <button class="text-sm text-blue-600 hover:text-blue-700 font-medium dark:text-blue-400">Export CSV</button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-slate-700/50">
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase dark:text-slate-400 rounded-l-lg">Product</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Sold</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Revenue</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Profit</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase dark:text-slate-400 rounded-r-lg">Margin %</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        {% for product in product_margins %}
+                        <tr class="group hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                            <td class="px-4 py-3">
+                                <div class="text-sm font-medium text-slate-900 dark:text-white">{{ product.product__name }}</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-500 group-hover:text-slate-400">{{ product.product__sku }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-600 dark:text-slate-300">{{ product.quantity_sold }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-semibold text-slate-900 dark:text-white">${{ product.revenue|floatformat:2 }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-semibold text-green-600 dark:text-green-400">${{ product.profit|floatformat:2 }}</td>
+                            <td class="px-4 py-3 text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                    {% if product.margin_percent >= 40 %} bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300
+                                    {% elif product.margin_percent >= 20 %} bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300
+                                    {% elif product.margin_percent >= 0 %} bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300
+                                    {% else %} bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 {% endif %}">
+                                    {{ product.margin_percent|floatformat:1 }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No sales data found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Alerts Tab -->
+    <div id="tab-content-alerts" class="space-y-6 tab-content hidden animate-fade-in">
+        
+        {% if not low_stock_items and not out_of_stock_items %}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12 text-center dark:bg-slate-800 dark:border-slate-700">
+             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-4 dark:bg-green-900/30 dark:text-green-400">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Everything looks good!</h3>
+            <p class="text-slate-500 dark:text-slate-400 mt-2">There are no stock alerts requiring your attention right now.</p>
+        </div>
+        {% endif %}
+
+        {% if out_of_stock_items %}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 border-l-4 border-l-red-500 dark:bg-slate-800 dark:border-slate-700">
+            <h4 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 dark:text-white">
+                <span class="p-1.5 bg-red-100 text-red-600 rounded-lg dark:bg-red-900/30 dark:text-red-400">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                </span>
+                Critical: Out of Stock
+            </h4>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-slate-700/50">
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Product</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Branch</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Price</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        {% for item in out_of_stock_items %}
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                            <td class="px-4 py-3">
+                                <div class="text-sm font-medium text-slate-900 dark:text-white">{{ item.name }}</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-500">{{ item.sku }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                                {{ item.branch.name|default:"Global" }}
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-700 dark:text-slate-300">${{ item.price|floatformat:2 }}</td>
+                            <td class="px-4 py-3 text-right">
+                                {% if item.branch or first_branch %}
+                                <a href="{% url 'purchase_order_create' branch_id=item.branch.id|default:first_branch.id %}?product_id={{ item.id }}" class="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400">Restock</a>
+                                {% else %}
+                                <span class="text-xs text-slate-400">No Branch</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if low_stock_items %}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 border-l-4 border-l-amber-500 dark:bg-slate-800 dark:border-slate-700">
+            <h4 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2 dark:text-white">
+                <span class="p-1.5 bg-amber-100 text-amber-600 rounded-lg dark:bg-amber-900/30 dark:text-amber-400">
+                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </span>
+                Warning: Low Stock
+            </h4>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-slate-700/50">
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Product</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Branch</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Current</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Threshold</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                        {% for item in low_stock_items %}
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                            <td class="px-4 py-3">
+                                <div class="text-sm font-medium text-slate-900 dark:text-white">{{ item.name }}</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-500">{{ item.sku }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                                {{ item.branch.name|default:"Global" }}
+                            </td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-amber-600 dark:text-amber-500">{{ item.stock_quantity }}</td>
+                            <td class="px-4 py-3 text-right text-sm text-slate-500 dark:text-slate-400">{{ item.low_stock_threshold }}</td>
+                            <td class="px-4 py-3 text-right">
+                                {% if item.branch or first_branch %}
+                                <a href="{% url 'purchase_order_create' branch_id=item.branch.id|default:first_branch.id %}?product_id={{ item.id }}" class="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400">Order Stock</a>
+                                {% else %}
+                                <span class="text-xs text-slate-400">No Branch</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Tabs Logic ---
+        const tabs = document.querySelectorAll('.tab-link');
+        const contents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.tab;
+                
+                // Update UI State
+                tabs.forEach(t => {
+                   if (t.dataset.tab === target) {
+                       t.className = 'tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400';
+                   } else {
+                       t.className = 'tab-link whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200';
+                   }
+                });
+
+                // Show/Hide Content
+                contents.forEach(c => {
+                    if (c.id === `tab-content-${target}`) {
+                        c.classList.remove('hidden');
+                    } else {
+                        c.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // --- Date Picker Logic ---
+        const form = document.getElementById('date-filter-form');
+        const select = document.getElementById('date-range-select');
+        const customDiv = document.getElementById('custom-date-inputs');
+
+        if (select && customDiv && form) {
+            function updateVisibility() {
+                if (select.value === 'custom') {
+                    customDiv.classList.remove('hidden');
+                    customDiv.classList.add('flex');
+                } else {
+                    customDiv.classList.add('hidden');
+                    customDiv.classList.remove('flex');
+                }
+            }
+            
+            // Initial run
+            updateVisibility();
+
+            select.addEventListener('change', () => {
+                updateVisibility();
+                if (select.value !== 'custom') {
+                    form.submit();
+                }
+            });
+        }
+        
+        // --- Chart Config & Global Theme Check ---
+        const isDark = document.documentElement.classList.contains('dark');
+        const textColor = isDark ? '#cbd5e1' : '#64748b'; // slate-300 : slate-500
+        const gridColor = isDark ? '#334155' : '#f1f5f9'; // slate-700 : slate-100
+        
+        // Chart Defaults
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = textColor;
+        Chart.defaults.scale.grid.color = gridColor;
+
+        // --- 1. Category Chart (Doughnut) ---
+        {% if revenue_by_category %}
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [{% for cat in revenue_by_category %}'{{ cat.product__category__name }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    data: [{% for cat in revenue_by_category %}{{ cat.revenue }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',   // blue-500
+                        'rgba(16, 185, 129, 0.8)',   // emerald-500
+                        'rgba(168, 85, 247, 0.8)',   // purple-500
+                        'rgba(249, 115, 22, 0.8)',   // orange-500
+                        'rgba(236, 72, 153, 0.8)',   // pink-500
+                        'rgba(14, 165, 233, 0.8)',   // sky-500
+                        'rgba(234, 179, 8, 0.8)',    // yellow-500
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 20, usePointStyle: true }
+                    }
+                }
+            }
+        });
+        {% endif %}
+
+        // --- 2. Best Sellers Chart (Bar) ---
+        {% if best_sellers %}
+        const bestSellersCtx = document.getElementById('bestSellersChart').getContext('2d');
+        new Chart(bestSellersCtx, {
+            type: 'bar',
+            data: {
+                labels: [{% for prod in best_sellers %}'{{ prod.product__name|truncatechars:15 }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Units Sold',
+                    data: [{% for prod in best_sellers %}{{ prod.quantity_sold }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)', // blue-500 (transparent)
+                    borderColor: 'rgb(59, 130, 246)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                         callbacks: {
+                            label: function(context) {
+                                return context.raw + ' units sold';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { display: true, drawBorder: false }
+                    },
+                    x: {
+                        grid: { display: false, drawBorder: false }
+                    }
+                }
+            }
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}

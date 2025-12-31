@@ -1,0 +1,132 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Sales Heatmap - Analytics{% endblock %}
+
+{% block page_title %}Sales Heatmap{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Controls -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h2 class="text-lg font-bold text-slate-800">Branch Activity Heatmap</h2>
+            <p class="text-sm text-slate-500">Transaction density by Day & Hour</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <select id="branch-select" class="rounded-lg border-slate-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value="">All Branches</option>
+                {% for b in branches %}
+                <option value="{{ b.id }}" {% if branch.id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+            </select>
+            <select id="period-select" class="rounded-lg border-slate-300 text-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value="week">Last 7 Days</option>
+                <option value="month" selected>Last 30 Days</option>
+                <option value="year">Last Year</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Chart Container -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 min-h-[500px]">
+        <div id="heatmap-chart"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let chart = null;
+
+        const branchSelect = document.getElementById('branch-select');
+        const periodSelect = document.getElementById('period-select');
+
+        function fetchAndRender() {
+            const branchId = branchSelect.value;
+            const period = periodSelect.value;
+            
+            let url = "{% url 'heatmap_api' %}";
+            if (branchId) {
+                url = `/dashboard/analytics/heatmap/api/${branchId}/`; 
+            }
+            url += `?period=${period}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    renderChart(data.data);
+                })
+                .catch(err => console.error('Error loading heatmap data:', err));
+        }
+
+        function renderChart(data) {
+            // Data format from API: [{weekday: 1-7, hour: 0-23, count: N, revenue: M}, ...]
+            // ApexCharts Heatmap expects series: [{name: '00:00', data: [{x: 'Mon', y: 10}, ...]}, ...]
+            // Actually usually: Series = Rows (Hours or Days), Data = Columns.
+            // Let's make Y-axis = Day of Week, X-axis = Hour of Day.
+            
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const hours = Array.from({length: 24}, (_, i) => i.toString().padStart(2, '0') + ':00');
+
+            // Initialize matrix
+            // matrix[day_index][hour_index] = value
+            const matrix = Array(7).fill().map(() => Array(24).fill(0));
+
+            data.forEach(item => {
+                // item.weekday: 1=Sun (Django default) -> index 0
+                // item.hour: 0-23 -> index 0-23
+                const dayIdx = item.weekday - 1; 
+                const hourIdx = item.hour;
+                if (dayIdx >= 0 && dayIdx < 7 && hourIdx >= 0 && hourIdx < 24) {
+                    matrix[dayIdx][hourIdx] = item.count; // Using transaction count for density
+                }
+            });
+
+            const series = days.map((day, dayIdx) => {
+                return {
+                    name: day,
+                    data: hours.map((hour, hourIdx) => ({
+                        x: hour,
+                        y: matrix[dayIdx][hourIdx]
+                    }))
+                };
+            }).reverse(); // Reverse to have Sun at bottom or top? Usually Mon top.
+            // Let's reverse so Mon is top if we listed Mon first. Django 1=Sun (usually).
+            // Let's keep Standard: Sun at top (index 0). But Chart renders bottom-up usually?
+            // ApexCharts Heatmap renders first series at TOP. So Sun at top.
+
+            const options = {
+                series: series,
+                chart: {
+                    height: 450,
+                    type: 'heatmap',
+                    toolbar: { show: false }
+                },
+                dataLabels: { enabled: false },
+                colors: ["#008FFB"],
+                title: { text: 'Transaction Density' },
+                tooltip: {
+                    y: {
+                        formatter: function (val) {
+                            return val + " orders";
+                        }
+                    }
+                }
+            };
+
+            if (chart) {
+                chart.destroy();
+            }
+            chart = new ApexCharts(document.querySelector("#heatmap-chart"), options);
+            chart.render();
+        }
+
+        branchSelect.addEventListener('change', fetchAndRender);
+        periodSelect.addEventListener('change', fetchAndRender);
+
+        // Initial Load
+        fetchAndRender();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends 'storefront/base.html' %}
+{% load storefront_extras %}
+
+{% block title %}Order Details #{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto py-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+        <div class="flex items-center gap-6">
+            <a href="{% url 'customer_orders' tenant.subdomain branch.id %}" class="w-12 h-12 flex items-center justify-center glass-card rounded-xl border border-white dark:border-gray-800 hover:bg-gray-900 dark:hover:bg-gray-700 hover:text-white transition-all duration-300">
+                <span class="material-icons-round">arrow_back</span>
+            </a>
+            <div>
+                <h1 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Order #{{ order.order_number }}</h1>
+                <p class="text-gray-500 dark:text-gray-400 font-medium tracking-tight">Placed on {{ order.created_at|date:"F j, Y" }}</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest border-4 border-white dark:border-gray-800 shadow-sm dark:shadow-none
+                {% if order.status == 'completed' %}bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400
+                {% elif order.status == 'pending' %}bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400
+                {% elif order.status == 'cancelled' %}bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400
+                {% else %}bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400{% endif %}">
+                {{ order.status }}
+            </span>
+            <button onclick="window.print()" class="w-12 h-12 flex items-center justify-center glass-card rounded-xl border border-white dark:border-gray-800 text-gray-400 dark:text-gray-500 hover:text-primary dark:hover:text-primary transition-all">
+                <span class="material-icons-round">print</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-8">
+            
+            <!-- Order Timeline -->
+            <div class="glass-card rounded-[2.5rem] p-10 border border-white dark:border-gray-800 shadow-sm dark:shadow-none">
+                <h3 class="text-xl font-black text-gray-900 dark:text-white mb-10 tracking-tight">Order Timeline</h3>
+                <div class="relative pl-8 space-y-12 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-1 before:bg-gray-100 dark:before:bg-gray-800 before:rounded-full">
+                    
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1 w-6 h-6 rounded-full bg-emerald-500 border-4 border-white dark:border-gray-900 shadow-sm ring-4 ring-emerald-100 dark:ring-emerald-500/20 transition-all"></div>
+                        <h4 class="font-black text-gray-900 dark:text-white text-sm mb-1 uppercase tracking-widest">Order Placed</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ order.created_at|date:"F j, Y - g:i A" }}</p>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">Your order has been received and is waiting for branch confirmation.</p>
+                    </div>
+
+                    {% if order.status != 'pending' %}
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1 w-6 h-6 rounded-full {% if order.status == 'cancelled' %}bg-red-500 ring-red-100 dark:ring-red-500/20{% else %}bg-emerald-500 ring-emerald-100 dark:ring-emerald-500/20{% endif %} border-4 border-white dark:border-gray-900 shadow-sm ring-4"></div>
+                        <h4 class="font-black text-gray-900 dark:text-white text-sm mb-1 uppercase tracking-widest">{% if order.status == 'cancelled' %}Cancelled{% else %}Processed{% endif %}</h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ order.updated_at|date:"F j, Y - g:i A" }}</p>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                            {% if order.status == 'cancelled' %}Unfortunately, this order was cancelled. Please contact support if this was an error.{% else %}Great news! Your items have been processed and are ready at the pickup counter.{% endif %}
+                        </p>
+                    </div>
+                    {% else %}
+                    <div class="relative">
+                        <div class="absolute -left-[31px] top-1 w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 border-4 border-white dark:border-gray-900 shadow-sm"></div>
+                        <h4 class="font-black text-gray-400 dark:text-gray-500 text-sm mb-1 uppercase tracking-widest">Processing</h4>
+                        <p class="mt-2 text-sm text-gray-400 dark:text-gray-500 italic">Expected to be ready soon...</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Items List -->
+            <div class="bg-white dark:bg-gray-900 rounded-[2.5rem] p-10 shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-800">
+                <h3 class="text-xl font-black text-gray-900 dark:text-white mb-8 tracking-tight">Order Items</h3>
+                <div class="space-y-6">
+                    {% for item in order.items.all %}
+                    <div class="flex items-center gap-6 p-4 rounded-3xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all group">
+                         <div class="w-20 h-20 glass-card rounded-2xl flex items-center justify-center border border-white dark:border-gray-800 flex-shrink-0 p-3 group-hover:scale-105 transition-transform">
+                             {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" class="w-full h-full object-contain">
+                             {% else %}
+                                <span class="text-xl font-black text-primary/20">{{ item.product.name|slice:":2"|upper }}</span>
+                             {% endif %}
+                         </div>
+                         <div class="flex-grow">
+                             <h5 class="font-black text-gray-900 dark:text-white group-hover:text-primary transition-colors">{{ item.product.name }}</h5>
+                             <p class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1">Qty: {{ item.quantity }} × ${{ item.price }}</p>
+                         </div>
+                         <div class="text-right">
+                             <span class="text-lg font-black text-gray-900 dark:text-white tabular-nums">${{ item.price|multiply:item.quantity|floatformat:2 }}</span>
+                         </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Summary -->
+        <div class="space-y-8">
+            <!-- Payment & Summary -->
+            <div class="glass-card rounded-[2.5rem] p-8 shadow-2xl shadow-gray-200/50 dark:shadow-none border border-white dark:border-gray-800">
+                <h3 class="text-lg font-black text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <span class="material-icons-round text-primary">analytics</span>
+                    Financial Summary
+                </h3>
+                <div class="space-y-4 mb-8">
+                    <div class="flex justify-between items-center text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <span>Items Total</span>
+                        <span class="font-bold text-gray-900 dark:text-white">${{ order.total_amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm font-medium text-gray-500 dark:text-gray-400">
+                        <span>Service Fee</span>
+                        <span class="text-emerald-500 font-bold">Free</span>
+                    </div>
+                    <div class="pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-between items-end">
+                        <span class="font-black text-gray-900 dark:text-white uppercase tracking-widest text-[10px]">Grand Total</span>
+                        <span class="text-3xl font-black text-primary tabular-nums tracking-tighter">${{ order.total_amount|floatformat:2 }}</span>
+                    </div>
+                </div>
+                
+                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center gap-4">
+                     <div class="w-10 h-10 rounded-xl bg-white dark:bg-gray-900 flex items-center justify-center text-primary shadow-sm dark:shadow-none">
+                         <span class="material-icons-round text-lg">payment</span>
+                     </div>
+                     <div>
+                         <span class="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">Method</span>
+                         <span class="block text-sm font-bold text-gray-700 dark:text-gray-300">{{ order.get_payment_method_display }}</span>
+                     </div>
+                </div>
+            </div>
+
+            <!-- Customer Details -->
+            <div class="bg-gray-900 rounded-[2.5rem] p-8 text-white">
+                <h3 class="text-lg font-black mb-6 flex items-center gap-2 text-primary">
+                    <span class="material-icons-round">contact_mail</span>
+                    Customer Info
+                </h3>
+                <div class="space-y-6">
+                    <div>
+                        <span class="block text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Full Name</span>
+                        <span class="block font-bold">{{ order.customer_name }}</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Phone Number</span>
+                        <span class="block font-bold">{{ order.customer_phone }}</span>
+                    </div>
+                    {% if order.customer_email %}
+                    <div>
+                        <span class="block text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Email Address</span>
+                        <span class="block font-bold truncate">{{ order.customer_email }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

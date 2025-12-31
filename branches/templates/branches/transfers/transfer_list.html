@@ -1,0 +1,213 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Stock Transfers - SaaS POS{% endblock %}
+
+{% block content %}
+<div class="px-4 py-8 max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Stock Transfers</h1>
+            <p class="mt-1 text-sm text-gray-500">Manage inventory movement between branches.</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'transfer_request' branch.id %}" class="inline-flex items-center px-5 py-2.5 border border-slate-200 rounded-lg shadow-sm text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 transition-all">
+                <span class="material-symbols-outlined mr-2 text-xl">download</span>
+                Request Stock
+            </a>
+            <a href="{% url 'transfer_create' branch.id %}" class="inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+                <span class="material-symbols-outlined mr-2 text-xl">upload</span>
+                Send Transfer
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50/50">
+            <nav class="flex -mb-px" aria-label="Tabs" id="transfer-tabs">
+                <button type="button" data-target="tab-sent" class="transfer-tab-btn active w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm transition-all border-indigo-500 text-indigo-600">
+                    Outbound (Sent)
+                </button>
+                <button type="button" data-target="tab-received" class="transfer-tab-btn w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm transition-all border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Inbound (Received)
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-0">
+            <!-- Sent Tab -->
+            <div id="tab-sent" class="transfer-tab-content">
+                <ul id="sent-transfers-list" class="divide-y divide-gray-100">
+                    {% for transfer in sent_transfers %}
+                        <li class="hover:bg-gray-50 transition-colors">
+                            <a href="{% url 'transfer_detail' branch.id transfer.id %}" class="block p-4 sm:px-6">
+                                <div class="flex items-center justify-between gap-4">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-sm font-bold text-indigo-600 truncate">{{ transfer.reference_id }}</span>
+                                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                            </svg>
+                                            <span class="text-sm font-medium text-gray-700">{{ transfer.destination_branch.name }}</span>
+                                        </div>
+                                        <div class="mt-1 flex items-center gap-4 text-xs text-gray-500">
+                                            <span class="flex items-center">
+                                                <svg class="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                                                </svg>
+                                                {{ transfer.items.count }} Line Items
+                                            </span>
+                                            <span class="flex items-center">
+                                                <svg class="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                {{ transfer.created_at|date:"M d, H:i" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="px-2.5 py-1 text-xs font-bold rounded-full 
+                                            {% if transfer.status == 'completed' %}bg-emerald-100 text-emerald-800
+                                            {% elif transfer.status == 'cancelled' %}bg-rose-100 text-rose-800
+                                            {% elif transfer.status == 'shipped' %}bg-blue-100 text-blue-800
+                                            {% elif transfer.status == 'approved' %}bg-indigo-100 text-indigo-800
+                                            {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                            {{ transfer.get_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li class="p-12 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No outbound transfers</h3>
+                            <p class="mt-1 text-sm text-gray-500">Get started by creating a new transfer request.</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Received Tab -->
+            <div id="tab-received" class="transfer-tab-content hidden">
+                <ul class="divide-y divide-gray-100">
+                    {% for transfer in received_transfers %}
+                        <li class="hover:bg-gray-50 transition-colors">
+                            <a href="{% url 'transfer_detail' branch.id transfer.id %}" class="block p-4 sm:px-6">
+                                <div class="flex items-center justify-between gap-4">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-sm font-bold text-indigo-600 truncate">{{ transfer.reference_id }}</span>
+                                            <svg class="h-4 w-4 text-gray-400 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                            </svg>
+                                            <span class="text-sm font-medium text-gray-700">{{ transfer.source_branch.name }}</span>
+                                        </div>
+                                        <div class="mt-1 flex items-center gap-4 text-xs text-gray-500">
+                                            <span class="flex items-center">
+                                                <svg class="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                                                </svg>
+                                                {{ transfer.items.count }} Line Items
+                                            </span>
+                                            <span class="flex items-center">
+                                                <svg class="mr-1 h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                {{ transfer.created_at|date:"M d, H:i" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="px-2.5 py-1 text-xs font-bold rounded-full 
+                                            {% if transfer.status == 'completed' %}bg-emerald-100 text-emerald-800
+                                            {% elif transfer.status == 'cancelled' %}bg-rose-100 text-rose-800
+                                            {% elif transfer.status == 'shipped' %}bg-blue-100 text-blue-800
+                                            {% elif transfer.status == 'approved' %}bg-indigo-100 text-indigo-800
+                                            {% else %}bg-amber-100 text-amber-800{% endif %}">
+                                            {{ transfer.get_status_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                    {% empty %}
+                        <li class="p-12 text-center">
+                            <p class="text-sm text-gray-500">No inbound transfers received yet.</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabBtns = document.querySelectorAll('.transfer-tab-btn');
+        const tabContents = document.querySelectorAll('.transfer-tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                
+                // Update Buttons
+                tabBtns.forEach(b => {
+                    b.classList.remove('active', 'border-indigo-500', 'text-indigo-600');
+                    b.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                });
+                btn.classList.add('active', 'border-indigo-500', 'text-indigo-600');
+                btn.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+
+                // Update Content
+                tabContents.forEach(content => {
+                    if (content.id === targetId) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    });
+</script>
+<script src="{% static 'js/offline-forms.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof OfflineListInjector !== 'undefined') {
+            new OfflineListInjector({
+                containerId: 'sent-transfers-list',
+                storeName: 'stock_transfers',
+                templateFunc: (item) => `
+                    <li class="hover:bg-gray-50 transition-colors bg-amber-50/30">
+                        <div class="block p-4 sm:px-6 opacity-75">
+                            <div class="flex items-center justify-between gap-4">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-sm font-bold text-gray-400 italic">Pending Sync</span>
+                                        <svg class="h-4 w-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                        </svg>
+                                        <span class="text-sm font-medium text-gray-500">${item.destination_branch_name || 'Destination'}</span>
+                                    </div>
+                                    <div class="mt-1 flex items-center gap-4 text-xs text-gray-400">
+                                        <span>${item.items ? item.items.length : 0} Line Items</span>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0 flex items-center gap-2">
+                                    <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800 animate-pulse">Syncing...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                `
+            });
+        }
+    });
+</script>
+{% endblock %}

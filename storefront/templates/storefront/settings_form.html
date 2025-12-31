@@ -1,0 +1,480 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Store Intelligence - SaaS POS{% endblock %}
+{% block page_title %}Storefront Intelligence{% endblock %}
+{% block messages %}{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.4);
+        --premium-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+    }
+
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--premium-shadow);
+        border-radius: 2rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-section-header {
+        font-family: 'Outfit', sans-serif;
+        letter-spacing: -0.02em;
+    }
+
+    /* Premium Input Styling - Replaced @apply with standard CSS properties where needed */
+    .premium-input-field {
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.5);
+        border-color: rgba(226, 232, 240, 0.6);
+        border-radius: 1rem;
+        padding: 1rem 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #0f172a;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-width: 1px;
+    }
+    .premium-input-field:focus {
+        border-color: rgba(59, 130, 246, 0.5);
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.05), 0 10px 15px -3px rgba(59, 130, 246, 0.05);
+        background-color: white;
+    }
+
+    /* Custom Color Picker */
+    .color-preview-blob {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 1rem;
+        border: 3px solid white;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+    }
+
+    /* Animation */
+    @keyframes pulse-slow {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    .animate-pulse-slow {
+        animation: pulse-slow 3s infinite ease-in-out;
+    }
+
+    [x-cloak] { display: none !important; }
+</style>
+
+<div class="space-y-10" x-data="{ activeSection: 'general' }">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-6">
+        <div>
+            <div class="flex items-center gap-3 mb-4">
+                <span class="w-8 h-1 bg-blue-600 rounded-full"></span>
+                <span class="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600">Merchant Settings</span>
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-black text-slate-900 tracking-tighter form-section-header">Storefront Intelligence</h1>
+            <p class="mt-4 text-lg text-slate-500 font-medium max-w-2xl">Powering your digital commerce experience across the global web with enterprise-grade controls.</p>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <div class="text-right hidden sm:block">
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Current Status</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="flex h-2 w-2 relative">
+                        <span class="{% if store_settings.is_active %}animate-ping{% endif %} absolute inline-flex h-full w-full rounded-full {% if store_settings.is_active %}bg-emerald-400{% else %}bg-slate-300{% endif %} opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 {% if store_settings.is_active %}bg-emerald-500{% else %}bg-slate-400{% endif %}"></span>
+                    </span>
+                    <span class="text-xs font-bold text-slate-700">{% if store_settings.is_active %}Live & Active{% else %}Maintenance Mode{% endif %}</span>
+                </div>
+            </div>
+            {% if store_settings.default_branch %}
+            <a href="{% url 'store_home' request.user.profile.tenant.subdomain store_settings.default_branch.id %}" target="_blank"
+               class="h-14 px-8 inline-flex items-center gap-3 bg-white border border-slate-200 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-slate-900 hover:bg-slate-50 transition-all shadow-sm">
+                Open Storefront
+                <span class="material-symbols-outlined text-sm">open_in_new</span>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <!-- Vertical Side Navigation -->
+        <aside class="lg:col-span-3 space-y-2 sticky top-24">
+            <button @click="activeSection = 'general'" :class="activeSection === 'general' ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:bg-white/80 hover:text-slate-900'" class="flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold w-full transition-all duration-300">
+                <span class="material-symbols-outlined text-lg">settings_suggest</span>
+                Core Parameters
+            </button>
+            <button @click="activeSection = 'branding'" :class="activeSection === 'branding' ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:bg-white/80 hover:text-slate-900'" class="flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold w-full transition-all duration-300">
+                <span class="material-symbols-outlined text-lg">palette</span>
+                Visual Identity
+            </button>
+            <button @click="activeSection = 'logistics'" :class="activeSection === 'logistics' ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:bg-white/80 hover:text-slate-900'" class="flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold w-full transition-all duration-300">
+                <span class="material-symbols-outlined text-lg">local_shipping</span>
+                Fulfillment Logic
+            </button>
+            <button @click="activeSection = 'payments'" :class="activeSection === 'payments' ? 'bg-white text-blue-600 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-500 hover:bg-white/80 hover:text-slate-900'" class="flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold w-full transition-all duration-300">
+                <span class="material-symbols-outlined text-lg">account_balance_wallet</span>
+                Revenue Gateways
+            </button>
+            
+            <div class="mt-12 p-6 rounded-[2rem] bg-indigo-600 text-white shadow-2xl shadow-indigo-500/20 relative overflow-hidden group">
+                <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                <h4 class="text-xs font-black uppercase tracking-[0.2em] mb-3 relative z-10">Global Reach</h4>
+                <p class="text-[11px] font-medium text-indigo-100 leading-relaxed mb-4 relative z-10">Your storefront is optimized for SEO and high-conversion mobile interactions by default.</p>
+                <div class="flex items-center gap-2 relative z-10">
+                    <span class="material-symbols-outlined text-xs">verified</span>
+                    <span class="text-[9px] font-black uppercase tracking-widest">Enterprise Secured</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Form Body -->
+        <div class="lg:col-span-9">
+            <form method="POST" enctype="multipart/form-data" class="space-y-8">
+                {% csrf_token %}
+
+                <!-- General Section -->
+                <div x-show="activeSection === 'general'" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="glass-card p-8 sm:p-12">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+                        <div>
+                            <h2 class="text-2xl font-black text-slate-900 tracking-tight form-section-header">Core Parameters</h2>
+                            <p class="text-sm text-slate-500 font-medium mt-1">Foundational store identity and availability.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer select-none">
+                            <span class="mr-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Public Status</span>
+                            <div class="relative">
+                                {{ form.is_active }}
+                                <div class="w-12 h-6 bg-slate-200 rounded-full transition-colors duration-300 peer-checked:bg-blue-600">
+                                    <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 transform peer-checked:translate-x-6"></div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Store Name</label>
+                            <div class="relative">
+                                {{ form.store_name }}
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Universal Slug</label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                                    <span class="text-slate-400 font-black text-[10px] uppercase tracking-widest">/store/</span>
+                                </div>
+                                <div class="pl-16">
+                                    {{ form.slug }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Executive Greeting</label>
+                            {{ form.welcome_message }}
+                            <p class="text-[10px] text-slate-400 font-bold mt-2 ml-1">Displayed as the primary hero message on your landing page.</p>
+                        </div>
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Merchant Biography</label>
+                            {{ form.about_text }}
+                        </div>
+
+                        <div class="md:col-span-2 space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Default Operational Branch</label>
+                            {{ form.default_branch }}
+                            <p class="text-[10px] text-slate-400 font-bold mt-2 ml-1">Sales and stock deductions will be routed to this branch by default.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Branding Section -->
+                <div x-show="activeSection === 'branding'" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="glass-card p-8 sm:p-12">
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight form-section-header mb-2">Visual Identity</h2>
+                    <p class="text-sm text-slate-500 font-medium mb-12">Refine how your brand is perceived in the digital ecosystem.</p>
+
+                    <div class="space-y-12">
+                        <!-- Color Theme -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-8 p-8 rounded-[2rem] bg-slate-50/50 border border-slate-200/50">
+                            <div class="max-w-md">
+                                <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-1">Brand Accentuation</h3>
+                                <p class="text-xs text-slate-500 font-medium leading-relaxed">This primary color dictates the aesthetic of buttons, indicators, and highlights across the entire storefront.</p>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="text-right">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Selected Hex</p>
+                                    <p class="text-sm font-mono font-bold text-slate-900" id="hex-display">{{ store_settings.primary_color|default:'#3b82f6' }}</p>
+                                </div>
+                                <div class="relative group">
+                                    <div class="absolute inset-0 bg-blue-500 blur-xl opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                                    <input type="color" name="primary_color" id="primary-color-input" value="{{ store_settings.primary_color|default:'#3b82f6' }}" 
+                                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                    <div class="color-preview-blob relative z-0 animate-pulse-slow" id="primary-color-blob" style="background-color: {{ store_settings.primary_color|default:'#3b82f6' }}"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Media Assets -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                            <!-- Logo Upload -->
+                            <div class="space-y-6">
+                                <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Signature Logo</label>
+                                <div class="relative group cursor-pointer">
+                                    <div class="aspect-square rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-8 transition-all hover:border-blue-300 hover:bg-blue-50/30 overflow-hidden">
+                                        {% if store_settings.logo_image %}
+                                            <img src="{{ store_settings.logo_image.url }}" class="w-full h-full object-contain filter drop-shadow-2xl">
+                                        {% else %}
+                                            <span class="material-symbols-outlined text-4xl text-slate-300 mb-4">diamond</span>
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">No Asset Loaded</p>
+                                        {% endif %}
+                                        
+                                        <div class="absolute inset-0 bg-white/90 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                                            <span class="material-symbols-outlined text-2xl text-blue-600 mb-4">upload_file</span>
+                                            <p class="text-xs font-black text-slate-900 uppercase tracking-widest mb-2">Update Asset</p>
+                                            <p class="text-[9px] font-bold text-slate-500 leading-relaxed capitalize">Optimized PNG or SVG recommended</p>
+                                            <div class="mt-4 w-full text-left overflow-hidden">
+                                                {{ form.logo_image }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Banner Upload -->
+                            <div class="space-y-6">
+                                <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Hero Backdrop</label>
+                                <div class="relative group cursor-pointer">
+                                    <div class="aspect-square rounded-[2.5rem] bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-8 transition-all hover:border-blue-300 hover:bg-blue-50/30 overflow-hidden">
+                                        {% if store_settings.banner_image %}
+                                            <img src="{{ store_settings.banner_image.url }}" class="w-full h-full object-cover rounded-[1.5rem] shadow-xl">
+                                        {% else %}
+                                            <span class="material-symbols-outlined text-4xl text-slate-300 mb-4">add_photo_alternate</span>
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">No Banner Loaded</p>
+                                        {% endif %}
+
+                                        <div class="absolute inset-0 bg-white/90 rounded-[2.5rem] opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-8 text-center backdrop-blur-sm">
+                                            <span class="material-symbols-outlined text-2xl text-blue-600 mb-4">image_search</span>
+                                            <p class="text-xs font-black text-slate-900 uppercase tracking-widest mb-2">New Backdrop</p>
+                                            <p class="text-[9px] font-bold text-slate-500 leading-relaxed capitalize">High resolution (1920x1080) recommended</p>
+                                            <div class="mt-4 w-full text-left overflow-hidden">
+                                                {{ form.banner_image }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logistics Section -->
+                <div x-show="activeSection === 'logistics'" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="glass-card p-8 sm:p-12">
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight form-section-header mb-2">Fulfillment Logic</h2>
+                    <p class="text-sm text-slate-500 font-medium mb-12">Configure how orders flow from digital cart to physical hand-off.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="flex items-center justify-between p-8 rounded-[2rem] bg-slate-50 border border-slate-100 group hover:bg-white hover:shadow-xl hover:shadow-slate-200/20 transition-all duration-500">
+                            <div>
+                                <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-1">In-Store Pickup</h3>
+                                <p class="text-[10px] text-slate-500 font-bold">Zero-fee collection point.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer select-none">
+                                <div class="relative">
+                                    {{ form.allow_pickup }}
+                                    <div class="w-12 h-6 bg-slate-200 rounded-full transition-colors duration-300 peer-checked:bg-blue-600">
+                                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 transform peer-checked:translate-x-6"></div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between p-8 rounded-[2rem] bg-slate-50 border border-slate-100 group hover:bg-white hover:shadow-xl hover:shadow-slate-200/20 transition-all duration-500">
+                            <div>
+                                <h3 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-1">Direct Delivery</h3>
+                                <p class="text-[10px] text-slate-500 font-bold">Courier-assisted fulfillments.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer select-none">
+                                <div class="relative">
+                                    {{ form.allow_delivery }}
+                                    <div class="w-12 h-6 bg-slate-200 rounded-full transition-colors duration-300 peer-checked:bg-blue-600">
+                                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 transform peer-checked:translate-x-6"></div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Standard Delivery Fee</label>
+                            <div class="relative">
+                                <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">{{ request.user.profile.branch.currency_symbol }}</span>
+                                <div class="pl-8">{{ form.delivery_fee }}</div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Minimum Commitment</label>
+                            <div class="relative">
+                                <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">{{ request.user.profile.branch.currency_symbol }}</span>
+                                <div class="pl-8">{{ form.min_order_amount }}</div>
+                            </div>
+                            <p class="text-[9px] text-slate-400 font-bold ml-1">Subtotal threshold required to initialize checkout.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payments Section -->
+                <div x-show="activeSection === 'payments'" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="glass-card p-8 sm:p-12">
+                    <h2 class="text-2xl font-black text-slate-900 tracking-tight form-section-header mb-2" id="revenue-gateways">Revenue Gateways</h2>
+                    <p class="text-sm text-slate-500 font-medium mb-12">Connect your financial infrastructure for real-time transaction processing.</p>
+
+                    <div class="space-y-8">
+                        <!-- Stripe -->
+                        <div class="p-10 rounded-[2.5rem] bg-indigo-600 text-white relative overflow-hidden group shadow-xl">
+                            <div class="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                                <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M13.962 8.196c0-1.03-.816-1.503-2.133-1.503-2.022 0-3.957.944-3.957 2.684 0 2.21 2.943 1.846 2.943 3.65 0 .618-.495.918-1.226.918-1.077 0-2.454-.515-3.322-1.03l-.626 2.505c1.076.601 2.628 1.03 4.09 1.03 1.954 0 4.106-.858 4.106-3.235 0-2.274-2.943-1.93-2.943-3.084 0-.58.495-.816 1.096-.816 1.012 0 1.921.43 2.637.794l.433-2.923zm5.038-2.196v3.322H24V11.2h-5v5.71h-3.134V11.2H12.9v-2.196h2.966V5.412c0-2.618 1.583-3.412 3.665-3.412.986 0 1.701.129 2.148.275l-.431 2.382c-.343-.086-.708-.129-1.2-.129-1.031 0-1.121.579-1.121 1.472v.001zM4.09 13.9c-1.288 0-2.274-.472-2.966-1.03L.5 15.372c1.002.687 2.766 1.288 4.41 1.288 2.748 0 4.59-1.373 4.59-4.045 0-4.106-5.83-3.425-5.83-5.265 0-.71.58-1.137 1.43-.137 1.258 0 2.37.5 3.05 1.03L8.7 5.672c-1.012-.626-2.523-1.076-3.794-1.076-2.583 0-4.381 1.341-4.381 3.903 0 3.868 5.8 3.193 5.8 5.253 0 .741-.65 1.147-1.58 1.147z"/></svg>
+                            </div>
+                            <div class="relative z-10">
+                                <div class="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h3 class="text-xl font-black uppercase tracking-widest">Stripe Engine</h3>
+                                        <p class="text-sm font-medium text-indigo-100 mt-1">Accept high-security card payments globally.</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer select-none">
+                                        <div class="relative">
+                                            {{ form.enable_stripe }}
+                                            <div class="w-14 h-8 bg-white/20 rounded-full transition-colors duration-300 peer-checked:bg-white/40">
+                                                <div class="absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-sm transition-transform duration-300 transform peer-checked:translate-x-6"></div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div id="stripe-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-black/10 p-8 rounded-[2rem] border border-white/10 backdrop-blur-md">
+                                    <div class="space-y-2">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-indigo-200 ml-1">Identity Key (Public)</label>
+                                        {{ form.stripe_public_key }}
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-indigo-200 ml-1">Authentication Secret</label>
+                                        {{ form.stripe_secret_key }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paystack -->
+                        <div class="p-10 rounded-[2.5rem] bg-slate-900 text-white relative overflow-hidden group border border-slate-800 shadow-xl">
+                             <div class="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform duration-700 font-black text-9xl italic select-none">
+                                P
+                             </div>
+                             <div class="relative z-10">
+                                <div class="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h3 class="text-xl font-black uppercase tracking-widest">Paystack Flow</h3>
+                                        <p class="text-sm font-medium text-slate-400 mt-1">Localized payment processing for emergent markets.</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer select-none">
+                                        <div class="relative">
+                                            {{ form.enable_paystack }}
+                                            <div class="w-14 h-8 bg-white/10 rounded-full transition-colors duration-300 peer-checked:bg-teal-600/40">
+                                                <div class="absolute left-1 top-1 w-6 h-6 bg-white rounded-full shadow-sm transition-transform duration-300 transform peer-checked:translate-x-6"></div>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div id="paystack-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/5 p-8 rounded-[2rem] border border-white/5 backdrop-blur-md">
+                                    <div class="space-y-2">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Access Key</label>
+                                        {{ form.paystack_public_key }}
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Operational Secret</label>
+                                        {{ form.paystack_secret_key }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategic Footer Buttons -->
+                <div class="flex items-center justify-between gap-8 pt-8 pb-12">
+                    <a href="{% url 'dashboard' %}" class="font-black text-[10px] uppercase tracking-[0.3em] text-slate-400 hover:text-slate-900 transition-colors">Discard Alterations</a>
+                    <button type="submit" class="h-16 px-12 bg-slate-900 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.25em] hover:bg-black transition-all shadow-2xl shadow-slate-900/20 hover:scale-[1.02] active:scale-95 group flex items-center justify-center">
+                        Commit Configurations
+                        <span class="material-symbols-outlined text-sm ml-2 group-hover:translate-x-1 transition-transform">bolt</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Apply Premium Classes to generated inputs
+        const inputs = document.querySelectorAll('.lg\\:col-span-9 input:not([type=checkbox]), .lg\\:col-span-9 textarea, .lg\\:col-span-9 select');
+        inputs.forEach(input => {
+            input.classList.add('premium-input-field');
+            if (input.name === 'slug') {
+               // Special handling for slug input alignment (already has pl-16 wrapper)
+            }
+        });
+
+        // Hide Checkboxes (as we use peer-checked logic for custom toggles)
+        const checkboxes = document.querySelectorAll('.lg\\:col-span-9 input[type=checkbox]');
+        checkboxes.forEach(cb => {
+            cb.classList.add('sr-only', 'peer');
+        });
+
+        // Toggle Logic for Gateway Fields
+        const stripeCheckbox = document.querySelector('input[name="enable_stripe"]');
+        const stripeFields = document.getElementById('stripe-fields');
+        const paystackCheckbox = document.querySelector('input[name="enable_paystack"]');
+        const paystackFields = document.getElementById('paystack-fields');
+
+        function updateGatewayVisibility() {
+            if (stripeCheckbox) {
+                stripeFields.style.opacity = stripeCheckbox.checked ? '1' : '0.4';
+                stripeFields.style.pointerEvents = stripeCheckbox.checked ? 'auto' : 'none';
+                stripeFields.style.filter = stripeCheckbox.checked ? 'none' : 'grayscale(30%)';
+            }
+            if (paystackCheckbox) {
+                paystackFields.style.opacity = paystackCheckbox.checked ? '1' : '0.4';
+                paystackFields.style.pointerEvents = paystackCheckbox.checked ? 'auto' : 'none';
+                paystackFields.style.filter = paystackCheckbox.checked ? 'none' : 'grayscale(30%)';
+            }
+        }
+
+        [stripeCheckbox, paystackCheckbox].forEach(el => {
+            if (el) el.addEventListener('change', updateGatewayVisibility);
+        });
+
+        updateGatewayVisibility();
+
+        // Color Picker Logic
+        const colorInput = document.getElementById('primary-color-input');
+        const colorBlob = document.getElementById('primary-color-blob');
+        const hexDisplay = document.getElementById('hex-display');
+
+        if (colorInput) {
+            colorInput.addEventListener('input', function() {
+                colorBlob.style.backgroundColor = this.value;
+                hexDisplay.textContent = this.value.toUpperCase();
+            });
+        }
+    });
+</script>
+{% endblock %}

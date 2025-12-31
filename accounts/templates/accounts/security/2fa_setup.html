@@ -1,0 +1,322 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Two-Factor Authentication - {{ request.user.profile.tenant.name }}{% endblock %}
+
+{% block page_title %}Security Settings{% endblock %}
+
+{% block content %}
+<style>
+    @keyframes pulse-glow {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+        }
+        50% {
+            box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+        }
+    }
+    
+    .qr-pulse {
+        animation: pulse-glow 2s ease-in-out infinite;
+    }
+    
+    .gradient-text {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .digit-input {
+        width: 3rem;
+        height: 3.5rem;
+        font-size: 1.5rem;
+        text-align: center;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        transition: all 0.2s;
+    }
+    
+    .digit-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        transform: scale(1.05);
+    }
+    
+    .digit-input.filled {
+        border-color: #10b981;
+        background-color: #f0fdf4;
+    }
+    
+    .dark .digit-input {
+        background-color: #1e293b;
+        border-color: #475569;
+        color: white;
+    }
+    
+    .dark .digit-input.filled {
+        border-color: #10b981;
+        background-color: #064e3b;
+    }
+    
+    .copy-btn {
+        transition: all 0.2s;
+    }
+    
+    .copy-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .copy-btn.copied {
+        background-color: #10b981 !important;
+        color: white !important;
+    }
+</style>
+
+<div class="max-w-4xl mx-auto px-4">
+    <!-- Header Section -->
+    <div class="mb-10 text-center">
+        <h1 class="text-4xl sm:text-5xl font-extrabold gradient-text mb-3">Two-Factor Authentication</h1>
+        <p class="mt-3 text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+            Add an extra layer of security to your account with time-based one-time passwords
+        </p>
+    </div>
+
+    <div class="bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        {% if is_enabled %}
+        <!-- Enabled State -->
+        <div class="p-8 sm:p-14 text-center">
+            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 mb-6 shadow-lg">
+                <svg class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-3">2FA is Active</h2>
+            <p class="text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-10 text-base">
+                Your account is protected with two-factor authentication. You'll need your authenticator app to sign in.
+            </p>
+            
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-800 inline-block text-left max-w-md w-full mb-10">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-1">Switching Devices?</h3>
+                        <p class="text-sm text-blue-700 dark:text-blue-400">
+                            Disable 2FA first, then set it up again on your new device.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'disable_2fa' %}" onsubmit="return confirm('⚠️ Are you sure you want to disable 2FA? This will significantly reduce your account security.');">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center px-8 py-4 border-2 border-red-300 dark:border-red-700 shadow-lg text-base font-semibold rounded-xl text-red-700 dark:text-red-400 bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-4 focus:ring-red-500/50 transition-all transform hover:scale-105">
+                    <svg class="mr-2 -ml-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Disable Two-Factor Authentication
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <!-- Setup State -->
+        <div class="p-6 sm:p-12">
+            <div class="grid lg:grid-cols-2 gap-10 lg:gap-16">
+                <!-- Step 1: Scan -->
+                <div class="space-y-6">
+                    <div class="flex items-center mb-6">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold mr-3 shadow-lg">1</div>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Scan QR Code</h3>
+                    </div>
+                    
+                    <p class="text-slate-600 dark:text-slate-400 text-base leading-relaxed">
+                        Open your authenticator app (Google Authenticator, Authy, or Microsoft Authenticator) and scan this QR code.
+                    </p>
+
+                    <div class="flex justify-center my-8">
+                        <div class="relative p-5 bg-white rounded-2xl shadow-2xl border-4 border-transparent bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 qr-pulse">
+                            <div class="bg-white p-3 rounded-xl">
+                                <img src="data:image/png;base64,{{ qr_image }}" alt="2FA QR Code" class="w-52 h-52 sm:w-60 sm:h-60">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-bold">Manual Entry Key</p>
+                            <button type="button" onclick="copySecret()" class="copy-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <span class="copy-text">Copy</span>
+                            </button>
+                        </div>
+                        <code id="secret-code" class="block w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg py-3 px-4 text-slate-800 dark:text-slate-200 font-mono text-sm break-all select-all">
+                            {{ secret }}
+                        </code>
+                    </div>
+                </div>
+
+                <!-- Step 2: Verify -->
+                <div class="relative">
+                    <!-- Divider for Mobile -->
+                    <div class="lg:hidden border-t-2 border-slate-200 dark:border-slate-700 my-10"></div>
+                    
+                    <!-- Vertical Divider for Desktop -->
+                    <div class="hidden lg:block absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-slate-300 dark:via-slate-600 to-transparent -ml-8"></div>
+
+                    <div class="flex items-center mb-6">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold mr-3 shadow-lg">2</div>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Verify Code</h3>
+                    </div>
+
+                    <p class="text-slate-600 dark:text-slate-400 mb-8 text-base leading-relaxed">
+                        Enter the 6-digit code from your authenticator app to complete the setup.
+                    </p>
+
+                    <form method="post" id="verify-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="secret" value="{{ secret }}">
+                        <input type="hidden" name="otp_code" id="otp_code">
+                        
+                        <div class="mb-8">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Verification Code</label>
+                            <div class="flex justify-center gap-2 sm:gap-3" id="digit-inputs">
+                                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="digit-input dark:bg-slate-900 dark:text-white" data-index="0" autofocus>
+                                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="digit-input dark:bg-slate-900 dark:text-white" data-index="1">
+                                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="digit-input dark:bg-slate-900 dark:text-white" data-index="2">
+                                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="digit-input dark:bg-slate-900 dark:text-white" data-index="3">
+                                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="digit-input dark:bg-slate-900 dark:text-white" data-index="4">
+                                <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="digit-input dark:bg-slate-900 dark:text-white" data-index="5">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-blue-500/50 transition-all transform hover:scale-105 hover:-translate-y-1">
+                            <svg class="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                            Enable Two-Factor Authentication
+                        </button>
+                    </form>
+                    
+                    <div class="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-800">
+                        <div class="flex items-start">
+                            <svg class="h-6 w-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-bold text-blue-900 dark:text-blue-300 mb-1">Why Enable 2FA?</h4>
+                                <p class="text-sm text-blue-700 dark:text-blue-400 leading-relaxed">
+                                    Even if someone discovers your password, they won't be able to access your account without the time-sensitive code from your phone.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script nonce="{{ request.csp_nonce }}">
+// Individual digit input handling
+const digitInputs = document.querySelectorAll('.digit-input');
+const otpCodeInput = document.getElementById('otp_code');
+const verifyForm = document.getElementById('verify-form');
+
+digitInputs.forEach((input, index) => {
+    input.addEventListener('input', (e) => {
+        const value = e.target.value;
+        
+        // Only allow numbers
+        if (!/^\d*$/.test(value)) {
+            e.target.value = '';
+            return;
+        }
+        
+        // Add filled class
+        if (value) {
+            e.target.classList.add('filled');
+        } else {
+            e.target.classList.remove('filled');
+        }
+        
+        // Auto-advance to next input
+        if (value && index < digitInputs.length - 1) {
+            digitInputs[index + 1].focus();
+        }
+        
+        // Update hidden input and auto-submit when complete
+        updateOTPCode();
+    });
+    
+    input.addEventListener('keydown', (e) => {
+        // Handle backspace
+        if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            digitInputs[index - 1].focus();
+            digitInputs[index - 1].value = '';
+            digitInputs[index - 1].classList.remove('filled');
+            updateOTPCode();
+        }
+        
+        // Handle left/right arrow keys
+        if (e.key === 'ArrowLeft' && index > 0) {
+            digitInputs[index - 1].focus();
+        }
+        if (e.key === 'ArrowRight' && index < digitInputs.length - 1) {
+            digitInputs[index + 1].focus();
+        }
+    });
+    
+    // Handle paste
+    input.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        
+        pastedData.split('').forEach((char, i) => {
+            if (digitInputs[i]) {
+                digitInputs[i].value = char;
+                digitInputs[i].classList.add('filled');
+            }
+        });
+        
+        updateOTPCode();
+        
+        // Focus last filled input or first empty
+        const lastFilledIndex = Math.min(pastedData.length - 1, digitInputs.length - 1);
+        digitInputs[lastFilledIndex].focus();
+    });
+});
+
+function updateOTPCode() {
+    const code = Array.from(digitInputs).map(input => input.value).join('');
+    otpCodeInput.value = code;
+    
+    // Auto-submit when all 6 digits are entered
+    if (code.length === 6) {
+        setTimeout(() => {
+            verifyForm.submit();
+        }, 300);
+    }
+}
+
+// Copy secret key functionality
+function copySecret() {
+    const secretCode = document.getElementById('secret-code').textContent.trim();
+    const copyBtn = document.querySelector('.copy-btn');
+    const copyText = copyBtn.querySelector('.copy-text');
+    
+    navigator.clipboard.writeText(secretCode).then(() => {
+        copyBtn.classList.add('copied');
+        copyText.textContent = 'Copied!';
+        
+        setTimeout(() => {
+            copyBtn.classList.remove('copied');
+            copyText.textContent = 'Copy';
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

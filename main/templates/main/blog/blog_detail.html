@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ post.title }} - Puxbay{% endblock %}
+
+{% block extra_css %}
+<style>
+    .blog-content p {
+        margin-bottom: 2rem;
+        line-height: 1.8;
+        font-size: 1.125rem;
+        color: #334155;
+    }
+    .blog-content h2 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-top: 3rem;
+        margin-bottom: 1.5rem;
+        color: #0f172a;
+        letter-spacing: -0.025em;
+    }
+    #reading-progress {
+        transform-origin: 0% 50%;
+        transition: transform 0.1s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Reading Progress -->
+<div class="fixed top-0 left-0 w-full h-1 z-[100] bg-slate-100">
+    <div id="reading-progress" class="h-full bg-blue-600 w-full scale-x-0"></div>
+</div>
+
+<article class="bg-white min-h-screen">
+    <!-- Post Header -->
+    <header class="pt-16 pb-12">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex items-center gap-2 mb-8 text-[11px] font-bold uppercase tracking-widest text-blue-600">
+                <a href="{% url 'blog_home' %}">Blog</a>
+                <span class="text-slate-300">/</span>
+                <span>{{ post.category.name }}</span>
+            </nav>
+            
+            <h1 class="text-4xl md:text-5xl font-black text-slate-900 mb-8 leading-tight tracking-tight">
+                {{ post.title }}
+            </h1>
+            
+            <div class="flex items-center gap-4 mb-12">
+                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-sm font-bold text-slate-600">
+                    {{ post.author.username|slice:":1"|upper }}
+                </div>
+                <div class="text-sm">
+                    <p class="font-bold text-slate-900">{{ post.author.get_full_name|default:post.author.username }}</p>
+                    <p class="text-slate-500">{{ post.published_at|date:"M d, Y" }} · 6 min read</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Featured Image -->
+    {% if post.featured_image %}
+    <div class="max-w-4xl mx-auto px-4 mb-16">
+        <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="w-full rounded-2xl shadow-lg">
+    </div>
+    {% endif %}
+
+    <!-- Content -->
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-32">
+        <div class="blog-content prose prose-slate max-w-none prose-img:rounded-xl">
+            <p class="text-2xl text-slate-500 font-medium italic mb-12 leading-relaxed">
+                {{ post.excerpt }}
+            </p>
+            {{ post.content|safe }}
+        </div>
+
+        <!-- Tags -->
+        {% if post.tags.exists %}
+        <div class="mt-16 flex flex-wrap gap-2">
+            {% for tag in post.tags.all %}
+            <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-bold">#{{ tag.name }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Minimalist Footer Navigation -->
+        <div class="mt-20 pt-10 border-t border-slate-100 flex justify-between items-center">
+            {% if prev_post %}
+            <a href="{% url 'blog_detail' prev_post.slug %}" class="text-sm font-bold text-slate-600 hover:text-blue-600 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Previous
+            </a>
+            {% else %}
+            <span></span>
+            {% endif %}
+
+            <a href="{% url 'blog_home' %}" class="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900">All Posts</a>
+
+            {% if next_post %}
+            <a href="{% url 'blog_detail' next_post.slug %}" class="text-sm font-bold text-slate-600 hover:text-blue-600 flex items-center gap-2">
+                Next
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+            {% else %}
+            <span></span>
+            {% endif %}
+        </div>
+    </div>
+</article>
+
+{% block extra_js %}
+<script nonce="{{ request.csp_nonce }}">
+    window.addEventListener('scroll', () => {
+        const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+        const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrolled = (winScroll / height);
+        document.getElementById('reading-progress').style.transform = `scaleX(${scrolled})`;
+    });
+</script>
+{% endblock %}
+{% endblock %}

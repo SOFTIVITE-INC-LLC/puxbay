@@ -1,0 +1,27 @@
+name: Python SDK
+
+on:
+  push:
+    paths:
+      - 'sdks/python/**'
+  pull_request:
+    paths:
+      - 'sdks/python/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        cd sdks/python
+        pip install -e .
+    - name: Test
+      run: |
+        cd sdks/python
+        python -m unittest discover tests

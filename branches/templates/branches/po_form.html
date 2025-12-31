@@ -1,0 +1,343 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SaaS POS- {{ branch.name }}{% endblock %}
+{% block page_title %}Create Purchase Order{% endblock %}
+
+{% block content %}
+<div id="po-form-container" class="max-w-5xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6 text-sm font-medium text-slate-500" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2">
+            <li><a href="{% url 'branch_dashboard' branch.id %}" class="hover:text-blue-600 transition-colors">{{ branch.name }}</a></li>
+            <li><span class="text-slate-300">/</span></li>
+            <li><a href="{% url 'purchase_order_list' branch.id %}" class="hover:text-blue-600 transition-colors">Purchase Orders</a></li>
+            <li><span class="text-slate-300">/</span></li>
+            <li class="text-slate-900" aria-current="page">Create Order</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Create Purchase Order</h1>
+        <p class="mt-2 text-slate-500">Order inventory from your suppliers.</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-xl shadow-lg shadow-slate-200/50 border border-slate-200 overflow-hidden">
+        <form method="post" id="po-form">
+            {% csrf_token %}
+
+            <!-- Order Details Section -->
+            <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+                <h3 class="text-lg font-semibold text-slate-900">Order Details</h3>
+                <p class="text-sm text-slate-500">Select supplier and expected delivery date.</p>
+            </div>
+
+            <div class="p-8 space-y-8">
+                <!-- Supplier -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">
+                        Supplier <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        </div>
+                        {{ form.supplier }}
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expected Date -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">
+                        Expected Delivery Date <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <input type="date" name="expected_date" required
+                            class="block w-full pl-10 h-11 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items Section -->
+            <div class="px-8 py-6 border-t border-b border-slate-100 bg-slate-50/50">
+                <h3 class="text-lg font-semibold text-slate-900">Order Items</h3>
+                <p class="text-sm text-slate-500">Add products to this purchase order.</p>
+            </div>
+
+            <div class="p-8 space-y-6">
+                <!-- Add Item Controls -->
+                <div class="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                        <div class="md:col-span-5">
+                            <label class="block text-xs font-medium text-slate-600 mb-2">Product</label>
+                            <select id="product-select"
+                                class="block w-full h-10 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                <option value="">Select Product...</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}" data-cost="{{ p.cost_price }}">{{ p.name }} (Cost: ${{ p.cost_price }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-medium text-slate-600 mb-2">Quantity</label>
+                            <input type="number" id="qty-input" min="1" placeholder="Qty" value="1"
+                                class="block w-full h-10 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        </div>
+                        <div class="md:col-span-3">
+                            <label class="block text-xs font-medium text-slate-600 mb-2">Unit Cost ($)</label>
+                            <input type="number" id="cost-input" step="0.01" placeholder="0.00" value="0.00"
+                                class="block w-full h-10 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 text-sm font-semibold">
+                        </div>
+                        <div class="md:col-span-2 flex items-end">
+                            <button type="button" id="add-item-btn"
+                                class="w-full h-10 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Table -->
+                <div id="items-table-container" class="overflow-hidden rounded-lg border border-slate-200 hidden">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Product</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Quantity</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Unit Cost</th>
+                                <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Total</th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-table-body" class="bg-white divide-y divide-slate-100">
+                            <!-- Items injected here -->
+                        </tbody>
+                        <tfoot class="bg-slate-50">
+                            <tr>
+                                <td colspan="3" class="px-6 py-4 text-right text-sm font-bold text-slate-900">Total Estimated Cost:</td>
+                                <td class="px-6 py-4 text-right text-lg font-bold text-blue-600" id="total-cost-display">$0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
+                    <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                    </svg>
+                    <p class="mt-2 text-sm text-slate-500">No items added yet. Add products above to create your purchase order.</p>
+                </div>
+            </div>
+
+            <input type="hidden" name="items_json" id="items-json">
+
+            <!-- Form Actions -->
+            <div class="px-8 py-6 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+                <a href="{% url 'purchase_order_list' branch.id %}"
+                    class="px-5 py-2.5 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" id="submit-btn" disabled
+                    class="inline-flex items-center justify-center px-6 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-blue-200 transition-all hover:scale-[1.02] disabled:hover:scale-100">
+                    <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Create Purchase Order
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    class POForm {
+        constructor() {
+            this.items = [];
+            this.select = document.getElementById('product-select');
+            this.qtyInput = document.getElementById('qty-input');
+            this.costInput = document.getElementById('cost-input');
+            this.addBtn = document.getElementById('add-item-btn');
+            this.tableBody = document.getElementById('items-table-body');
+            this.tableContainer = document.getElementById('items-table-container');
+            this.emptyState = document.getElementById('empty-state');
+            this.hiddenInput = document.getElementById('items-json');
+            this.totalDisplay = document.getElementById('total-cost-display');
+            this.submitBtn = document.getElementById('submit-btn');
+            this.form = document.getElementById('po-form');
+
+            this.init();
+        }
+
+        init() {
+            // Watch for product change
+            if (this.select) {
+                this.select.addEventListener('change', () => {
+                    if (this.select.selectedIndex > 0) {
+                         const option = this.select.options[this.select.selectedIndex];
+                         const cost = parseFloat(option.getAttribute('data-cost')) || 0;
+                         this.costInput.value = cost.toFixed(2);
+                    } else {
+                        this.costInput.value = '0.00';
+                    }
+                });
+            }
+
+            // Add Item
+            if (this.addBtn) {
+                this.addBtn.addEventListener('click', () => this.addItem());
+            }
+
+            // Form Submit
+            if (this.form) {
+                this.form.addEventListener('submit', (e) => {
+                    if (this.items.length === 0) {
+                        e.preventDefault();
+                        showToast("Please add at least one item to the purchase order.", 'warning');
+                    }
+                });
+            }
+        }
+
+        addItem() {
+            const productId = this.select.value;
+            const qty = parseInt(this.qtyInput.value);
+            const cost = parseFloat(this.costInput.value);
+
+            if (!productId || qty < 1) {
+                showToast('Please select a product and enter a valid quantity.', 'warning');
+                return;
+            }
+
+            const option = this.select.options[this.select.selectedIndex];
+            const name = option.text.split(' (')[0];
+
+            this.items.push({
+                product_id: productId,
+                product_name: name,
+                quantity: qty,
+                cost: cost
+            });
+
+            // Reset inputs
+            this.select.value = "";
+            this.qtyInput.value = "1";
+            this.costInput.value = "0.00";
+
+            this.render();
+        }
+
+        removeItem(index) {
+            this.items.splice(index, 1);
+            this.render();
+        }
+
+        render() {
+            // Toggle visibility
+            if (this.items.length > 0) {
+                this.tableContainer.classList.remove('hidden');
+                this.emptyState.classList.add('hidden');
+                this.submitBtn.disabled = false;
+            } else {
+                this.tableContainer.classList.add('hidden');
+                this.emptyState.classList.remove('hidden');
+                this.submitBtn.disabled = true;
+            }
+
+            // Render Rows
+            this.tableBody.innerHTML = this.items.map((item, index) => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">${item.product_name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 text-right">${item.quantity}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 text-right font-semibold">$${item.cost.toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 text-right font-bold">$${(item.quantity * item.cost).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                        <button type="button" onclick="poForm.removeItem(${index})"
+                            class="text-red-600 hover:text-red-800 font-medium transition-colors">
+                            Remove
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Update Total
+            const total = this.items.reduce((sum, item) => sum + (item.quantity * item.cost), 0);
+            this.totalDisplay.textContent = '$' + total.toFixed(2);
+
+            // Update Hidden Input
+            this.hiddenInput.value = JSON.stringify(this.items);
+        }
+    }
+
+    let poForm;
+    document.addEventListener('DOMContentLoaded', () => {
+        poForm = new POForm();
+
+        // Handle pre-filled product from redirect
+        {% if prefill_product_id %}
+        const prefillId = "{{ prefill_product_id }}";
+        if (prefillId) {
+            const select = document.getElementById('product-select');
+            select.value = prefillId;
+            // Trigger change to update cost input
+            const event = new Event('change');
+            select.dispatchEvent(event);
+        }
+        {% endif %}
+
+        // Offline Manager - DISABLED: Now saves directly to online database
+        /*
+        new OfflineFormManager({
+            formId: 'po-form',
+            storeName: 'purchase_orders',
+            transactionType: 'create_po',
+            redirectUrl: "{% url 'purchase_order_list' branch.id %}",
+            onBeforeSave: async (data) => {
+                // Parse items JSON
+                const itemsJson = document.getElementById('items-json').value;
+                if (!itemsJson) {
+                    showToast('Please add items to order', 'warning');
+                    return null;
+                }
+
+                const items = JSON.parse(itemsJson);
+                if (items.length === 0) {
+                    showToast('Please add items to order', 'warning');
+                    return null;
+                }
+
+                // Add branch info
+                data.branch_id = '{{ branch.id }}';
+                data.items = items;
+
+                // Capture supplier name
+                const supplierSelect = document.getElementById('id_supplier');
+                if (supplierSelect && supplierSelect.selectedIndex >= 0) {
+                    data.supplier_name = supplierSelect.options[supplierSelect.selectedIndex].text;
+                }
+
+                // PO status is initially 'pending'
+                data.status = 'pending';
+
+                return data;
+            }
+        });
+        */
+    });
+</script>
+<script src="{% static 'js/offline-forms.js' %}"></script>
+{% endblock %}

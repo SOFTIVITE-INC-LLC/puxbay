@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up - SaaS POS{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-80px)] flex">
+    <!-- Left Side: Marketing/Branding -->
+    <div class="hidden lg:flex lg:w-1/2 bg-blue-600 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-800 opacity-90"></div>
+        <!-- Decorative blobs -->
+        <div class="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob"></div>
+        <div class="absolute bottom-0 -right-4 w-72 h-72 bg-yellow-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000"></div>
+
+        <div class="relative z-10 w-full flex flex-col justify-center px-12 text-white">
+            <h2 class="text-4xl font-extrabold mb-6 leading-tight">
+                Start your journey with <br/> the best POS platform.
+            </h2>
+            <p class="text-lg text-blue-100 mb-8 max-w-md">
+                Join thousands of retailers who are scaling their business with our powerful, intuitive tools.
+            </p>
+            
+            <!-- Steps Progress on Left (Optional, but nice visual) -->
+            <div class="mt-8 flex items-center space-x-4">
+                <div class="flex items-center">
+                    <div class="flex items-center justify-center w-8 h-8 rounded-full border-2 {% if step >= 1 %}border-white bg-white text-blue-600{% else %}border-blue-300 text-blue-300{% endif %} font-bold">1</div>
+                    <span class="ml-2 {% if step >= 1 %}text-white font-medium{% else %}text-blue-300{% endif %}">Account</span>
+                </div>
+                <div class="w-12 h-0.5 {% if step >= 2 %}bg-white{% else %}bg-blue-400{% endif %}"></div>
+                <div class="flex items-center">
+                    <div class="flex items-center justify-center w-8 h-8 rounded-full border-2 {% if step >= 2 %}border-white bg-white text-blue-600{% else %}border-blue-300 text-blue-300{% endif %} font-bold">2</div>
+                    <span class="ml-2 {% if step >= 2 %}text-white font-medium{% else %}text-blue-300{% endif %}">Company</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Side: Registration Form -->
+    <div class="w-full lg:w-1/2 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24 bg-white">
+        <div class="mx-auto w-full max-w-sm lg:w-96">
+            <div>
+                <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
+                    {% if step == 1 %}Create your account{% else %}Setup your store{% endif %}
+                </h2>
+                <p class="mt-2 text-sm text-gray-600 flex justify-between items-center">
+                    <span>Step {{ step }} of 2</span>
+                </p>
+            </div>
+
+            <div class="mt-8">
+                <div class="mt-6">
+                    <form action="" method="POST" class="space-y-6">
+                        {% csrf_token %}
+                        <input type="hidden" name="step" value="{{ step }}">
+
+                        {% if step == 1 %}
+                            <!-- Step 1: User Details -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 border-b pb-2">Admin Account</h3>
+                                {% for field in user_form %}
+                                <div class="space-y-1 mb-4">
+                                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                        {{ field.label }}
+                                    </label>
+                                    <div class="mt-1">
+                                        <input id="{{ field.id_for_label }}" name="{{ field.name }}" type="{{ field.field.widget.input_type }}" required value="{{ field.value|default_if_none:"" }}" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    </div>
+                                    {% for error in field.errors %}
+                                    <p class="text-sm text-red-600">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                Next: Company Details
+                            </button>
+
+                        {% elif step == 2 %}
+                            <!-- Step 2: Company Details -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 border-b pb-2">Company Details</h3>
+                                
+                                {% for field in tenant_form %}
+                                <div class="space-y-1 mb-4">
+                                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                        {{ field.label }}
+                                    </label>
+                                    <div class="mt-1">
+                                        {% if field.name == 'address' %}
+                                        <textarea name="{{ field.name }}" id="{{ field.id_for_label }}" rows="2" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">{{ field.value|default_if_none:"" }}</textarea>
+                                        {% else %}
+                                        <input id="{{ field.id_for_label }}" name="{{ field.name }}" type="{{ field.field.widget.input_type }}" required value="{{ field.value|default_if_none:"" }}" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        {% endif %}
+                                    </div>
+                                    {% if field.help_text %}
+                                    <p class="text-xs text-gray-500">{{ field.help_text }}</p>
+                                    {% endif %}
+                                    {% for error in field.errors %}
+                                    <p class="text-sm text-red-600">{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                Complete Registration
+                            </button>
+                            
+                            <!-- Simple back link logic (clears session effectively by going to clean GET) -->
+                            <a href="{% url 'signup' %}" class="mt-4 block text-center text-sm font-medium text-gray-500 hover:text-gray-700">
+                                &larr; Back to Account Details
+                            </a>
+                        {% endif %}
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Animation for background blobs */
+    @keyframes blob {
+        0% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0px, 0px) scale(1); }
+    }
+    .animate-blob {
+        animation: blob 7s infinite;
+    }
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+</style>
+{% endblock %}

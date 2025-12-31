@@ -1,0 +1,69 @@
+{% load i18n unfold %}
+
+<div class="flex items-center gap-4">
+    {% if user.is_superuser and all_tenants %}
+    <!-- Tenant Switcher Dropdown -->
+    <div class="relative" x-data="{ open: false }">
+        <button @click="open = !open" type="button" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <span class="material-symbols-outlined text-base">store</span>
+            <span>
+                {% if current_tenant %}
+                    {{ current_tenant.name }}
+                {% else %}
+                    Global Admin
+                {% endif %}
+            </span>
+            <span class="material-symbols-outlined text-base">expand_more</span>
+        </button>
+        
+        <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto">
+            <!-- Search Box -->
+            <div class="p-2 border-b border-gray-200 dark:border-gray-700">
+                <input type="text" placeholder="Search tenants..." class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500" x-ref="search" @input="filterTenants($event.target.value)">
+            </div>
+            
+            <!-- Global Admin Option -->
+            <a href="http://{{ request.get_host.split.0 }}/admin/" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 {% if not current_tenant %}bg-indigo-50 dark:bg-indigo-900{% endif %}">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base">public</span>
+                    <span class="font-medium">Global Admin</span>
+                </div>
+            </a>
+            
+            <div class="border-t border-gray-200 dark:border-gray-700"></div>
+            
+            <!-- Tenant List -->
+            {% for tenant in all_tenants %}
+            <a href="http://{{ tenant.domains.first.domain }}/admin/" class="tenant-item block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 {% if current_tenant and current_tenant.id == tenant.id %}bg-indigo-50 dark:bg-indigo-900{% endif %}" data-tenant-name="{{ tenant.name|lower }}">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-base">store</span>
+                        <span>{{ tenant.name }}</span>
+                    </div>
+                    {% if current_tenant and current_tenant.id == tenant.id %}
+                    <span class="material-symbols-outlined text-base text-indigo-600 dark:text-indigo-400">check</span>
+                    {% endif %}
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 ml-6">{{ tenant.subdomain }}</div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function filterTenants(query) {
+    const items = document.querySelectorAll('.tenant-item');
+    const lowerQuery = query.toLowerCase();
+    
+    items.forEach(item => {
+        const tenantName = item.getAttribute('data-tenant-name');
+        if (tenantName.includes(lowerQuery)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+</script>

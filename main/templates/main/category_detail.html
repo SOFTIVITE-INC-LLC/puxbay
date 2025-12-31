@@ -1,0 +1,120 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} - {{ branch.name }}{% endblock %}
+
+{% block page_title %}Categories{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center sm:justify-between">
+        <div>
+             <nav class="flex mb-2 text-sm font-medium text-slate-500" aria-label="Breadcrumb">
+                <ol class="flex items-center space-x-2">
+                    <li><a href="{% url 'branch_dashboard' branch.id %}" class="hover:text-blue-600 transition-colors">{{ branch.name }}</a></li>
+                    <li><span class="text-slate-300">/</span></li>
+                    <li><a href="{% url 'category_list' branch.id %}" class="hover:text-blue-600 transition-colors">Categories</a></li>
+                    <li><span class="text-slate-300">/</span></li>
+                    <li class="text-slate-900" aria-current="page">{{ category.name }}</li>
+                </ol>
+            </nav>
+            <h1 class="text-2xl font-bold text-slate-900">{{ category.name }}</h1>
+            <p class="mt-2 text-sm text-slate-700">{{ category.description|default:"No description provided." }}</p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex gap-3">
+             {% if request.user.profile.role != 'sales' %}
+            <a href="{% url 'category_update' branch.id category.id %}" class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                <svg class="mr-2 -ml-1 h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white overflow-hidden shadow-sm rounded-xl border border-slate-200">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-blue-50 rounded-md p-3">
+                        <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-slate-500 truncate">Total Products</dt>
+                            <dd class="text-lg font-bold text-slate-900">{{ products.count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products List -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50">
+            <h3 class="text-lg font-medium text-slate-900">Products in this Category</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Product</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">SKU</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Price</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-slate-200">
+                    {% for product in products %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm">
+                                        {{ product.name|slice:":1"|upper }}
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-semibold text-slate-900">{{ product.name }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-500">
+                            {{ product.sku }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-slate-900">
+                            ${{ product.price }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            {% if product.stock_quantity <= 0 %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Out of Stock
+                                </span>
+                            {% elif product.stock_quantity <= product.low_stock_threshold %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                    {{ product.stock_quantity }} (Low)
+                                </span>
+                            {% else %}
+                                <span class="text-sm text-slate-600 font-medium">{{ product.stock_quantity }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-10 text-center text-slate-500">
+                            <p class="text-sm">No products in this category yet.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

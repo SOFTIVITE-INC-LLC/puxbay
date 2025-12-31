@@ -1,0 +1,50 @@
+======================================================================
+SUBSCRIPTION MIDDLEWARE DEBUG
+======================================================================
+
+Total user profiles with tenants: 2
+
+
+User: dev1 (ID: 1)
+  - Is superuser: False
+  - Profile ID: af8d3258-c65f-4e08-bdd3-be676ce899e0
+  - Tenant: Eduxkope (ID: ec94a078-b431-4b86-92d0-9e50bff3310d)
+  - Has subscription: YES
+    - Subscription ID: 319d445f-d232-445a-a9e1-1c1676b53407
+    - Status: active
+    - Plan: Growth Monthly ($79.00/monthly)
+    - Current period end: 2026-01-25 22:55:57.039913+00:00
+    - is_subscription_active() result: True
+
+    Middleware check conditions:
+      1. User authenticated: (would be True in real request)
+      2. User is superuser: False
+      3. Has profile: YES
+      4. Profile has tenant: YES
+      5. Subscription is active: True
+
+    *** SHOULD HAVE ACCESS ***
+----------------------------------------------------------------------
+
+User: samuel (ID: 5)
+  - Is superuser: False
+  - Profile ID: 1b7efe33-40f8-4bd5-821a-a8b1d9ac852e
+  - Tenant: Softivite LLC (ID: 740dda62-b69d-4078-93bf-fbca066cb6c2)
+  - Has subscription: YES
+    - Subscription ID: 9ab5d05f-1ee3-4d53-9ca2-35397389c433
+    - Status: active
+    - Plan: Enterprise Monthly ($199.00/monthly)
+    - Current period end: 2026-01-25 23:05:53.098738+00:00
+    - is_subscription_active() result: True
+
+    Middleware check conditions:
+      1. User authenticated: (would be True in real request)
+      2. User is superuser: False
+      3. Has profile: YES
+      4. Profile has tenant: YES
+      5. Subscription is active: True
+
+    *** SHOULD HAVE ACCESS ***
+----------------------------------------------------------------------
+
+======================================================================

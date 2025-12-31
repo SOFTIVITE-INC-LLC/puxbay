@@ -1,0 +1,278 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Create Return Request - {{ request.user.profile.tenant.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+    <!-- Breadcrumb -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% if branch %}{% url 'branch_dashboard' branch.id %}{% else %}{% url 'dashboard' %}{% endif %}" class="text-slate-700 dark:text-slate-300 hover:text-blue-600 inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                    </svg>
+                    {% if branch %}{{ branch.name }}{% else %}Dashboard{% endif %}
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <a href="{% if branch %}{% url 'branch_return_list' branch.id %}{% else %}{% url 'return_list' %}{% endif %}" class="ml-1 text-slate-700 dark:text-slate-300 hover:text-blue-600 md:ml-2">Returns</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="ml-1 text-slate-500 dark:text-slate-400 md:ml-2">Create Return</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Create Return Request</h2>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Initiate a product return and refund process</p>
+    </div>
+
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Main Return Info -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Return Information</h3>
+            
+            {% if form.errors %}
+            <div class="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <p class="text-sm text-red-800 dark:text-red-200 font-medium">Please correct the errors below.</p>
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Order Selector -->
+                <div>
+                    <label for="{{ form.order.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Order <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.order }}
+                    {% if form.order.errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.order.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Customer -->
+                <div>
+                    <label for="{{ form.customer.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Customer
+                    </label>
+                    {{ form.customer }}
+                    {% if form.customer.errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.customer.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Reason -->
+                <div>
+                    <label for="{{ form.reason.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Reason <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.reason }}
+                    {% if form.reason.errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.reason.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Refund Method -->
+                <div>
+                    <label for="{{ form.refund_method.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Refund Method <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.refund_method }}
+                    {% if form.refund_method.errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.refund_method.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Restocking Fee -->
+                <div>
+                    <label for="{{ form.restocking_fee.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        Restocking Fee
+                    </label>
+                    {{ form.restocking_fee }}
+                    {% if form.restocking_fee.errors %}
+                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.restocking_fee.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Reason Detail -->
+            <div class="mt-6">
+                <label for="{{ form.reason_detail.id_for_label }}" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                    Detailed Explanation <span class="text-red-500">*</span>
+                </label>
+                {{ form.reason_detail }}
+                {% if form.reason_detail.errors %}
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ form.reason_detail.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Return Items Formset -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Returned Items</h3>
+            </div>
+            
+            <div class="p-6">
+                {{ formset.management_form }}
+                <div id="formset-container" class="space-y-4">
+                    {% for item_form in formset %}
+                    <div class="formset-row grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg relative bg-slate-50/50 dark:bg-slate-900/20">
+                        {% for hidden in item_form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+                        
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Product</label>
+                            {{ item_form.product }}
+                            {% if item_form.product.errors %}
+                            <p class="mt-1 text-xs text-red-600">{{ item_form.product.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Quantity</label>
+                            {{ item_form.quantity }}
+                            {% if item_form.quantity.errors %}
+                            <p class="mt-1 text-xs text-red-600">{{ item_form.quantity.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Condition</label>
+                            {{ item_form.condition }}
+                            {% if item_form.condition.errors %}
+                            <p class="mt-1 text-xs text-red-600">{{ item_form.condition.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center">
+                                {{ item_form.restock }}
+                                <label class="ml-2 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Restock</label>
+                            </div>
+                            
+                            {% if formset.can_delete %}
+                            <div class="flex items-center ml-auto">
+                                {{ item_form.DELETE }}
+                                <label class="ml-2 block text-xs font-semibold text-red-500 uppercase tracking-wider">Delete</label>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-4 flex justify-start">
+                    <button type="button" id="add-item-btn" class="inline-flex items-center px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        Add Another Item
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3 pt-6">
+            <a href="{% if branch %}{% url 'branch_return_list' branch.id %}{% else %}{% url 'return_list' %}{% endif %}" class="px-6 py-2.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
+                Cancel
+            </a>
+            <button type="submit" class="px-8 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Create Return Request
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Template for new formset rows -->
+<div id="empty-form" class="hidden">
+    <div class="formset-row grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-lg relative bg-slate-50/50 dark:bg-slate-900/20">
+        <div class="md:col-span-1">
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Product</label>
+            {{ formset.empty_form.product }}
+        </div>
+        
+        <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Quantity</label>
+            {{ formset.empty_form.quantity }}
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Condition</label>
+            {{ formset.empty_form.condition }}
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="flex items-center">
+                {{ formset.empty_form.restock }}
+                <label class="ml-2 block text-xs font-semibold text-slate-500 uppercase tracking-wider">Restock</label>
+            </div>
+            <button type="button" class="remove-item-btn ml-auto text-red-500 hover:text-red-700 transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addBtn = document.getElementById('add-item-btn');
+        const container = document.getElementById('formset-container');
+        // Need to correctly target the internal items formset prefix
+        const totalForms = document.getElementById('id_items-TOTAL_FORMS') || document.querySelector('input[name$="-TOTAL_FORMS"]');
+        const emptyForm = document.getElementById('empty-form').innerHTML;
+
+        if (addBtn) {
+            addBtn.addEventListener('click', function() {
+                const formCount = parseInt(totalForms.value);
+                // Replace both __prefix__ and the generic prefix if needed
+                const newForm = emptyForm.replace(/__prefix__/g, formCount);
+                
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = newForm;
+                container.appendChild(wrapper.firstElementChild);
+                
+                totalForms.value = formCount + 1;
+            });
+        }
+
+        container.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-item-btn')) {
+                const row = e.target.closest('.formset-row');
+                const deleteInput = row.querySelector('input[name$="-DELETE"]');
+                
+                if (deleteInput) {
+                    deleteInput.checked = true;
+                    row.style.display = 'none';
+                } else {
+                    row.remove();
+                    // Optional: Decrease TOTAL_FORMS if needed
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

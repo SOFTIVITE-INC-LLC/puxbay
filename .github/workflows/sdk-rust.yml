@@ -1,0 +1,28 @@
+name: Rust SDK
+
+on:
+  push:
+    paths:
+      - 'sdks/rust/**'
+  pull_request:
+    paths:
+      - 'sdks/rust/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+    - name: Build
+      run: |
+        cd sdks/rust
+        cargo build --verbose
+    - name: Test
+      run: |
+        cd sdks/rust
+        cargo test --verbose

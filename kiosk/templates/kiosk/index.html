@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{{ branch.name }} | Self-Checkout</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    {% load static %}
+    <link href="{% static 'css/tailwind.css' %}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --premium-blue: #3b82f6;
+            --premium-indigo: #4f46e5;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .category-pill.active {
+            background: var(--premium-indigo);
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .product-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .product-card:active {
+            transform: scale(0.95);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        [v-cloak] { display: none; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div id="app" v-cloak class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-900 tracking-tight">{{ branch.name }}</h1>
+                <p class="text-slate-500 font-medium italic">Self-Checkout Mode</p>
+            </div>
+            <div class="glass px-6 py-3 rounded-2xl flex items-center gap-4 shadow-sm">
+                <div class="text-right">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Your Cart</p>
+                    <p class="text-xl font-bold text-premium-indigo">${ cartTotal.toFixed(2) }</p>
+                </div>
+                <button @click="showCart = true" class="bg-indigo-600 text-white p-3 rounded-xl shadow-lg relative">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    <span v-if="cartCount > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white animate-bounce">
+                        ${ cartCount }
+                    </span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Categories -->
+        <nav class="flex gap-3 overflow-x-auto pb-6 mb-4 no-scrollbar">
+            <button 
+                @click="activeCategory = 'all'"
+                :class="['category-pill glass px-6 py-3 rounded-2xl font-bold whitespace-nowrap transition-all duration-200', activeCategory === 'all' ? 'active' : 'text-slate-600']"
+            >
+                All Items
+            </button>
+            <button 
+                v-for="cat in categories" 
+                :key="cat.id"
+                @click="activeCategory = cat.id"
+                :class="['category-pill glass px-6 py-3 rounded-2xl font-bold whitespace-nowrap transition-all duration-200', activeCategory === cat.id ? 'active' : 'text-slate-600']"
+            >
+                ${ cat.name }
+            </button>
+        </nav>
+
+        <!-- Search -->
+        <div class="mb-8 relative">
+            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input 
+                v-model="searchQuery"
+                type="text" 
+                placeholder="Search for snacks, drinks, or items..." 
+                class="w-full glass px-12 py-5 rounded-3xl outline-none focus:ring-2 focus:ring-indigo-500/50 text-lg font-medium text-slate-800 shadow-sm"
+            >
+        </div>
+
+        <!-- Product Grid -->
+        <main v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div v-for="i in 8" :key="i" class="glass h-64 rounded-3xl animate-pulse"></div>
+        </main>
+        <main v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div 
+                v-for="product in filteredProducts" 
+                :key="product.id"
+                @click="addToCart(product)"
+                class="product-card group relative glass rounded-3xl p-4 cursor-pointer hover:shadow-2xl hover:shadow-indigo-500/10 border-transparent hover:border-indigo-200"
+            >
+                <!-- Stock Badge -->
+                <div v-if="product.stock_quantity <= 0" class="absolute inset-0 z-20 bg-white/60 backdrop-blur-[2px] rounded-3xl flex items-center justify-center">
+                    <span class="bg-red-100 text-red-600 text-xs font-bold px-3 py-1 rounded-full uppercase">Out of Stock</span>
+                </div>
+                
+                <div class="relative h-40 mb-4 overflow-hidden rounded-2xl bg-slate-100">
+                    <img v-if="product.image" :src="product.image" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500">
+                    <div v-else class="w-full h-full flex items-center justify-center text-slate-300">
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-slate-800 text-lg line-clamp-1">${ product.name }</h3>
+                <div class="flex justify-between items-center mt-2">
+                    <p class="text-indigo-600 font-extrabold text-xl font-mono">$${ product.price }</p>
+                    <div class="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Cart Modal/Drawer -->
+        <div v-if="showCart" class="fixed inset-0 z-[100] flex justify-end">
+            <div @click="showCart = false" class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+            <div class="relative w-full max-w-md bg-white shadow-2xl flex flex-col h-full animate-slide-left">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-slate-900">Your Selection</h2>
+                    <button @click="showCart = false" class="text-slate-400 hover:text-slate-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <div class="flex-grow overflow-y-auto p-6 space-y-6">
+                    <div v-for="item in cart" :key="item.id" class="flex gap-4 items-center">
+                        <div class="h-16 w-16 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0">
+                            <img v-if="item.image" :src="item.image" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-grow">
+                            <h4 class="font-bold text-slate-800">${ item.name }</h4>
+                            <p class="text-indigo-600 font-bold">$${ item.price }</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button @click="updateQty(item, -1)" class="h-8 w-8 rounded-full border border-slate-200 flex items-center justify-center font-bold">-</button>
+                            <span class="font-bold w-4 text-center">${ item.quantity }</span>
+                            <button @click="updateQty(item, 1)" class="h-8 w-8 rounded-full border border-slate-200 flex items-center justify-center font-bold">+</button>
+                        </div>
+                    </div>
+                    <div v-if="cart.length === 0" class="flex flex-col items-center justify-center h-full text-center">
+                        <svg class="w-20 h-20 text-slate-100 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        <p class="text-slate-400 font-medium">Your cart is empty.<br>Start browsing our catalog!</p>
+                    </div>
+                </div>
+
+                <div class="p-6 bg-slate-50 border-t border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-slate-500 font-medium">Subtotal</span>
+                        <span class="text-xl font-bold text-slate-900">$${ cartTotal.toFixed(2) }</span>
+                    </div>
+                    <button 
+                        @click="checkout"
+                        :disabled="cart.length === 0"
+                        class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white py-4 rounded-2xl font-bold text-lg shadow-xl shadow-indigo-200 transition-all flex items-center justify-center gap-2"
+                    >
+                        <span>Finish & Pay</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Overlay -->
+        <div v-if="checkoutSuccess" class="fixed inset-0 z-[200] bg-indigo-600 flex flex-col items-center justify-center text-white p-8 text-center animate-fade-in">
+            <div class="h-24 w-24 bg-white/20 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 class="text-4xl font-bold mb-4">Order Received!</h2>
+            <div class="bg-white/10 px-6 py-3 rounded-2xl mb-6 backdrop-blur-md border border-white/20">
+                <p class="text-sm uppercase tracking-widest font-bold text-indigo-200">Order ID</p>
+                <p class="text-3xl font-mono font-black">${ lastOrderNumber }</p>
+            </div>
+            <p class="text-indigo-100 text-xl max-w-sm">Please head to the counter if you chose cash, or wait for your receipt.</p>
+            <button @click="resetKiosk" class="mt-12 bg-white text-indigo-600 px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl">
+                One More Order
+            </button>
+        </div>
+        </div>
+    </div>
+
+    {{ config|json_script:"config-data" }}
+    <script>
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        const app = createApp({
+            delimiters: ['${', '}'],
+            setup() {
+                const configElement = document.getElementById('config-data');
+                const config = JSON.parse(configElement.textContent);
+                
+                const products = ref([]);
+                const categories = ref([]);
+                const loading = ref(true);
+                const searchQuery = ref('');
+                const activeCategory = ref('all');
+                const cart = ref([]);
+                const showCart = ref(false);
+                const checkoutSuccess = ref(false);
+                const lastOrderNumber = ref('');
+
+                // Fetch Data
+                onMounted(async () => {
+                    try {
+                        const response = await fetch(`/api/v1/kiosk/data/${config.branchId}/`);
+                        if (!response.ok) throw new Error('Failed to load data');
+                        
+                        const data = await response.json();
+                        products.value = data.products || [];
+                        categories.value = data.categories || [];
+                    } catch (e) {
+                        console.error("Failed to load kiosk data", e);
+                    } finally {
+                        loading.value = false;
+                    }
+                });
+
+                // Computed
+                const activeCategoryValue = activeCategory; // Fix reference
+
+                const filteredProducts = computed(() => {
+                    return products.value.filter(p => {
+                        const matchesSearch = p.name ? p.name.toLowerCase().includes(searchQuery.value.toLowerCase()) : true;
+                        // Using 'category' field now
+                        const matchesCat = activeCategory.value === 'all' || p.category === activeCategory.value;
+                        return matchesSearch && matchesCat;
+                    });
+                });
+
+                const cartCount = computed(() => cart.value.reduce((sum, item) => sum + item.quantity, 0));
+                const cartTotal = computed(() => cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0));
+
+                // Actions
+                const addToCart = (product) => {
+                    if (product.stock_quantity <= 0) return;
+                    
+                    const existing = cart.value.find(i => i.id === product.id);
+                    if (existing) {
+                        existing.quantity++;
+                    } else {
+                        cart.value.push({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.image,
+                            quantity: 1
+                        });
+                    }
+                };
+
+                const updateQty = (item, delta) => {
+                    item.quantity += delta;
+                    if (item.quantity <= 0) {
+                        cart.value = cart.value.filter(i => i.id !== item.id);
+                    }
+                };
+
+                const checkout = async () => {
+                    const payload = {
+                        uuid: crypto.randomUUID(),
+                        type: 'order',
+                        data: {
+                            branch_id: config.branchId,
+                            items: cart.value.map(item => ({
+                                id: item.id,
+                                quantity: item.quantity,
+                                price: item.price
+                            })),
+                            total_amount: cartTotal.value,
+                            payment_method: 'kiosk_pay',
+                            ordering_type: 'kiosk',
+                            customer_id: null
+                        }
+                    };
+
+                    try {
+                        const response = await fetch('/api/v1/kiosk/transaction/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (response.ok) {
+                            const result = await response.json();
+                            lastOrderNumber.value = result.order_number;
+                            checkoutSuccess.value = true;
+                            showCart.value = false;
+                        } else {
+                            const errorData = await response.json();
+                            alert("Checkout failed: " + (errorData.error || "Unknown error"));
+                        }
+                    } catch (e) {
+                        console.error("Checkout error", e);
+                        alert("Network error during checkout.");
+                    }
+                };
+
+                // Helper to get CSRF token
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                const resetKiosk = () => {
+                    cart.value = [];
+                    checkoutSuccess.value = false;
+                    activeCategory.value = 'all';
+                    searchQuery.value = '';
+                };
+
+                return {
+                    loading, products, categories, searchQuery, activeCategory, filteredProducts,
+                    cart, showCart, cartCount, cartTotal, addToCart, updateQty, checkout,
+                    checkoutSuccess, resetKiosk, lastOrderNumber
+                };
+            }
+        });
+        
+        app.mount('#app');
+    </script>
+
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        @keyframes slide-left {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .animate-slide-left { animation: slide-left 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in { animation: fade-in 0.5s ease; }
+    </style>
+</body>
+</html>

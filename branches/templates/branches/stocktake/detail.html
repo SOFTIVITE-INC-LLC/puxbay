@@ -1,0 +1,310 @@
+{% extends 'dashboard_base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <style>
+        @media print {
+            #sidebar-menu, header, #sidebar-overlay, .no-print, form button {
+                display: none !important;
+            }
+            main { padding: 0 !important; margin: 0 !important; }
+            .container { max-width: 100% !important; width: 100% !important; padding: 0 !important; }
+            body { background-color: white !important; }
+            table { width: 100% !important; border: 1px solid #e5e7eb !important; }
+            th, td { border: 1px solid #e5e7eb !important; }
+        }
+
+        /* Premium UI Styles */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .action-button {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .premium-input {
+            transition: all 0.2s ease;
+            border: 1px solid #e2e8f0;
+        }
+        .premium-input:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+        .status-badge {
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 800;
+        }
+    </style>
+
+    <!-- Page Header & Actions -->
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 no-print">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-200">
+                <span class="material-symbols-outlined text-3xl font-bold">inventory</span>
+            </div>
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{{ title }}</h1>
+                <div class="flex items-center gap-2 mt-1">
+                    <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Branch: {{ branch.name }}</span>
+                    <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                    <span class="status-badge {% if session.status == 'in_progress' %}bg-blue-100 text-blue-700{% else %}bg-green-100 text-green-700{% endif %} uppercase">
+                        {{ session.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{% url 'stocktake_analytics' branch.id session.id %}" class="action-button bg-slate-900 dark:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px]">analytics</span>
+                Analytics
+            </a>
+
+            {% if session.status == 'in_progress' %}
+            <button onclick="document.getElementById('qr-modal').classList.remove('hidden')" class="action-button bg-white dark:bg-slate-800 text-slate-700 dark:text-white border border-slate-200 dark:border-slate-700 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm">
+                <span class="material-symbols-outlined text-[20px]">qr_code_2</span>
+                Invite Team
+            </button>
+            {% endif %}
+            
+            <form action="{% url 'stocktake_detail' branch.id session.id %}" method="post" class="contents">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="adjust_all">
+                <button type="submit" class="action-button bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-amber-200/50" onclick="return confirm('Apply adjustments to all counted items?')">
+                    <span class="material-symbols-outlined text-[20px]">balance</span>
+                    Adjust All
+                </button>
+            </form>
+
+            {% if session.status == 'in_progress' %}
+            <form action="{% url 'stocktake_detail' branch.id session.id %}" method="post" class="contents">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="finalize">
+                <button type="submit" class="action-button bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-200/50" onclick="return confirm('Are you sure you want to complete this session?')">
+                    <span class="material-symbols-outlined text-[20px]">verified</span>
+                    Finalize session
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Product Grid/Table -->
+    <div class="glass-card rounded-3xl overflow-hidden no-print">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 dark:bg-slate-900/50">
+                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800">Product Detail</th>
+                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 text-right">System Stock</th>
+                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 text-right">Physical Count</th>
+                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 text-right">Variance</th>
+                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 text-right">Impact Value</th>
+                        <th class="px-6 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 text-center">Manage</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    {% for entry in entries %}
+                    <tr class="group hover:bg-white/50 dark:hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-5">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-slate-900 dark:text-white text-base">{{ entry.product.name }}</span>
+                                <span class="text-xs font-medium text-slate-400 font-mono mt-0.5 tracking-tight uppercase">{{ entry.product.sku|default:entry.product.barcode|default:"No SKU" }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 text-right font-bold text-slate-500 dark:text-slate-400 text-sm">
+                            {{ entry.expected_quantity }}
+                        </td>
+                        
+                        <td class="px-6 py-5">
+                            <form method="post" class="flex items-center justify-end">
+                                {% csrf_token %}
+                                <input type="hidden" name="entry_id" value="{{ entry.id }}">
+                                <input type="number" name="counted_quantity" value="{{ entry.counted_quantity }}" 
+                                       class="premium-input w-20 px-2 py-2 bg-white dark:bg-slate-900 rounded-xl text-right font-black text-slate-900 dark:text-white focus:outline-none">
+                        </td>
+
+                        <td class="px-6 py-5 text-right">
+                             {% with diff=entry.difference %}
+                                <span class="text-sm font-black font-mono {% if diff < 0 %}text-rose-500{% elif diff > 0 %}text-emerald-500{% else %}text-slate-300{% endif %}">
+                                    {% if diff > 0 %}+{% endif %}{{ diff }}
+                                </span>
+                             {% endwith %}
+                        </td>
+
+                        <td class="px-6 py-5 text-right font-black font-mono text-sm dark:text-slate-300">
+                             {% with val=entry.difference_value %}
+                                <span class="{% if val < 0 %}text-rose-500{% elif val > 0 %}text-emerald-500{% else %}text-slate-300{% endif %}">
+                                    {{ val|floatformat:2 }}
+                                </span>
+                             {% endwith %}
+                        </td>
+
+                        <td class="px-6 py-5">
+                            <div class="flex items-center justify-center gap-2">
+                                <button type="submit" name="action" value="update_count" 
+                                        class="p-2.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-indigo-600 hover:text-white transition-all group/btn" title="Save Count">
+                                    <span class="material-symbols-outlined text-[20px]">save</span>
+                                </button>
+                                <button type="submit" name="action" value="adjust_single" 
+                                        class="p-2.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-xl hover:bg-amber-600 hover:text-white transition-all" 
+                                        onclick="return confirm('Sync inventory for this product now?')" title="Adjust Stock">
+                                    <span class="material-symbols-outlined text-[20px]">balance</span>
+                                </button>
+                            </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-20 text-center">
+                            <div class="flex flex-col items-center gap-4 text-slate-400">
+                                <span class="material-symbols-outlined text-6xl opacity-20">inventory_2</span>
+                                <p class="font-bold text-lg">No products found in this branch.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Print View (Clean & Professional) -->
+    <div class="hidden print:block">
+        <div class="flex justify-between items-start border-b-2 border-slate-900 pb-8 mb-8">
+            <div>
+                <h1 class="text-4xl font-black uppercase">Stocktake Report</h1>
+                <p class="text-slate-500 font-bold mt-2">Generated on: {{ session.started_at|date:"M d, Y H:i" }}</p>
+            </div>
+            <div class="text-right font-bold">
+                <p class="text-xl uppercase tracking-tighter">{{ branch.name }}</p>
+                <p class="text-slate-500 text-sm mt-1">Status: {{ session.get_status_display }}</p>
+            </div>
+        </div>
+        <!-- Simple Table for Printing -->
+    </div>
+
+    <!-- QR Modal - Premium Design -->
+    <div id="qr-modal" class="fixed inset-0 bg-gradient-to-br from-slate-900/95 via-indigo-900/95 to-slate-900/95 backdrop-blur-xl z-50 flex items-center justify-center hidden p-4 transition-all duration-300" onclick="if(event.target === this) this.classList.add('hidden')">
+        <!-- Animated Background Blobs -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl animate-pulse"></div>
+            <div class="absolute bottom-0 left-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+        </div>
+
+        <div class="relative glass-card p-8 md:p-12 rounded-[3rem] max-w-2xl w-full text-center shadow-2xl border-2 border-white/10">
+            <!-- Close Button -->
+            <button onclick="document.getElementById('qr-modal').classList.add('hidden')" class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all hover:rotate-90 duration-300">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+
+            <!-- Header Icon -->
+            <div class="relative inline-block mb-6">
+                <div class="absolute inset-0 bg-indigo-500 rounded-3xl blur-xl opacity-50 animate-pulse"></div>
+                <div class="relative w-20 h-20 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-indigo-500/50">
+                    <span class="material-symbols-outlined text-4xl">qr_code_scanner</span>
+                </div>
+            </div>
+
+            <!-- Title & Description -->
+            <h3 class="text-4xl font-black mb-3 bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">Invite Your Team</h3>
+            <p class="text-blue-200 mb-8 text-base leading-relaxed max-w-md mx-auto">Scan this QR code with any mobile device to join the live stocktake session and start counting inventory.</p>
+
+            <!-- QR Code Container -->
+            <div class="relative inline-block mb-8">
+                <div class="absolute inset-0 bg-gradient-to-br from-white/20 to-white/5 rounded-[2.5rem] blur-2xl"></div>
+                <div class="relative bg-white p-8 rounded-[2.5rem] shadow-2xl border-4 border-white/20 inline-block">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ request.scheme }}://{{ request.get_host }}{% url 'stocktake_portal_login' token=session.access_token %}" alt="Stocktake QR Code" class="w-64 h-64 rounded-2xl">
+                </div>
+            </div>
+
+            <!-- URL Display with Copy Button -->
+            <div class="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10 mb-6 group hover:bg-white/10 transition-all">
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center justify-between gap-3">
+                        <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'stocktake_portal_login' token=session.access_token %}" target="_blank" id="qr-url" class="text-xs font-mono text-blue-200 break-all select-all flex-1 text-left hover:text-white hover:underline decoration-blue-400 underline-offset-4 transition-all">
+                            {{ request.scheme }}://{{ request.get_host }}{% url 'stocktake_portal_login' token=session.access_token %}
+                        </a>
+                        <button onclick="copyToClipboard()" class="flex-shrink-0 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold text-sm transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                            <span id="copy-text">Copy Link</span>
+                        </button>
+                    </div>
+                    <!-- Display Access Token explicitly -->
+                    <div class="flex items-center gap-2 pt-2 border-t border-white/5">
+                        <span class="text-[10px] uppercase font-bold text-slate-400">Access Token:</span>
+                        <code class="text-xs font-mono text-indigo-300">{{ session.access_token }}</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-gradient-to-r from-indigo-500/10 to-blue-500/10 backdrop-blur-sm p-6 rounded-2xl border border-indigo-400/20">
+                <h4 class="text-white font-bold text-sm uppercase tracking-wider mb-4 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">info</span>
+                    How It Works
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-sm">1</div>
+                        <div>
+                            <p class="text-white font-bold text-sm">Scan QR Code</p>
+                            <p class="text-blue-200 text-xs mt-1">Use your phone camera</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-sm">2</div>
+                        <div>
+                            <p class="text-white font-bold text-sm">Start Scanning</p>
+                            <p class="text-blue-200 text-xs mt-1">Scan product barcodes</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-sm">3</div>
+                        <div>
+                            <p class="text-white font-bold text-sm">Live Updates</p>
+                            <p class="text-blue-200 text-xs mt-1">Counts sync instantly</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="mt-6 flex items-center justify-center gap-2 text-blue-300 text-xs">
+                <span class="material-symbols-outlined text-[16px]">lock</span>
+                <span>This session is secure and will expire when finalized</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard() {
+            const url = document.getElementById('qr-url').textContent;
+            const copyBtn = document.getElementById('copy-text');
+            
+            navigator.clipboard.writeText(url).then(() => {
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+    </script>
+</div>
+{% endblock %}

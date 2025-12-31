@@ -1,0 +1,226 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Tax Report - {{ request.user.profile.tenant.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Tax Report</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                {{ tax_config.get_tax_type_display }} - {{ tax_config.tax_rate }}%
+                {% if start_date and end_date %}
+                    | {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="flex gap-2">
+            <a href="{% url 'tax_configuration' %}" class="px-4 py-2 bg-slate-600 text-white rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Tax Settings
+            </a>
+            
+            <a href="{% url 'tax_report_export' %}?start_date={{ start_date|date:'Y-m-d' }}&end_date={{ end_date|date:'Y-m-d' }}" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Export CSV
+            </a>
+            
+            <!-- Date Range Selector -->
+            <form method="get" class="flex gap-2" id="date-filter-form">
+                <select name="range" id="date-range-select" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-white">
+                    <option value="today" {% if date_range == 'today' %}selected{% endif %}>Today</option>
+                    <option value="week" {% if date_range == 'week' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="month" {% if date_range == 'month' %}selected{% endif %}>Last 30 Days</option>
+                    <option value="quarter" {% if date_range == 'quarter' %}selected{% endif %}>Last Quarter</option>
+                    <option value="year" {% if date_range == 'year' %}selected{% endif %}>Last Year</option>
+                    <option value="custom" {% if date_range == 'custom' %}selected{% endif %}>Custom Range</option>
+                </select>
+                
+                <div id="custom-date-inputs" class="flex gap-2" style="display: none;">
+                    <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm dark:bg-slate-700 dark:text-white">
+                    <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm dark:bg-slate-700 dark:text-white">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Apply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-blue-100 text-sm font-medium uppercase">Total Sales</p>
+            <h3 class="text-3xl font-bold mt-2">${{ tax_summary.total_sales|floatformat:2 }}</h3>
+            <p class="text-blue-100 text-xs mt-1">{{ tax_summary.order_count }} transactions</p>
+        </div>
+        
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-emerald-100 text-sm font-medium uppercase">Taxable Amount</p>
+            <h3 class="text-3xl font-bold mt-2">${{ tax_summary.taxable_amount|floatformat:2 }}</h3>
+        </div>
+        
+        <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-purple-100 text-sm font-medium uppercase">Tax Collected</p>
+            <h3 class="text-3xl font-bold mt-2">${{ tax_summary.total_tax_collected|floatformat:2 }}</h3>
+            <p class="text-purple-100 text-xs mt-1">@ {{ tax_config.tax_rate }}%</p>
+        </div>
+        
+        <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+            <p class="text-amber-100 text-sm font-medium uppercase">Avg Tax/Order</p>
+            <h3 class="text-3xl font-bold mt-2">
+                {% if tax_summary.order_count > 0 %}
+                    ${% widthratio tax_summary.total_tax_collected tax_summary.order_count 1 %}
+                {% else %}
+                    $0.00
+                {% endif %}
+            </h3>
+        </div>
+    </div>
+
+    <!-- Tax by Branch -->
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Tax Collection by Branch</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                <thead class="bg-slate-50 dark:bg-slate-900">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Branch</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Orders</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Total Sales</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Tax Collected</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">% of Total</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    {% for branch in tax_by_branch %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td class="px-6 py-4 text-sm font-medium text-slate-900 dark:text-white">{{ branch.branch__name }}</td>
+                        <td class="px-6 py-4 text-right text-sm text-slate-600 dark:text-slate-300">{{ branch.orders }}</td>
+                        <td class="px-6 py-4 text-right text-sm text-slate-600 dark:text-slate-300">${{ branch.sales|floatformat:2 }}</td>
+                        <td class="px-6 py-4 text-right text-sm font-bold text-purple-600 dark:text-purple-400">${{ branch.tax|floatformat:2 }}</td>
+                        <td class="px-6 py-4 text-right text-sm text-slate-600 dark:text-slate-300">
+                            {% widthratio branch.tax tax_summary.total_tax_collected 100 %}%
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                            No tax data available for the selected period
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Daily Tax Collection Chart -->
+    {% if daily_tax %}
+    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Daily Tax Collection</h3>
+        <canvas id="dailyTaxChart" height="80"></canvas>
+    </div>
+    {% endif %}
+
+    <!-- Tax Configuration Info -->
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+        <div class="flex items-start">
+            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="ml-3">
+                <h4 class="text-sm font-medium text-blue-900 dark:text-blue-200">Tax Configuration</h4>
+                <div class="mt-2 text-sm text-blue-800 dark:text-blue-300 space-y-1">
+                    <p><strong>Tax Type:</strong> {{ tax_config.get_tax_type_display }}</p>
+                    <p><strong>Tax Rate:</strong> {{ tax_config.tax_rate }}%</p>
+                    {% if tax_config.tax_number %}
+                    <p><strong>Tax Number:</strong> {{ tax_config.tax_number }}</p>
+                    {% endif %}
+                    <p><strong>Prices Include Tax:</strong> {% if tax_config.include_tax_in_prices %}Yes{% else %}No{% endif %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('date-filter-form');
+    const select = document.getElementById('date-range-select');
+    const customDiv = document.getElementById('custom-date-inputs');
+
+    if (select && customDiv && form) {
+        function updateVisibility() {
+            if (select.value === 'custom') {
+                customDiv.style.display = 'flex';
+            } else {
+                customDiv.style.display = 'none';
+            }
+        }
+        
+        // Initial state
+        updateVisibility();
+
+        select.addEventListener('change', () => {
+            updateVisibility();
+            if (select.value !== 'custom') {
+                form.submit();
+            }
+        });
+    }
+});
+
+{% if daily_tax %}
+const dailyTaxCtx = document.getElementById('dailyTaxChart').getContext('2d');
+new Chart(dailyTaxCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for day in daily_tax %}'{{ day.day|date:"M d" }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Tax Collected',
+            data: [{% for day in daily_tax %}{{ day.tax }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: 'rgba(168, 85, 247, 0.8)',
+            borderColor: 'rgb(168, 85, 247)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { 
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'Tax: $' + context.parsed.y.toFixed(2);
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { 
+                    callback: function(value) { 
+                        return '$' + value.toFixed(2); 
+                    } 
+                }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

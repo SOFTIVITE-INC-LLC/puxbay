@@ -1,0 +1,43 @@
+{% extends 'storefront/base.html' %}
+{% load static %}
+{% load storefront_extras %}
+
+{% block content %}
+<div style="font-family: 'Outfit', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+    <div style="text-align: center; margin-bottom: 40px;">
+        <div style="width: 64px; height: 64px; background-color: #3b82f6; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; color: white; margin-bottom: 24px;">
+            <span class="material-icons-round" style="font-size: 32px;">shopping_bag</span>
+        </div>
+        <h1 style="font-size: 32px; font-weight: 800; color: #111827; margin: 0; letter-spacing: -0.025em;">Did you forget something?</h1>
+        <p style="font-size: 16px; color: #6b7280; margin-top: 12px; font-weight: 500;">We noticed you left some premium items in your cart at <strong>{{ store_settings.store_name|default:tenant.name }}</strong>.</p>
+    </div>
+
+    <div style="background-color: #f8fafc; border-radius: 20px; padding: 24px; margin-bottom: 32px; border: 1px solid #f1f5f9;">
+        <h3 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #3b82f6; margin-top: 0; margin-bottom: 16px;">Items in your cart</h3>
+        
+        <!-- Cart Summary Loop -->
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            {% for item in cart_items %}
+                <div style="display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                    <span style="font-weight: 600; color: #1f2937;">{{ item.name }}</span>
+                    <span style="font-weight: 800; color: #3b82f6;">{{ item.quantity }}x</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div style="text-align: center;">
+        <a href="{{ recover_url }}" style="display: inline-block; background-color: #111827; color: #ffffff; padding: 18px 36px; border-radius: 16px; font-weight: 800; text-decoration: none; font-size: 16px; transition: all 0.3s; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+            Recover My Cart
+        </a>
+        <p style="font-size: 12px; color: #9ca3af; margin-top: 24px;">This link will expire in 24 hours.</p>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 40px 0;">
+
+    <div style="text-align: center; color: #9ca3af; font-size: 12px;">
+        <p>&copy; {{ timestamp|date:"Y" }} {{ store_settings.store_name|default:tenant.name }}. All rights reserved.</p>
+        <p>If you didn't mean to start a cart, you can safely ignore this email.</p>
+    </div>
+</div>
+{% endblock %}

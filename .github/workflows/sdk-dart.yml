@@ -1,0 +1,25 @@
+name: Dart SDK
+
+on:
+  push:
+    paths:
+      - 'sdks/dart/**'
+  pull_request:
+    paths:
+      - 'sdks/dart/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Dart
+      uses: dart-lang/setup-dart@v1
+    - name: Install dependencies
+      run: |
+        cd sdks/dart
+        dart pub get
+    - name: Test
+      run: |
+        cd sdks/dart
+        dart test

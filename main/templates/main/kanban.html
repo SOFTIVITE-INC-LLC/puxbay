@@ -1,0 +1,189 @@
+{% extends 'dashboard_base.html' %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="p-6 h-full flex flex-col">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Order Management Board</h1>
+        <div class="flex space-x-2">
+            <span class="text-sm text-gray-500 dark:text-gray-400 self-center">Drag cards to update status</span>
+            <button onclick="window.location.reload()" class="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700">
+                <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="flex-1 overflow-x-auto overflow-y-hidden">
+        <div class="flex h-full space-x-6 min-w-max pb-4">
+            <!-- Pending Column -->
+            <div class="w-80 flex flex-col bg-gray-100 dark:bg-gray-800/50 rounded-xl" ondragover="allowDrop(event)" ondrop="drop(event, 'pending')">
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-yellow-50 dark:bg-yellow-900/10 rounded-t-xl sticky top-0">
+                    <h2 class="font-bold text-gray-700 dark:text-gray-200">Pending</h2>
+                    <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-mono">{{ columns.pending|length }}</span>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-3" id="col-pending">
+                    {% for order in columns.pending %}
+                        {% include 'main/partials/kanban_card.html' with order=order %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Processing Column -->
+            <div class="w-80 flex flex-col bg-gray-100 dark:bg-gray-800/50 rounded-xl" ondragover="allowDrop(event)" ondrop="drop(event, 'processing')">
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-blue-50 dark:bg-blue-900/10 rounded-t-xl sticky top-0">
+                    <h2 class="font-bold text-gray-700 dark:text-gray-200">Preparation</h2>
+                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-mono">{{ columns.processing|length }}</span>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-3" id="col-processing">
+                     {% for order in columns.processing %}
+                        {% include 'main/partials/kanban_card.html' with order=order %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Ready Column -->
+            <div class="w-80 flex flex-col bg-gray-100 dark:bg-gray-800/50 rounded-xl" ondragover="allowDrop(event)" ondrop="drop(event, 'ready')">
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-purple-50 dark:bg-purple-900/10 rounded-t-xl sticky top-0">
+                    <h2 class="font-bold text-gray-700 dark:text-gray-200">Ready for Pickup</h2>
+                    <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full font-mono">{{ columns.ready|length }}</span>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-3" id="col-ready">
+                     {% for order in columns.ready %}
+                        {% include 'main/partials/kanban_card.html' with order=order %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Completed Column -->
+            <div class="w-80 flex flex-col bg-gray-100 dark:bg-gray-800/50 rounded-xl" ondragover="allowDrop(event)" ondrop="drop(event, 'completed')">
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-green-50 dark:bg-green-900/10 rounded-t-xl sticky top-0">
+                    <h2 class="font-bold text-gray-700 dark:text-gray-200">Completed</h2>
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-mono">{{ columns.completed|length }}</span>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-3" id="col-completed">
+                     {% for order in columns.completed %}
+                        {% include 'main/partials/kanban_card.html' with order=order %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+        ev.target.classList.add('opacity-50');
+    }
+
+    function drop(ev, newStatus) {
+        ev.preventDefault();
+        var data = ev.dataTransfer.getData("text");
+        var draggedElement = document.getElementById(data);
+        var targetCol = document.getElementById('col-' + newStatus);
+        
+        // Optimistic UI Update
+        targetCol.appendChild(draggedElement);
+        draggedElement.classList.remove('opacity-50');
+        
+        // Beep
+        playBeep();
+
+        // API Call
+        var orderId = data.replace('order-', '');
+        
+        fetch("{% url 'update_order_status_api' branch.id %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.error) {
+                alert('Error updating status: ' + data.error);
+                window.location.reload(); // Revert on error
+            } else {
+                console.log(data.message);
+                updateCounts();
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            window.location.reload();
+        });
+    }
+    
+    function playBeep() {
+        // Simple context beep
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        osc.connect(ctx.destination);
+        osc.frequency.value = 600;
+        osc.type = "sine";
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+    }
+    
+    function updateCounts() {
+        // Optional: Implement client-side logic to recalculate counts in headers
+        // For MVP, simple reload is safer but we want smooth UX.
+        // We can just find all .kanban-card in each column and update the span
+        ['pending', 'processing', 'ready', 'completed'].forEach(status => {
+            var count = document.getElementById('col-' + status).children.length;
+            // Traverse up to find header span? This relies on DOM structure.
+            // Simplified:
+            // document.querySelector(`#col-${status}`).previousElementSibling.querySelector('span').innerText = count;
+        });
+    }
+
+    // KDS v2: Live Timers & Urgency Shifts
+    function updateTimers() {
+        const now = new Date();
+        document.querySelectorAll('.kanban-card').forEach(card => {
+            const createdStr = card.getAttribute('data-created');
+            if (!createdStr) return;
+            
+            const created = new Date(createdStr);
+            const diffMs = now - created;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffSecs = Math.floor((diffMs % 60000) / 1000);
+            
+            // Update display
+            const timerSpan = card.querySelector('.order-timer');
+            if (timerSpan) {
+                timerSpan.innerText = `${diffMins.toString().padStart(2, '0')}:${diffSecs.toString().padStart(2, '0')}`;
+                
+                // Urgency Shifts
+                if (diffMins >= 15) {
+                    timerSpan.classList.remove('text-gray-400', 'text-amber-500');
+                    timerSpan.classList.add('text-red-500', 'animate-pulse');
+                    card.classList.add('ring-2', 'ring-red-500', 'bg-red-50', 'dark:bg-red-900/10');
+                } else if (diffMins >= 10) {
+                    timerSpan.classList.remove('text-gray-400');
+                    timerSpan.classList.add('text-amber-500');
+                    card.classList.add('ring-1', 'ring-amber-500');
+                }
+            }
+        });
+    }
+
+    // Run every second
+    setInterval(updateTimers, 1000);
+    updateTimers();
+
+    // End drag event cleanup
+    document.addEventListener("dragend", function(event) {
+        event.target.classList.remove("opacity-50");
+    });
+</script>
+{% endblock %}

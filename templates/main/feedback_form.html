@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-gray-50">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback for {{ tenant.name }}</title>
+    <!-- Inter Font -->
+    <link rel="stylesheet" href="{% static 'css/fonts.css' %}">
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom visual star rating */
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            cursor: pointer;
+            color: #d1d5db; /* gray-300 */
+            transition: color 0.2s, transform 0.1s;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label {
+            color: #fbbf24; /* amber-400 */
+        }
+        .star-rating label:hover {
+            transform: scale(1.1);
+        }
+        .star-svg {
+            width: 32px;
+            height: 32px;
+        }
+    </style>
+</head>
+<body class="h-full font-sans antialiased text-gray-900 bg-gray-50 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]">
+    
+    <div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        
+        <!-- Header -->
+        <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+            <div class="mx-auto h-16 w-16 bg-white rounded-2xl shadow-xl flex items-center justify-center text-3xl font-bold text-indigo-600 mb-6 border border-gray-100">
+                {{ tenant.name|slice:":1" }}
+            </div>
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">
+                {{ tenant.name }}
+            </h2>
+            <p class="mt-2 text-sm text-gray-600">
+                We value your opinion. How did we do?
+            </p>
+        </div>
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-xl">
+            <div class="bg-white py-10 px-6 shadow-2xl rounded-2xl border border-gray-100 sm:px-12 relative overflow-hidden">
+                <!-- Decorative Top Border -->
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
+
+                <form method="post" class="space-y-8" id="feedbackForm">
+                    {% csrf_token %}
+
+                     <!-- Star Rating Section -->
+                    <div class="text-center border-b border-gray-100 pb-8">
+                        <label class="block text-sm font-medium text-gray-700 mb-4">Rate your overall experience</label>
+                        <div class="star-rating group">
+                            <!-- Reversed order for CSS sibling selector trick -->
+                            <input type="radio" id="star5" name="rating" value="5" required />
+                            <label for="star5" title="5 stars - Excellent">
+                                <svg class="star-svg" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            </label>
+                            
+                            <input type="radio" id="star4" name="rating" value="4" />
+                            <label for="star4" title="4 stars - Good">
+                                <svg class="star-svg" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            </label>
+                            
+                            <input type="radio" id="star3" name="rating" value="3" />
+                            <label for="star3" title="3 stars - OK">
+                                <svg class="star-svg" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            </label>
+                            
+                            <input type="radio" id="star2" name="rating" value="2" />
+                            <label for="star2" title="2 stars - Bad">
+                                <svg class="star-svg" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            </label>
+                            
+                            <input type="radio" id="star1" name="rating" value="1" />
+                            <label for="star1" title="1 star - Terrible">
+                                <svg class="star-svg" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Personal Details -->
+                    <div>
+                        <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-gray-700">Your Name</label>
+                        <div class="mt-2 relative">
+                            <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" required placeholder="Jane Doe"
+                                class="form-input block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-shadow">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                             <label for="{{ form.email.id_for_label }}" class="block text-sm font-semibold text-gray-700">Email (Optional)</label>
+                             <div class="mt-2 relative">
+                                <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" placeholder="jane@example.com"
+                                    class="form-input block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-shadow">
+                            </div>
+                        </div>
+                         <div>
+                             <label for="{{ form.phone.id_for_label }}" class="block text-sm font-semibold text-gray-700">Phone (Optional)</label>
+                             <div class="mt-2 relative">
+                                <input type="tel" name="{{ form.phone.name }}" id="{{ form.phone.id_for_label }}" placeholder="+1 (555) 000-0000"
+                                    class="form-input block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-shadow">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comment Section -->
+                    <div>
+                        <label for="{{ form.comment.id_for_label }}" class="block text-sm font-semibold text-gray-700">
+                            Tell us more
+                        </label>
+                        <div class="mt-2 relative">
+                            <textarea name="{{ form.comment.name }}" id="{{ form.comment.id_for_label }}" rows="4" 
+                                class="form-textarea block w-full px-4 py-3 rounded-lg border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm transition-shadow"
+                                placeholder="What did you like? What can we improve?"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-2">
+                        <button type="submit" class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:-translate-y-0.5 hover:shadow-lg">
+                            Submit Feedback
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                    <p class="text-xs text-gray-400">Powered by <strong>Puxbay</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Optional: Add simple client-side validation or enhancements
+        document.addEventListener('DOMContentLoaded', () => {
+             // Example: Focus interactions
+             const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], textarea');
+             inputs.forEach(input => {
+                 input.classList.add('transition-all', 'duration-200');
+             });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+    "name": "Softivite Premium Store",
+    "short_name": "PremiumStore",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#3b82f6",
+    "description": "Next-generation e-commerce experience.",
+    "icons": [
+        {
+            "src": "https://via.placeholder.com/192x192/3b82f6/ffffff?text=Store",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "https://via.placeholder.com/512x512/3b82f6/ffffff?text=Store",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

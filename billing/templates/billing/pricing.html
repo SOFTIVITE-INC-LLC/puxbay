@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+  <!-- Hero Section -->
+  <div class="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-900 text-white py-24 md:py-32 overflow-hidden">
+    <!-- Animated Background Elements -->
+    <div class="absolute inset-0 overflow-hidden">
+      <div class="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+      <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+      <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+    </div>
+
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6">
+          <svg class="w-4 h-4 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          <span class="text-sm font-semibold text-white">7-Day Free Trial • No Credit Card Required</span>
+        </div>
+
+        <!-- Main Heading -->
+        <h1 class="text-5xl md:text-6xl lg:text-7xl font-black mb-6 tracking-tight">
+          Simple, Transparent
+          <span class="block bg-gradient-to-r from-blue-200 via-white to-blue-200 bg-clip-text text-transparent">Pricing</span>
+        </h1>
+
+        <!-- Subheading -->
+        <p class="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-8 leading-relaxed">
+          Choose the perfect plan for your business. Scale as you grow with flexible pricing designed for retailers of all sizes.
+        </p>
+
+        <!-- Trust Indicators -->
+        <div class="flex flex-wrap items-center justify-center gap-6 md:gap-8 text-sm text-blue-200">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>Cancel Anytime</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>24/7 Support</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>Secure Payments</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10">
+    <!-- Type & Currency Toggles -->
+    <div class="flex flex-col md:flex-row items-center justify-center gap-4 mb-12">
+      <!-- Account Type Toggle -->
+
+      <!-- Currency Toggle -->
+      <div class="inline-flex p-1 bg-blue-50 rounded-2xl shadow-inner ring-1 ring-blue-100">
+        <a href="?currency=USD{% if tenant_type %}&type={{ tenant_type }}{% endif %}" class="px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-300 {% if active_currency == 'USD' %}bg-white text-blue-600 shadow-md transform scale-105{% else %}text-blue-600/70 hover:text-blue-600{% endif %}">
+          $ USD
+        </a>
+        <a href="?currency=GHS{% if tenant_type %}&type={{ tenant_type }}{% endif %}" class="px-6 py-2.5 rounded-xl text-sm font-black transition-all duration-300 {% if active_currency == 'GHS' %}bg-white text-blue-600 shadow-md transform scale-105{% else %}text-blue-600/70 hover:text-blue-600{% endif %}">
+          GH₵ GHS
+        </a>
+      </div>
+    </div>
+
+    <!-- Interval Selector -->
+    <div class="flex justify-center mb-12">
+      <div class="relative bg-white rounded-xl p-1.5 flex space-x-1 shadow-lg border border-gray-200">
+        <button id="btn-monthly" data-interval="monthly" class="interval-btn active px-8 py-3 text-sm font-bold rounded-lg transition-all">
+          Monthly
+        </button>
+        <button id="btn-6-month" data-interval="6-month" class="interval-btn px-8 py-3 text-sm font-bold rounded-lg transition-all">
+          6 Months
+          <span class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-bold">Save 15%</span>
+        </button>
+        <button id="btn-yearly" data-interval="yearly" class="interval-btn px-8 py-3 text-sm font-bold rounded-lg transition-all">
+          Yearly
+          <span class="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-bold">Save 25%</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Pricing Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+      {% for plan in plans %}
+      <div class="plan-card relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 {% if plan.name == 'Professional' %}border-blue-500 transform scale-105{% else %}border-gray-200{% endif %}" data-interval="{{ plan.interval }}">
+        
+        
+        <!-- Popular Badge -->
+        {% if plan.name == "Professional" %}
+        <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 z-10">
+          <span class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg whitespace-nowrap">
+            ⭐ Most Popular
+          </span>
+        </div>
+        {% endif %}
+
+        <!-- Trial Badge -->
+        {% if plan.trial_days > 0 and plan.price > 0 %}
+        <div class="bg-gradient-to-r from-green-500 to-green-600 text-white text-center py-2.5 rounded-t-2xl">
+          <span class="text-sm font-bold">{{ plan.trial_days }}-Day Free Trial</span>
+        </div>
+        {% elif plan.price == 0 %}
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-center py-2.5 rounded-t-2xl">
+          <span class="text-sm font-bold">100% Free Forever</span>
+        </div>
+        {% endif %}
+        
+        <div class="p-8 {% if plan.name == 'Professional' %}pt-10{% endif %}">
+          <h3 class="text-2xl font-extrabold text-gray-900 mb-2">{{ plan.name }}</h3>
+          <p class="text-gray-600 text-sm mb-6 h-12">{{ plan.description }}</p>
+          
+          <div class="mb-6 text-center">
+            {% if plan.price == 0 %}
+            <div class="flex flex-col items-center">
+              <span class="text-3xl font-extrabold text-gray-900">Free</span>
+            </div>
+            {% else %}
+            <div class="flex flex-col items-center">
+              <span class="text-3xl font-extrabold text-gray-900">
+                {% if active_currency == 'GHS' %}
+                  GH₵{{ plan.price_ghs }}
+                {% else %}
+                  ${{ plan.price }}
+                {% endif %}
+              </span>
+              <span class="text-gray-600 text-sm mt-1">/{{ plan.get_interval_display|lower }}</span>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Features -->
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start">
+              <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              <span class="text-gray-700 text-sm"><strong>{{ plan.max_branches }}</strong> Branch{{ plan.max_branches|pluralize:"es" }}</span>
+            </li>
+            <li class="flex items-start">
+              <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              <span class="text-gray-700 text-sm"><strong>{{ plan.max_users }}</strong> User{{ plan.max_users|pluralize }}</span>
+            </li>
+            {% for key, feature in plan.features.items %}
+            <li class="flex items-start">
+              <svg class="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              <span class="text-gray-700 text-sm">{{ feature }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+
+          <!-- CTA Button -->
+          {% if current_plan_id == plan.id %}
+          <button disabled class="w-full bg-gray-100 border-2 border-gray-200 rounded-xl py-3 text-sm font-bold text-gray-500 cursor-not-allowed">
+            Current Plan
+          </button>
+          {% else %}
+          <a href="{% url 'checkout' plan.id %}" class="block w-full {% if plan.name == 'Professional' %}bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800{% else %}bg-gray-900 hover:bg-gray-800{% endif %} text-white text-center rounded-xl py-3 text-sm font-bold transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+            {% if plan.price == 0 %}Start Free Trial{% elif current_plan_id %}Upgrade Now{% else %}Get Started{% endif %}
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Feature Comparison Table -->
+    <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-16">
+      <div class="bg-gradient-to-r from-gray-900 to-gray-800 px-8 py-6">
+        <h2 class="text-2xl font-extrabold text-white">Compare All Features</h2>
+        <p class="text-gray-300 mt-1">See what's included in each plan</p>
+      </div>
+      
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-8 py-4 text-left text-sm font-bold text-gray-900">Feature</th>
+              <th class="px-6 py-4 text-center text-sm font-bold text-gray-900">Free Trial</th>
+              <th class="px-6 py-4 text-center text-sm font-bold text-gray-900">Starter</th>
+              <th class="px-6 py-4 text-center text-sm font-bold text-blue-600">Professional</th>
+              <th class="px-6 py-4 text-center text-sm font-bold text-gray-900">Enterprise</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr class="hover:bg-gray-50">
+              <td class="px-8 py-4 text-sm text-gray-900 font-medium">Branches</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-600">1</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-600">1</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-600 bg-blue-50">3</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-600">Unlimited</td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-8 py-4 text-sm text-gray-900 font-medium">Users</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-600">3</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-600">5</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-600 bg-blue-50">15</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-600">Unlimited</td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-8 py-4 text-sm text-gray-900 font-medium">POS & Sales</td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center bg-blue-50"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-8 py-4 text-sm text-gray-900 font-medium">Inventory Management</td>
+              <td class="px-6 py-4 text-center bg-blue-50"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-8 py-4 text-sm text-gray-900 font-medium">Customer Management</td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center bg-blue-50"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-8 py-4 text-sm text-gray-900 font-medium">Analytics & Reports</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-500">Basic</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-600">Standard</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-900 font-semibold bg-blue-50">Advanced</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-900 font-semibold">Custom</td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-8 py-4 text-sm text-gray-900 font-medium">Offline Mode</td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center bg-blue-50"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-8 py-4 text-sm text-gray-900 font-medium">API Access</td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-gray-300 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-gray-300 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center bg-blue-50"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-green-500 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-8 py-4 text-sm text-gray-900 font-medium">Priority Support</td>
+              <td class="px-6 py-4 text-center"><svg class="w-5 h-5 text-gray-300 mx-auto" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></td>
+              <td class="px-6 py-4 text-center text-sm text-gray-600">Email</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-900 font-semibold bg-blue-50">Priority</td>
+              <td class="px-6 py-4 text-center text-sm text-gray-900 font-semibold">24/7</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-extrabold text-gray-900 mb-4">Frequently Asked Questions</h2>
+      <div class="max-w-3xl mx-auto text-left space-y-4">
+        <details class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 group">
+          <summary class="font-bold text-gray-900 cursor-pointer list-none flex justify-between items-center">
+            Can I change plans later?
+            <svg class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600">Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
+        </details>
+        <details class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 group">
+          <summary class="font-bold text-gray-900 cursor-pointer list-none flex justify-between items-center">
+            What payment methods do you accept?
+            <svg class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600">We accept all major credit cards via Stripe, and mobile money via Paystack (GHS).</p>
+        </details>
+        <details class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 group">
+          <summary class="font-bold text-gray-900 cursor-pointer list-none flex justify-between items-center">
+            Is there a setup fee?
+            <svg class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-4 text-gray-600">No setup fees, no hidden costs. You only pay the monthly subscription price.</p>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.interval-btn {
+  color: #6B7280;
+}
+.interval-btn.active {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+}
+.interval-btn:not(.active):hover {
+  background-color: #F3F4F6;
+}
+.plan-card {
+  transition: all 0.3s ease;
+}
+.plan-card.hidden {
+  display: none;
+}
+
+/* Animated Blob Effects */
+@keyframes blob {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+</style>
+
+<script nonce="{{ request.csp_nonce }}">
+let currentInterval = 'monthly';
+
+function switchInterval(interval) {
+  currentInterval = interval;
+  
+  // Update button states
+  document.querySelectorAll('.interval-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  const activeBtn = document.getElementById(`btn-${interval}`);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+  }
+  
+  // Show/hide plans based on interval
+  document.querySelectorAll('.plan-card').forEach(card => {
+    const cardInterval = card.getAttribute('data-interval');
+    if (cardInterval === interval) {
+      card.classList.remove('hidden');
+    } else {
+      card.classList.add('hidden');
+    }
+  });
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  switchInterval('monthly');
+  
+  // Attach event listeners for interval buttons
+  document.querySelectorAll('.interval-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const interval = this.getAttribute('data-interval');
+      if (interval) {
+        switchInterval(interval);
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

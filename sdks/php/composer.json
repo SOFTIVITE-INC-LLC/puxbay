@@ -1,0 +1,42 @@
+{
+    "name": "puxbay/puxbay-php",
+    "description": "Official PHP SDK for the Puxbay POS API",
+    "type": "library",
+    "keywords": [
+        "puxbay",
+        "pos",
+        "api",
+        "sdk",
+        "retail"
+    ],
+    "homepage": "https://github.com/puxbay/puxbay-php",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Puxbay Team",
+            "email": "support@puxbay.com"
+        }
+    ],
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "guzzlehttp/guzzle": "^7.5",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "mockery/mockery": "^1.5",
+        "phpstan/phpstan": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Puxbay\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Puxbay\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

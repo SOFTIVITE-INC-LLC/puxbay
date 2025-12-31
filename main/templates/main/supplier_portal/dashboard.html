@@ -1,0 +1,157 @@
+{% extends 'dashboard_base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="p-6 space-y-8 bg-slate-50 dark:bg-slate-900 min-h-screen">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Supplier Portal</h1>
+            <p class="text-slate-500 dark:text-slate-400">Merchant: <span class="font-bold text-slate-700 dark:text-slate-200">{{ supplier.name }}</span></p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <span class="material-icons-round text-blue-600 dark:text-blue-400">inventory</span>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pending Orders</div>
+                    <div class="text-lg font-black text-slate-900 dark:text-white leading-tight">{{ active_pos.count }}</div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <span class="material-icons-round text-emerald-600 dark:text-emerald-400">payments</span>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Value</div>
+                    <div class="text-lg font-black text-slate-900 dark:text-white leading-tight">{{ request.user.profile.tenant.currency_symbol }}{{ total_pending_amount|floatformat:2 }}</div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
+                    <span class="material-icons-round text-rose-600 dark:text-rose-400">account_balance_wallet</span>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Amount Owed</div>
+                    <div class="text-lg font-black text-slate-900 dark:text-white leading-tight">{{ request.user.profile.tenant.currency_symbol }}{{ supplier.outstanding_balance|floatformat:2 }}</div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                    <span class="material-icons-round text-amber-600 dark:text-amber-400">speed</span>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Credit Limit</div>
+                    <div class="text-lg font-black text-slate-900 dark:text-white leading-tight">{{ request.user.profile.tenant.currency_symbol }}{{ supplier.credit_limit|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Orders Table -->
+    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Active Purchase Orders</h3>
+            <a href="{% url 'supplier_po_list' %}" class="text-xs font-bold text-blue-600 hover:underline">View All History</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-900/50">
+                    <tr>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ref ID</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Branch</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Amount</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    {% for po in active_pos %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors group">
+                        <td class="px-6 py-4">
+                            <span class="text-sm font-black text-slate-900 dark:text-white">#{{ po.reference_id }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
+                            {{ po.created_at|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
+                            {{ po.branch.name }}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">
+                            {{ po.tenant.currency_symbol }}{{ po.total_cost|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider
+                                {% if po.status == 'ordered' %}bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400
+                                {% elif po.status == 'draft' %}bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300
+                                {% else %}bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400{% endif %}">
+                                {{ po.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'supplier_po_detail' po.id %}" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-black rounded-xl hover:scale-105 transition-transform">
+                                Details
+                                <span class="material-icons-round text-sm">chevron_right</span>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-20 text-center text-slate-400 italic">No active orders at the moment.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Recent Credit Transactions -->
+    <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Recent Credit Activity</h3>
+            <a href="{% url 'supplier_credit_history' %}" class="text-xs font-bold text-blue-600 hover:underline">View All History</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-900/50">
+                    <tr>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Type</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Reference/Staff</th>
+                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    {% for trans in credit_history %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors group">
+                        <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
+                            {{ trans.created_at|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider
+                                {% if trans.transaction_type == 'payment' %}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400
+                                {% elif trans.transaction_type == 'purchase' %}bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400
+                                {% else %}bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300{% endif %}">
+                                {{ trans.get_transaction_type_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-bold text-slate-900 dark:text-white">{{ trans.reference }}</div>
+                            <div class="text-[10px] text-slate-400">Processed by: {{ trans.created_by.user.get_full_name|default:trans.created_by.user.username }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-right text-sm font-black {% if trans.amount < 0 %}text-green-600{% else %}text-amber-600{% endif %}">
+                            ${{ trans.amount }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-10 text-center text-slate-400 italic text-sm">No recent credit activity.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

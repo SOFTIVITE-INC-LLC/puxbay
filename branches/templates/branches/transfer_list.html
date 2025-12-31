@@ -1,0 +1,191 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Stock Transfers - SaaS POS{% endblock %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-0">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Stock Transfers</h1>
+        <a href="{% url 'transfer_create' branch.id %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            New Transfer
+        </a>
+    </div>
+
+    <!-- Tabs (Vanilla JS) -->
+    <div>
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs" id="transfer-tabs">
+                <button type="button" data-target="tab-sent" class="transfer-tab-btn active border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    Sent
+                </button>
+                <button type="button" data-target="tab-received" class="transfer-tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    Received
+                </button>
+            </nav>
+        </div>
+
+        <div class="mt-6">
+            <!-- Sent Tab -->
+            <div id="tab-sent" class="transfer-tab-content">
+                 <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                    <ul id="sent-transfers-list" class="divide-y divide-gray-200">
+                        {% for transfer in sent_transfers %}
+                            <li>
+                                <a href="{% url 'transfer_detail' branch.id transfer.id %}" class="block hover:bg-gray-50">
+                                    <div class="px-4 py-4 sm:px-6">
+                                        <div class="flex items-center justify-between">
+                                            <p class="text-sm font-medium text-blue-600 truncate">
+                                                {{ transfer.reference_id }} -> To {{ transfer.destination_branch.name }}
+                                            </p>
+                                            <div class="ml-2 flex-shrink-0 flex">
+                                                <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                    {% if transfer.status == 'completed' %}bg-green-100 text-green-800
+                                                    {% elif transfer.status == 'cancelled' %}bg-red-100 text-red-800
+                                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                                    {{ transfer.get_status_display }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2 sm:flex sm:justify-between">
+                                            <div class="sm:flex">
+                                                <p class="flex items-center text-sm text-gray-500">
+                                                    {{ transfer.items.count }} items
+                                                </p>
+                                            </div>
+                                            <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                                <p>
+                                                    Sent on <time datetime="{{ transfer.created_at|date:'c' }}">{{ transfer.created_at|date:"M d, Y" }}</time>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        {% empty %}
+                            <li class="px-4 py-4 sm:px-6 text-gray-500 text-center">No transfers sent yet.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Received Tab -->
+            <div id="tab-received" class="transfer-tab-content hidden">
+                <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                   <ul class="divide-y divide-gray-200">
+                       {% for transfer in received_transfers %}
+                           <li>
+                               <a href="{% url 'transfer_detail' branch.id transfer.id %}" class="block hover:bg-gray-50">
+                                   <div class="px-4 py-4 sm:px-6">
+                                       <div class="flex items-center justify-between">
+                                           <p class="text-sm font-medium text-blue-600 truncate">
+                                               {{ transfer.reference_id }} <- From {{ transfer.source_branch.name }}
+                                           </p>
+                                           <div class="ml-2 flex-shrink-0 flex">
+                                               <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                   {% if transfer.status == 'completed' %}bg-green-100 text-green-800
+                                                   {% elif transfer.status == 'cancelled' %}bg-red-100 text-red-800
+                                                   {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                                   {{ transfer.get_status_display }}
+                                               </p>
+                                           </div>
+                                       </div>
+                                       <div class="mt-2 sm:flex sm:justify-between">
+                                           <div class="sm:flex">
+                                               <p class="flex items-center text-sm text-gray-500">
+                                                   {{ transfer.items.count }} items
+                                               </p>
+                                           </div>
+                                           <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                               <p>
+                                                   Received on <time datetime="{{ transfer.created_at|date:'c' }}">{{ transfer.created_at|date:"M d, Y" }}</time>
+                                               </p>
+                                           </div>
+                                       </div>
+                                   </div>
+                               </a>
+                           </li>
+                       {% empty %}
+                           <li class="px-4 py-4 sm:px-6 text-gray-500 text-center">No transfers received yet.</li>
+                       {% endfor %}
+                   </ul>
+               </div>
+           </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabBtns = document.querySelectorAll('.transfer-tab-btn');
+        const tabContents = document.querySelectorAll('.transfer-tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                
+                // Update Buttons
+                tabBtns.forEach(b => {
+                    b.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                    b.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                });
+                btn.classList.add('active', 'border-blue-500', 'text-blue-600');
+                btn.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+
+                // Update Content
+                tabContents.forEach(content => {
+                    if (content.id === targetId) {
+                        content.classList.remove('hidden');
+                    } else {
+                        content.classList.add('hidden');
+                    }
+                });
+            });
+        });
+    });
+</script>
+</script>
+<script src="{% static 'js/offline-forms.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Inject pending transfers
+        new OfflineListInjector({
+            containerId: 'sent-transfers-list',
+            storeName: 'stock_transfers',
+            emptyStateId: null, // We append to existing list or empty state usually
+            templateFunc: (item) => `
+                <li data-offline-id="${item.id}">
+                    <a href="#" class="block hover:bg-gray-50 bg-yellow-50/50">
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-medium text-blue-600 truncate">
+                                    Pending Sync -> To ${item.destination_branch_name || 'Destination'}
+                                </p>
+                                <div class="ml-2 flex-shrink-0 flex">
+                                    <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 animate-pulse">
+                                        Pending Sync
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-2 sm:flex sm:justify-between">
+                                <div class="sm:flex">
+                                    <p class="flex items-center text-sm text-gray-500">
+                                        ${item.items ? item.items.length : 0} items
+                                    </p>
+                                </div>
+                                <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                    <p>
+                                        Created <time>${new Date(item.created_at).toLocaleDateString()}</time>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            `
+        });
+    });
+</script>
+{% endblock %}

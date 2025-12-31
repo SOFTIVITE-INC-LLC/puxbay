@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Blog - Puxbay{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative py-20 bg-slate-950 overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-slate-950 to-slate-950"></div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="text-center max-w-3xl mx-auto">
+            <h1 class="text-4xl md:text-6xl font-black text-white mb-6">
+                Insights for <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400">Retail Excellence</span>
+            </h1>
+            <p class="text-xl text-slate-400 leading-relaxed">
+                Stay updated with the latest trends, tips, and success stories in the world of retail and Point of Sale.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Blog Main Section -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Categories & Search -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-16 gap-8">
+            <div class="flex flex-wrap gap-2">
+                <a href="{% url 'blog_home' %}" class="px-6 py-2 rounded-full text-sm font-bold transition-all {% if not category %}bg-blue-600 text-white shadow-lg shadow-blue-500/20{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                    All Posts
+                </a>
+                {% for cat in categories %}
+                <a href="{% url 'blog_category' cat.slug %}" class="px-6 py-2 rounded-full text-sm font-bold transition-all {% if category.slug == cat.slug %}bg-blue-600 text-white shadow-lg shadow-blue-500/20{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+                    {{ cat.name }}
+                </a>
+                {% endfor %}
+            </div>
+            
+            <div class="relative w-full md:w-80">
+                <input type="text" placeholder="Search articles..." class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-950 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium">
+                <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+        </div>
+
+        {% if category %}
+        <div class="mb-12">
+            <h2 class="text-2xl font-black text-slate-900 flex items-center">
+                <span class="w-8 h-1 bg-blue-600 mr-4 rounded-full"></span>
+                Showing posts in "{{ category.name }}"
+            </h2>
+        </div>
+        {% endif %}
+
+        <!-- Blog Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {% for post in posts %}
+            <article class="group flex flex-col bg-white rounded-3xl overflow-hidden border border-slate-100 transition-all hover:shadow-2xl hover:shadow-slate-200/50 hover:-translate-y-1">
+                <a href="{% url 'blog_detail' post.slug %}" class="block aspect-video overflow-hidden relative">
+                    {% if post.featured_image %}
+                        <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    {% else %}
+                        <div class="w-full h-full bg-slate-100 flex items-center justify-center">
+                            <svg class="w-12 h-12 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                    {% endif %}
+                    {% if post.category %}
+                    <span class="absolute top-4 left-4 px-4 py-1.5 bg-white/90 backdrop-blur rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm text-blue-600">
+                        {{ post.category.name }}
+                    </span>
+                    {% endif %}
+                </a>
+                
+                <div class="p-8 flex-1 flex flex-col">
+                    <div class="flex items-center text-xs text-slate-400 font-bold mb-4 uppercase tracking-widest gap-4">
+                        <span class="flex items-center">
+                            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            {{ post.published_at|date:"M d, Y" }}
+                        </span>
+                        <span class="w-1 h-1 bg-slate-200 rounded-full"></span>
+                        <span>5 min read</span>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-slate-900 mb-4 group-hover:text-blue-600 transition-colors line-clamp-2">
+                        <a href="{% url 'blog_detail' post.slug %}">{{ post.title }}</a>
+                    </h3>
+                    
+                    <p class="text-slate-500 text-sm leading-relaxed mb-8 line-clamp-3">
+                        {{ post.excerpt }}
+                    </p>
+                    
+                    <div class="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-600 mr-3">
+                                {{ post.author.username|slice:":1"|upper }}
+                            </div>
+                            <span class="text-xs font-bold text-slate-900">{{ post.author.get_full_name|default:post.author.username }}</span>
+                        </div>
+                        <a href="{% url 'blog_detail' post.slug %}" class="text-blue-600 group/link flex items-center text-xs font-black uppercase tracking-widest">
+                            Read More
+                            <svg class="w-4 h-4 ml-1.5 transition-transform group-hover/link:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </article>
+            {% empty %}
+            <div class="col-span-full py-20 text-center">
+                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2zM14 4v4h4"/></svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 mb-2">No articles found</h3>
+                <p class="text-slate-500">We're working on some great content. Check back soon!</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination (Placeholder) -->
+        {% if posts.has_other_pages %}
+        <div class="mt-20 flex justify-center items-center gap-4">
+            <button class="w-12 h-12 rounded-2xl border border-slate-200 flex items-center justify-center text-slate-400 hover:border-blue-600 hover:text-blue-600 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <span class="text-sm font-bold text-slate-900">Page 1 of 5</span>
+            <button class="w-12 h-12 rounded-2xl border border-slate-200 flex items-center justify-center text-slate-400 hover:border-blue-600 hover:text-blue-600 transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Newsletter CTA -->
+<section class="py-20 bg-slate-50 border-y border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-blue-600 rounded-[3rem] px-8 py-16 md:p-20 relative overflow-hidden text-center text-white">
+            <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-700 opacity-50"></div>
+            <div class="relative z-10 max-w-2xl mx-auto">
+                <h2 class="text-3xl md:text-5xl font-black mb-6">Stay ahead of the curve</h2>
+                <p class="text-blue-100 text-lg mb-10">Get the latest retail insights and product updates delivered straight to your inbox every week.</p>
+                <form class="flex flex-col sm:flex-row gap-4">
+                    <input type="email" placeholder="Enter your email address" class="flex-1 px-8 py-4 bg-white/10 backdrop-blur rounded-2xl border border-white/20 text-white placeholder:text-blue-100 focus:outline-none focus:ring-4 focus:ring-white/10 font-medium">
+                    <button type="submit" class="px-10 py-4 bg-white text-blue-600 rounded-2xl font-black uppercase tracking-widest hover:bg-blue-50 transition-all shadow-xl shadow-blue-900/20">
+                        Subscribe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

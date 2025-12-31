@@ -1,0 +1,25 @@
+{% extends 'registration/base_auth.html' %}
+
+{% block title %}Activation Failed{% endblock %}
+{% block icon %}error_outline{% endblock %}
+{% block heading %}Verification Failed{% endblock %}
+{% block subheading %}Invalid or expired activation link.{% endblock %}
+
+{% block content %}
+<p class="text-slate-400 mb-6">
+    The link you used is invalid or has expired. Please try signing in again or request a new verification email.
+</p>
+<div class="mt-8">
+    <a href="{% url 'signup' %}" 
+       class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 focus:ring-offset-slate-900 transition-all duration-200">
+        Sign Up Again
+    </a>
+</div>
+{% endblock %}
+
+{% block footer_links %}
+<p class="text-center text-sm text-slate-500">
+    Need help? <br>
+    <a href="#" class="font-medium text-indigo-400 hover:text-indigo-300 transition-colors">Contact Support</a>
+</p>
+{% endblock %}

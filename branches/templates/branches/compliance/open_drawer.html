@@ -1,0 +1,52 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Open Cash Drawer - {{ branch.name }}{% endblock %}
+
+{% block page_title %}End of Day Reconciliation{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-100">
+            <h2 class="text-xl font-bold text-slate-800">Open Cash Drawer</h2>
+            <p class="text-slate-500 mt-1">Start a new sales session for {{ branch.name }}</p>
+        </div>
+        
+        <form method="post" class="p-6 space-y-6">
+            {% csrf_token %}
+            
+            <div>
+                <label for="starting_balance" class="block text-sm font-medium text-slate-700 mb-1">
+                    Starting Cash Balance
+                </label>
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-slate-500 sm:text-sm">$</span>
+                    </div>
+                    <input type="number" name="starting_balance" id="starting_balance" step="0.01" min="0" required
+                           class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-slate-300 rounded-lg py-3" 
+                           placeholder="0.00">
+                </div>
+                <p class="mt-1 text-xs text-slate-500">Count the cash currently in the drawer.</p>
+            </div>
+            
+            <div>
+                <label for="notes" class="block text-sm font-medium text-slate-700 mb-1">Notes (Optional)</label>
+                <textarea name="notes" id="notes" rows="3" 
+                          class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-slate-300 rounded-lg p-3" 
+                          placeholder="e.g. Added extra change rolls"></textarea>
+            </div>
+            
+            <div class="pt-4 flex items-center justify-end gap-3">
+                <a href="{% url 'branch_dashboard' branch.id %}" class="px-4 py-2 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50">
+                    Cancel
+                </a>
+                <button type="submit" class="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all shadow-green-200">
+                    Open Drawer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Command Center - Puxbay{% endblock %}
+{% block page_title %}Command Center{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Global Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-indigo-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-900/20">
+            <p class="text-[10px] font-black uppercase tracking-widest opacity-70 mb-1">Total Network Revenue</p>
+            <h3 class="text-3xl font-black">${{ global_stats.revenue|floatformat:2 }}</h3>
+            <div class="mt-4 flex items-center gap-2 text-xs font-bold bg-white/10 w-fit px-2 py-1 rounded-full">
+                <span class="material-symbols-outlined text-sm">trending_up</span>
+                All Branches
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Transactions</p>
+            <h3 class="text-3xl font-black text-slate-900 dark:text-white">{{ global_stats.transactions }}</h3>
+            <p class="text-xs text-slate-500 mt-4">Across entire network</p>
+        </div>
+        
+        <!-- Action Card -->
+        <div class="lg:col-span-2 bg-slate-900 rounded-3xl p-6 text-white flex items-center justify-between">
+            <div>
+                <h4 class="text-lg font-bold mb-1">Global Price Sync</h4>
+                <p class="text-slate-400 text-xs">Update prices for all 50+ stores in seconds.</p>
+            </div>
+            <a href="{% url 'global_price_sync' %}" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-sm transition-all flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm font-black">sync</span>
+                Sync Now
+            </a>
+        </div>
+    </div>
+
+    <!-- Branch Benchmarking Table -->
+    <div class="bg-white rounded-3xl shadow-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+            <h3 class="text-lg font-black text-slate-900 dark:text-white">Branch Performance Benchmark</h3>
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-slate-400">info</span>
+                <p class="text-xs text-slate-500 italic">Sorted by total revenue (High to Low)</p>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-slate-50 dark:bg-slate-900">
+                    <tr>
+                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Branch Name</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Revenue</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Orders</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">AOV</th>
+                        <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Efficiency</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    {% for branch in branch_metrics %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td class="px-6 py-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-xs dark:bg-blue-900/30">
+                                    {{ branch.name|slice:":2"|upper }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-black text-slate-900 dark:text-white">{{ branch.name }}</p>
+                                    <p class="text-[10px] text-slate-500">{{ branch.unique_id }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 text-right font-bold text-slate-900 dark:text-white">
+                            ${{ branch.total_revenue|default:0|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-5 text-right text-slate-600 dark:text-slate-400 text-sm">
+                            {{ branch.transaction_count|default:0 }}
+                        </td>
+                        <td class="px-6 py-5 text-right text-slate-600 dark:text-slate-400 text-sm">
+                            ${{ branch.avg_order_value|default:0|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-5">
+                            <div class="flex items-center justify-center">
+                                {% if branch.total_revenue > 1000 %}
+                                <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-black border border-green-200">HIGH</span>
+                                {% elif branch.total_revenue > 0 %}
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black border border-blue-200">NORMAL</span>
+                                {% else %}
+                                <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-[10px] font-black border border-slate-200">INACTIVE</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-slate-400 text-sm italic">
+                            No branch data found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

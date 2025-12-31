@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Manual - Puxbay{% endblock %}
+
+{% block content %}
+<div class="bg-white min-h-screen">
+    <!-- Hero Header -->
+    <div class="bg-slate-900 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl font-extrabold text-white sm:text-5xl">User Manual</h1>
+            <p class="mt-4 text-xl text-slate-400">Everything you need to master your Point of Sale system.</p>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+            <!-- Sidebar Navigation -->
+            <aside class="hidden lg:block lg:col-span-3">
+                <nav class="sticky top-24 space-y-1" aria-label="Sidebar">
+                    {% for section in sections %}
+                        <a href="#section-{{ section.id }}" class="text-slate-900 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-3 py-2 font-medium rounded-md transition-colors" data-target="section-{{ section.id }}">
+                            <span class="truncate">{{ section.title }}</span>
+                        </a>
+                    {% endfor %}
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="lg:col-span-9 space-y-16">
+                
+                {% for section in sections %}
+                <section id="section-{{ section.id }}" class="scroll-mt-24">
+                    <div class="flex items-center gap-3 mb-6">
+                        {% if section.icon %}
+                        <span class="material-symbols-outlined text-3xl text-blue-600">{{ section.icon }}</span>
+                        {% endif %}
+                        <h2 class="text-3xl font-bold text-slate-900">{{ section.title }}</h2>
+                    </div>
+                    
+                    <div class="space-y-12">
+                        {% for article in section.articles.all %}
+                            {% if article.is_published %}
+                            <article id="article-{{ article.slug }}" class="scroll-mt-32">
+                                <h3 class="text-2xl font-bold text-slate-800 mb-4">{{ article.title }}</h3>
+                                <div class="prose prose-blue text-slate-600 max-w-none">
+                                    {{ article.content|safe }}
+                                </div>
+                            </article>
+                            {% endif %}
+                            
+                            {% if not forloop.last %}<hr class="border-slate-100 my-8">{% endif %}
+                        {% endfor %}
+                    </div>
+                </section>
+                
+                {% if not forloop.last %}<hr class="border-slate-200">{% endif %}
+                {% endfor %}
+
+            </main>
+        </div>
+    </div>
+</div>
+<script nonce="{{ request.csp_nonce }}">
+    // Smooth scrolling for sidebar links
+    document.querySelectorAll('aside nav a').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+            
+            // Update active state
+            document.querySelectorAll('aside nav a').forEach(a => {
+                a.classList.remove('bg-blue-50', 'text-blue-700');
+                a.classList.add('text-slate-900', 'hover:bg-slate-50');
+            });
+            this.classList.remove('text-slate-900', 'hover:bg-slate-50');
+            this.classList.add('bg-blue-50', 'text-blue-700');
+        });
+    });
+</script>
+{% endblock %}

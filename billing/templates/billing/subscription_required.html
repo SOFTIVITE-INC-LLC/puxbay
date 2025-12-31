@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center px-4 py-12">
+  <div class="max-w-2xl w-full">
+    <!-- Main Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+      <!-- Header with Gradient -->
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-12 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-6">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-3">
+          Subscription Required
+        </h1>
+        <p class="text-xl text-blue-100">
+          Access to this feature requires an active subscription
+        </p>
+      </div>
+
+      <!-- Content -->
+      <div class="px-8 py-10">
+        <div class="text-center mb-8">
+          <p class="text-lg text-gray-700 dark:text-gray-300 mb-6">
+            Your subscription is currently <span class="font-bold text-red-600 dark:text-red-400">inactive</span>. 
+            To continue using the dashboard and all premium features, please subscribe to one of our plans.
+          </p>
+          
+          <!-- Features List -->
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-6 mb-8">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              What you'll get with a subscription:
+            </h3>
+            <ul class="space-y-3 text-left max-w-md mx-auto">
+              <li class="flex items-start">
+                <svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-gray-700 dark:text-gray-300">Full access to POS and sales features</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-gray-700 dark:text-gray-300">Advanced inventory management</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-gray-700 dark:text-gray-300">Comprehensive analytics and reports</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-gray-700 dark:text-gray-300">Customer relationship management</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="text-gray-700 dark:text-gray-300">Multi-branch support</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- CTA Buttons -->
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'pricing' %}" class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              View Pricing Plans
+            </a>
+            <a href="{% url 'logout' %}" class="inline-flex items-center justify-center px-8 py-4 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold rounded-xl shadow hover:shadow-lg transition-all">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              </svg>
+              Logout
+            </a>
+          </div>
+        </div>
+
+        <!-- Help Text -->
+        <div class="text-center pt-6 border-t border-gray-200 dark:border-gray-700">
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Need help? Contact our support team at 
+            <a href="mailto:support@possystem.com" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold">
+              support@possystem.com
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Info -->
+    <div class="mt-6 text-center">
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        All plans include a <span class="font-bold text-green-600 dark:text-green-400">7-day free trial</span>. 
+        No credit card required to start!
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

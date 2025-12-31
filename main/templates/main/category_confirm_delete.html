@@ -1,0 +1,36 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SaaS POS{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10">
+    <div class="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
+        <div class="p-6 text-center">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 mb-6">
+                <svg class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Delete Category?</h3>
+            <p class="text-sm text-slate-500 mb-6">
+                Are you sure you want to delete <span class="font-bold text-slate-900">"{{ category.name }}"</span>? 
+                Products in this category will be set to "No Category". This action cannot be undone.
+            </p>
+
+            <form method="POST" class="flex flex-col gap-3">
+                {% csrf_token %}
+                <button type="submit" class="w-full inline-flex justify-center py-3 px-4 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                    Yes, Delete Category
+                </button>
+                <a href="{% url 'category_list' branch.id %}" class="w-full inline-flex justify-center py-3 px-4 border border-slate-300 shadow-sm text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors">
+                    No, Cancel
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

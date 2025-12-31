@@ -1,0 +1,26 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}{{ campaign.subject }}{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin-bottom: 32px;">
+    {% if tenant.logo %}
+        <img src="{{ tenant.logo.url }}" alt="{{ tenant.name }}" style="max-height: 80px; width: auto; margin-bottom: 16px;">
+    {% else %}
+        <h2 style="color: #1e293b; margin: 0;">{{ tenant.name }}</h2>
+    {% endif %}
+</div>
+
+<div class="campaign-message" style="color: #475569; font-size: 16px; line-height: 1.6;">
+    {{ campaign.message|safe }}
+</div>
+
+<div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #e2e8f0; text-align: center;">
+    <p style="font-size: 14px; color: #94a3b8; margin-bottom: 8px;">
+        Sent to you by {{ tenant.name }}
+    </p>
+    <a href="https://puxbay.com" style="font-size: 12px; color: #4f46e5; text-decoration: none; font-weight: 600;">
+        Powered by Puxbay
+    </a>
+</div>
+{% endblock %}

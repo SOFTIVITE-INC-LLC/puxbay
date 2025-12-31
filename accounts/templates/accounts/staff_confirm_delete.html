@@ -1,0 +1,34 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Remove Staff - SaaS POS{% endblock %}
+
+{% block page_title %}Remove Staff{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto mt-12">
+    <div class="bg-white rounded-xl shadow-lg border border-red-100 overflow-hidden">
+        <div class="p-6 text-center">
+             <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-6">
+                <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6"/>
+                </svg>
+            </div>
+            
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Remove Staff Member?</h3>
+            <p class="text-slate-500 mb-8">
+                Are you sure you want to remove <span class="font-semibold text-slate-900">"{{ staff.user.username }}"</span>? This will delete their account permanently.
+            </p>
+            
+            <form method="post" class="flex items-center justify-center gap-4">
+                {% csrf_token %}
+                <a href="{% url 'staff_list' %}" class="px-6 py-2.5 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors w-full">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors w-full">
+                    Yes, Remove
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+======================================================================
+USER PROFILE ANALYSIS
+======================================================================
+
+User: afari (ID: 2, Superuser: True)
+  Total profiles: 0
+----------------------------------------------------------------------
+
+User: dev1 (ID: 1, Superuser: False)
+  Total profiles: 1
+  - Profile ID: af8d3258-c65f-4e08-bdd3-be676ce899e0
+    Tenant: Eduxkope
+    Tenant schema: eduscope
+    Subscription: active - Growth Monthly
+----------------------------------------------------------------------
+
+User: samuel (ID: 5, Superuser: False)
+  Total profiles: 1
+  - Profile ID: 1b7efe33-40f8-4bd5-821a-a8b1d9ac852e
+    Tenant: Softivite LLC
+    Tenant schema: softiviteinc
+    Subscription: active - Enterprise Monthly
+----------------------------------------------------------------------
+
+======================================================================
+TENANT ANALYSIS
+======================================================================
+
+Tenant: Eduxkope
+  Schema: eduscope
+  Domain: None
+  User profiles: 1
+    - dev1
+  Subscription: active - Growth Monthly
+----------------------------------------------------------------------
+
+Tenant: Puxbay
+  Schema: public
+  Domain: None
+  User profiles: 0
+  Subscription: None
+----------------------------------------------------------------------
+
+Tenant: Softivite LLC
+  Schema: softiviteinc
+  Domain: None
+  User profiles: 1
+    - samuel
+  Subscription: active - Enterprise Monthly
+----------------------------------------------------------------------

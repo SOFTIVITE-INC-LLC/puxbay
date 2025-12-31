@@ -1,0 +1,273 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ title }} - {{ branch.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-8">
+    <!-- Breadcrumb -->
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-4">
+            <li>
+                <a href="{% url 'branch_dashboard' branch.id %}" class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
+                    <svg class="flex-shrink-0 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
+                    <span class="sr-only">Home</span>
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <svg class="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+                    </svg>
+                    <a href="{% url 'loyalty_dashboard' branch.id %}" class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">Loyalty Program</a>
+                </div>
+            </li>
+            <li>
+                 <div class="flex items-center">
+                    <svg class="flex-shrink-0 h-5 w-5 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+                    </svg>
+                    <span class="ml-4 text-sm font-medium text-gray-500 dark:text-gray-400" aria-current="page">{{ title }}</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Form Section -->
+        <div class="lg:col-span-2">
+            <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                <!-- Form Header -->
+                <div class="px-8 py-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ title }}</h1>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Define a new loyalty level and its benefits.</p>
+                    </div>
+                     <!-- Visual Preview Icon -->
+                    <div class="hidden sm:flex h-12 w-12 rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/50 dark:text-indigo-400 items-center justify-center">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="px-8 py-8">
+                    <form method="post" class="space-y-8" id="tierForm">
+                        {% csrf_token %}
+                        
+                         <!-- Tier Identity Section -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 pb-2 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>
+                                Tier Identity
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Tier Name -->
+                                <div class="col-span-2 md:col-span-1">
+                                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        Tier Name <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="mt-2 relative rounded-md shadow-sm">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                            </svg>
+                                        </div>
+                                        <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" 
+                                            class="form-input block w-full pl-10 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2.5 transition-shadow shadow-sm"
+                                            placeholder="e.g. Gold VIP"
+                                            value="{{ form.name.value|default_if_none:'' }}"
+                                            oninput="updatePreview()"
+                                            required>
+                                    </div>
+                                    {% if form.name.errors %}
+                                    <p class="mt-2 text-sm text-red-600 flex items-center">
+                                        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        {{ form.name.errors.0 }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+
+                                 <!-- Minimum Spend -->
+                                <div class="col-span-2 md:col-span-1">
+                                     <label for="{{ form.min_spend.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        Minimum Annual Spend <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="mt-2 relative rounded-md shadow-sm">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span class="text-gray-500 sm:text-sm font-bold">{{ settings.tenant.currency_symbol|default:'$' }}</span>
+                                        </div>
+                                        <input type="number" name="{{ form.min_spend.name }}" step="0.01" value="{{ form.min_spend.value|default_if_none:'' }}" id="{{ form.min_spend.id_for_label }}" 
+                                            class="form-input block w-full pl-8 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2.5 transition-shadow shadow-sm"
+                                            placeholder="0.00"
+                                            oninput="updatePreview()">
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Total spend required to reach this tier.</p>
+                                     {% if form.min_spend.errors %}
+                                    <p class="mt-2 text-sm text-red-600 flex items-center">
+                                        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        {{ form.min_spend.errors.0 }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                         <!-- Benefits & Visuals Section -->
+                        <div class="space-y-6">
+                            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white border-b border-gray-100 dark:border-gray-700 pb-2 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
+                                Benefits & Visuals
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-6 gap-6">
+                                <!-- Discount Area (Larger) -->
+                                <div class="sm:col-span-3">
+                                    <label for="{{ form.discount_percentage.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        Discount Benefit
+                                    </label>
+                                    <div class="mt-2 relative rounded-md shadow-sm">
+                                        <input type="number" name="{{ form.discount_percentage.name }}" step="0.01" value="{{ form.discount_percentage.value|default_if_none:'' }}" id="{{ form.discount_percentage.id_for_label }}" 
+                                            class="form-input block w-full pl-4 pr-10 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2.5 transition-shadow shadow-sm"
+                                            placeholder="0"
+                                            oninput="updatePreview()">
+                                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                            <span class="text-gray-500 sm:text-sm">%</span>
+                                        </div>
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Automatic discount applied at checkout.</p>
+                                </div>
+
+                                 <!-- Color Theme -->
+                                <div class="sm:col-span-3">
+                                    <label for="{{ form.color.id_for_label }}" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        Color Theme
+                                    </label>
+                                    <div class="mt-2 relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.357a4 4 0 014.136 0l1.657 1.357m-4.293 3.393l-1.414 1.414" />
+                                            </svg>
+                                        </div>
+                                        <select name="{{ form.color.name }}" id="{{ form.color.id_for_label }}" onchange="updatePreview()" class="form-input block w-full pl-10 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm py-2.5 transition-shadow shadow-sm">
+                                            <option value="blue" {% if form.color.value == 'blue' %}selected{% endif %}>Blue</option>
+                                            <option value="indigo" {% if form.color.value == 'indigo' %}selected{% endif %}>Indigo</option>
+                                            <option value="purple" {% if form.color.value == 'purple' %}selected{% endif %}>Purple</option>
+                                            <option value="pink" {% if form.color.value == 'pink' %}selected{% endif %}>Pink</option>
+                                            <option value="red" {% if form.color.value == 'red' %}selected{% endif %}>Red</option>
+                                            <option value="orange" {% if form.color.value == 'orange' %}selected{% endif %}>Orange</option>
+                                            <option value="yellow" {% if form.color.value == 'yellow' %}selected{% endif %}>Yellow</option>
+                                            <option value="green" {% if form.color.value == 'green' %}selected{% endif %}>Green</option>
+                                            <option value="teal" {% if form.color.value == 'teal' %}selected{% endif %}>Teal</option>
+                                            <option value="gray" {% if form.color.value == 'gray' %}selected{% endif %}>Gray</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700">
+                            <a href="{% url 'loyalty_dashboard' branch.id %}" class="bg-white py-2.5 px-5 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                Cancel
+                            </a>
+                            <button type="submit" class="inline-flex justify-center py-2.5 px-6 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-colors">
+                                Save Tier
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Preview Sidebar -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-6 border border-gray-100 dark:border-gray-700 sticky top-24">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Live Preview</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-6">See how this tier will appear to customers.</p>
+                
+                <!-- Preview Card -->
+                <div id="previewCard" class="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden transition-all duration-300">
+                    <div class="absolute top-0 right-0 -mr-8 -mt-8 w-24 h-24 rounded-full bg-white opacity-20 blur-xl"></div>
+                    
+                    <div class="flex items-center gap-4 relative z-10">
+                        <div class="h-16 w-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-3xl font-bold shadow-sm">
+                            <span id="previewInitial">G</span>
+                        </div>
+                        <div>
+                            <h4 id="previewName" class="text-xl font-bold tracking-wide">Gold Tier</h4>
+                            <p class="text-white/80 text-xs mt-1">Status Level</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 space-y-2 relative z-10">
+                        <div class="flex justify-between items-end border-b border-white/20 pb-2">
+                             <span class="text-xs font-medium text-white/80 uppercase tracking-widest">Rewards</span>
+                             <span id="previewDiscount" class="font-bold text-lg">10% OFF</span>
+                        </div>
+                         <div class="flex justify-between items-end pt-1">
+                             <span class="text-xs font-medium text-white/80 uppercase tracking-widest">Min Spend</span>
+                             <span id="previewSpend" class="font-medium text-sm">{{ settings.tenant.currency_symbol|default:'$' }}500.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updatePreview() {
+        const name = document.getElementById('{{ form.name.id_for_label }}').value || 'Tier Name';
+        const spend = document.getElementById('{{ form.min_spend.id_for_label }}').value || '0.00';
+        const discount = document.getElementById('{{ form.discount_percentage.id_for_label }}').value || '0';
+        const color = document.getElementById('{{ form.color.id_for_label }}').value || 'indigo';
+        
+        // Update Text
+        document.getElementById('previewName').innerText = name;
+        document.getElementById('previewInitial').innerText = name.charAt(0).toUpperCase();
+        document.getElementById('previewSpend').innerText = '{{ settings.tenant.currency_symbol|default:"$" }}' + spend;
+        document.getElementById('previewDiscount').innerText = discount + '% OFF';
+        
+        // Update Style
+        const card = document.getElementById('previewCard');
+        
+        // Map simplified colors to tailwind classes (approximate for demo)
+        const gradients = {
+            'blue': 'from-blue-500 to-blue-700',
+            'indigo': 'from-indigo-500 to-indigo-700',
+            'purple': 'from-purple-500 to-purple-700',
+            'pink': 'from-pink-500 to-pink-700',
+            'red': 'from-red-500 to-red-700',
+            'orange': 'from-orange-500 to-orange-700',
+            'yellow': 'from-yellow-400 to-yellow-600',
+            'green': 'from-green-500 to-green-700',
+            'teal': 'from-teal-500 to-teal-700',
+            'gray': 'from-gray-500 to-gray-700',
+        };
+
+        // Remove old gradients
+        Object.values(gradients).forEach(g => {
+            const classes = g.split(' ');
+            card.classList.remove(...classes);
+        });
+        
+        // Add new gradient
+        const newGradient = gradients[color] || 'from-indigo-500 to-indigo-700';
+        card.classList.add(...newGradient.split(' '));
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePreview();
+        
+        // Style standard Django inputs
+        const inputs = document.querySelectorAll('input[type="text"], input[type="number"], select');
+        inputs.forEach(input => {
+             if (!input.classList.contains('form-input')) {
+                input.classList.add('form-input', 'block', 'w-full', 'rounded-lg', 'border-gray-300', 'dark:border-gray-600', 'dark:bg-gray-700', 'dark:text-white', 'focus:ring-indigo-500', 'focus:border-indigo-500', 'sm:text-sm', 'py-2.5', 'pl-10');
+            }
+        });
+    });
+</script>
+{% endblock %}

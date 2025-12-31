@@ -1,0 +1,358 @@
+{% extends 'storefront/base.html' %}
+{% load storefront_extras %}
+{% load cache %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block meta_description %}{{ product.description|striptags|truncatewords:30 }} - Available at {{ store_settings.store_name|default:tenant.name }}{% endblock %}
+{% block meta_keywords %}{{ product.name }}, {{ product.category.name }}, {{ store_settings.store_name|default:tenant.name }}, buy {{ product.name }}{% endblock %}
+
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ product.name }} - {{ store_settings.store_name|default:tenant.name }}{% endblock %}
+{% block og_description %}{{ product.description|striptags|truncatewords:30 }}{% endblock %}
+{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{{ product.image_url }}{% endblock %}
+
+{% block twitter_title %}{{ product.name }}{% endblock %}
+{% block twitter_description %}{{ product.description|striptags|truncatewords:30 }}{% endblock %}
+{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{{ product.image_url }}{% endblock %}
+
+{% block extra_meta %}
+<!-- Product Structured Data (JSON-LD) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": "{{ product.name }}",
+  "image": "{{ request.scheme }}://{{ request.get_host }}{{ product.image_url }}",
+  "description": "{{ product.description|striptags }}",
+  "sku": "{{ product.sku }}",
+  "brand": {
+    "@type": "Brand",
+    "name": "{{ store_settings.store_name|default:tenant.name }}"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ request.build_absolute_uri }}",
+    "priceCurrency": "USD",
+    "price": "{{ product.price }}",
+    "availability": "{% if product.stock_quantity > 0 %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "seller": {
+      "@type": "Organization",
+      "name": "{{ store_settings.store_name|default:tenant.name }}"
+    }
+  }{% if average_rating %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ average_rating }}",
+    "reviewCount": "{{ reviews.count }}"
+  }{% endif %}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Breadcrumbs -->
+    <nav class="flex mb-8 text-sm font-medium text-gray-400">
+        <a href="{% url 'store_home' tenant.subdomain branch.id %}" class="hover:text-primary transition-colors">Store</a>
+        <span class="mx-3 text-gray-300 dark:text-gray-600">/</span>
+        <span class="text-gray-900 dark:text-white">{{ product.name }}</span>
+    </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+        <!-- Product Image Section -->
+        <div class="space-y-6">
+            <div class="relative group">
+                <div class="aspect-square glass-card rounded-[3rem] overflow-hidden flex items-center justify-center p-12 bg-gray-50/50 dark:bg-gray-800/50 relative">
+                    <!-- Abstract BG -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-purple-500/5 opacity-50"></div>
+                    
+                    {% if product.image %}
+                        <img id="main-product-image" 
+                             src="{{ product.image.url }}" 
+                             alt="{{ product.name }}" 
+                             class="relative z-10 w-full h-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.1)] group-hover:scale-105 transition-transform duration-700">
+                    {% elif product.image_url %}
+                        <img id="main-product-image" 
+                             src="{{ product.image_url }}" 
+                             alt="{{ product.name }}" 
+                             class="relative z-10 w-full h-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.1)] group-hover:scale-105 transition-transform duration-700">
+                    {% else %}
+                        <div id="main-product-image" class="relative z-10 w-full h-full flex items-center justify-center">
+                            <div class="text-center">
+                                <span class="material-icons-round text-9xl text-gray-300 dark:text-gray-600 mb-4">inventory_2</span>
+                                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">No Image Available</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Wishlist heart button -->
+                <button onclick="toggleWishlist('{{ product.id }}')" 
+                        class="absolute top-8 right-8 z-30 w-14 h-14 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all group/wish">
+                    <span id="wishlist-icon-{{ product.id }}" class="material-icons-round text-gray-300 dark:text-gray-600 group-hover/wish:text-rose-500 transition-colors">favorite</span>
+                </button>
+
+                <!-- Low Stock Pulse -->
+                {% if product.stock_quantity > 0 and product.stock_quantity <= product.low_stock_threshold %}
+                <div class="absolute top-8 left-8 z-30">
+                    <span class="bg-red-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-2xl animate-pulse">
+                        Limted Edition - Only {{ product.stock_quantity }} left
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Thumbnail Gallery (Mocking additional images from ProductImageGallery) -->
+            <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                {% if product.image or product.image_url %}
+                <button onclick="updateMainImage('{% if product.image %}{{ product.image.url }}{% else %}{{ product.image_url }}{% endif %}')" class="w-20 h-20 rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-primary overflow-hidden shrink-0 transition-all hover:opacity-80">
+                    <img src="{% if product.image %}{{ product.image.url }}{% else %}{{ product.image_url }}{% endif %}" class="w-full h-full object-cover">
+                </button>
+                {% endif %}
+                {% for item in product.gallery.all %}
+                <button onclick="updateMainImage('{{ item.image.url }}')" class="w-20 h-20 rounded-2xl bg-gray-50 dark:bg-gray-800 border-2 border-transparent hover:border-primary overflow-hidden shrink-0 transition-all hover:opacity-80">
+                    <img src="{{ item.image.url }}" class="w-full h-full object-cover">
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Product Info Section -->
+        <div class="flex flex-col pt-4">
+            <div class="mb-10">
+                <div class="flex items-center gap-4 mb-4">
+                    <span class="px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">
+                        {{ product.category.name|default:"General" }}
+                    </span>
+                    <div class="flex items-center gap-1 text-amber-500">
+                        <span class="material-icons-round text-sm">star</span>
+                        <span class="text-xs font-black text-gray-900 dark:text-white">{{ avg_rating|floatformat:1 }}</span>
+                        <span class="text-gray-400 text-xs font-medium">({{ review_count }} reviews)</span>
+                    </div>
+                </div>
+                <h1 class="text-4xl sm:text-6xl font-black text-gray-900 dark:text-white leading-[1.1] mb-6 tracking-tight">{{ product.name }}</h1>
+                <div class="flex items-end gap-3 mb-8">
+                    <span class="text-4xl font-black text-primary tabular-nums">${{ product.price }}</span>
+                    {% if product.stock_quantity <= 0 %}
+                        <span class="mb-1.5 text-sm font-bold text-rose-500 uppercase tracking-widest flex items-center gap-1">
+                            <span class="material-icons-round text-sm">error_outline</span>
+                            Out of Stock
+                        </span>
+                    {% endif %}
+                </div>
+                <p class="text-lg text-gray-500 dark:text-gray-400 leading-relaxed font-light mb-10 border-l-4 border-gray-100 dark:border-gray-800 pl-8">
+                    {{ product.description|default:"No description provided." }}
+                </p>
+            </div>
+
+            {% if product.stock_quantity > 0 %}
+            <div class="glass-card rounded-[2.5rem] p-8 shadow-2xl shadow-gray-200/50 dark:shadow-none border border-white dark:border-gray-800">
+                <form action="{% url 'add_to_cart' tenant.subdomain branch.id product.id %}" method="POST">
+                    {% csrf_token %}
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex items-center bg-gray-50 dark:bg-gray-800 rounded-2xl p-2 border border-gray-100 dark:border-gray-700 group focus-within:ring-2 focus:ring-primary/20 transition-all">
+                            <button type="button" onclick="this.nextElementSibling.stepDown()" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-all">
+                                <span class="material-icons-round">remove</span>
+                            </button>
+                            <input type="number" name="quantity" value="1" min="1" max="{{ product.stock_quantity }}"
+                                   class="w-16 bg-transparent border-none text-center font-black text-xl text-gray-900 dark:text-white focus:ring-0 p-0 appearance-none">
+                            <button type="button" onclick="this.previousElementSibling.stepUp()" class="w-12 h-12 flex items-center justify-center rounded-xl hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-all">
+                                <span class="material-icons-round">add</span>
+                            </button>
+                        </div>
+                        <button type="submit" class="flex-grow bg-gray-900 dark:bg-primary hover:bg-primary text-white py-5 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-gray-200 dark:shadow-none">
+                            <span class="material-icons-round">shopping_cart</span>
+                            Add to Cart
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+
+            <div class="mt-12 grid grid-cols-2 gap-6">
+                <div class="p-6 glass-card rounded-3xl border-none bg-white/40 dark:bg-gray-800/40">
+                    <span class="material-icons-round text-primary mb-3">store</span>
+                    <h4 class="font-bold text-gray-900 dark:text-white text-sm mb-1">Pick up in store</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Ready in 30-60 minutes.</p>
+                </div>
+                <div class="p-6 glass-card rounded-3xl border-none bg-white/40 dark:bg-gray-800/40">
+                    <span class="material-icons-round text-primary mb-3">security</span>
+                    <h4 class="font-bold text-gray-900 dark:text-white text-sm mb-1">Secure Transaction</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Your data is fully protected.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback & Reviews Section -->
+    <div class="mt-32">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-16">
+            <!-- Review Summary -->
+            <div class="lg:col-span-1">
+                <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-6">Customer Reviews</h2>
+                <div class="p-8 glass-card rounded-[2rem] bg-gray-50/50 dark:bg-gray-800/50">
+                    <div class="text-center mb-8">
+                        <span class="text-6xl font-black text-gray-900 dark:text-white">{{ avg_rating|floatformat:1 }}</span>
+                        <div class="flex justify-center gap-1 text-amber-500 mt-2">
+                            {% for i in "12345" %}
+                                <span class="material-icons-round">{% if forloop.counter <= avg_rating %}star{% else %}star_outline{% endif %}</span>
+                            {% endfor %}
+                        </div>
+                        <p class="text-gray-400 text-sm mt-2">Based on {{ review_count }} reviews</p>
+                    </div>
+                    
+                    {% if user.is_authenticated %}
+                    <form action="{% url 'submit_review' tenant.subdomain branch.id product.id %}" method="POST" class="space-y-4">
+                        {% csrf_token %}
+                        <div class="flex justify-center gap-2 mb-4" id="star-rating">
+                            {% for i in "12345" %}
+                            <button type="button" data-value="{{ forloop.counter }}" class="star-btn text-gray-200 hover:text-amber-500 transition-colors">
+                                <span class="material-icons-round text-3xl">star</span>
+                            </button>
+                            {% endfor %}
+                            <input type="hidden" name="rating" id="rating-input" value="5">
+                        </div>
+                        <textarea name="comment" rows="3" placeholder="Share your experience..." 
+                                  class="w-full rounded-2xl border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 p-4 text-sm focus:ring-primary focus:border-primary text-gray-900 dark:text-white"></textarea>
+                        <button type="submit" class="w-full py-4 bg-gray-900 dark:bg-primary text-white rounded-xl font-bold text-sm hover:bg-primary transition-all">Submit Review</button>
+                    </form>
+                    {% else %}
+                    <div class="text-center p-4 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl">
+                        <p class="text-xs text-gray-400 font-medium">Please <a href="{% url 'customer_login' tenant.subdomain branch.id %}" class="text-primary font-bold">Sign In</a> to write a review.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Review List -->
+            {% cache 3600 storefront_product_reviews product.id using="storefront" %}
+            <div class="lg:col-span-2 space-y-8">
+                {% for review in reviews %}
+                <div class="pb-8 border-b border-gray-50 dark:border-gray-800">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
+                                {{ review.customer.name|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 dark:text-white text-sm">{{ review.customer.name }}</h4>
+                                <span class="text-[10px] text-gray-400 uppercase font-bold">{{ review.created_at|date:"F d, Y" }}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-0.5 text-amber-500">
+                            {% for i in "12345" %}
+                                <span class="material-icons-round text-xs">{% if forloop.counter <= review.rating %}star{% else %}star_outline{% endif %}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="text-gray-500 dark:text-gray-400 leading-relaxed text-sm italic">"{{ review.comment }}"</p>
+                </div>
+                {% empty %}
+                <div class="py-12 bg-gray-50 dark:bg-gray-800 rounded-[2.5rem] flex flex-col items-center justify-center text-gray-400 dark:text-gray-600">
+                    <span class="material-icons-round text-6xl mb-4">rate_review</span>
+                    <p class="font-medium">Be the first to review this product!</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endcache %}
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    {% cache 3600 storefront_related_products product.id branch.id using="storefront" %}
+    <div class="mt-32">
+        <div class="flex items-center justify-between mb-12">
+            <h2 class="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+                {% if is_smart_recom %}Frequently Bought Together{% else %}You might also like{% endif %}
+            </h2>
+            <div class="h-px flex-grow mx-8 bg-gray-100 dark:bg-gray-800 hidden sm:block"></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {% for rel_product in related_products %}
+            <a href="{% url 'product_detail' tenant.subdomain branch.id rel_product.id %}" class="group bg-white dark:bg-gray-900 rounded-3xl p-6 shadow-sm dark:shadow-none hover:shadow-xl transition-all duration-500 border border-gray-100 dark:border-gray-800 flex flex-col transform hover:-translate-y-2">
+                <div class="aspect-square rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center mb-6 overflow-hidden">
+                    {% if rel_product.image %}
+                        <img src="{{ rel_product.image.url }}" alt="{{ rel_product.name }}" class="w-2/3 h-2/3 object-contain group-hover:scale-110 transition-transform duration-700">
+                    {% elif rel_product.image_url %}
+                        <img src="{{ rel_product.image_url }}" alt="{{ rel_product.name }}" class="w-2/3 h-2/3 object-contain group-hover:scale-110 transition-transform duration-700">
+                    {% else %}
+                        <span class="material-icons-round text-5xl text-gray-300 dark:text-gray-600">inventory_2</span>
+                    {% endif %}
+                </div>
+                <h3 class="font-bold text-gray-900 dark:text-white group-hover:text-primary transition-colors mb-1 truncate">{{ rel_product.name }}</h3>
+                <span class="text-xl font-black text-gray-900 dark:text-white tracking-tight">${{ rel_product.price }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endcache %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateMainImage(url) {
+        document.getElementById('main-product-image').src = url;
+    }
+
+    // Wishlist Toggle
+    function toggleWishlist(productId) {
+        fetch(`{% url 'toggle_wishlist' tenant.subdomain branch.id '00000000-0000-0000-0000-000000000000' %}`.replace('00000000-0000-0000-0000-000000000000', productId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const icon = document.getElementById(`wishlist-icon-${productId}`);
+                if (data.added) {
+                    icon.classList.remove('text-gray-300');
+                    icon.classList.add('text-rose-500');
+                } else {
+                    icon.classList.remove('text-rose-500');
+                    icon.classList.add('text-gray-300');
+                }
+            } else if (data.status === 'error' && data.message === 'Profile required') {
+                window.location.href = '{% url "customer_login" tenant.subdomain branch.id %}';
+            }
+        });
+    }
+
+    // Interactive Star Rating
+    const starBtns = document.querySelectorAll('.star-btn');
+    const ratingInput = document.getElementById('rating-input');
+    
+    starBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const val = btn.dataset.value;
+            ratingInput.value = val;
+            updateStars(val);
+        });
+        
+        btn.addEventListener('mouseenter', () => {
+            updateStars(btn.dataset.value);
+        });
+        
+        btn.addEventListener('mouseleave', () => {
+            updateStars(ratingInput.value);
+        });
+    });
+
+    function updateStars(val) {
+        starBtns.forEach((btn, index) => {
+            if (index < val) {
+                btn.classList.add('text-amber-500');
+                btn.classList.remove('text-gray-200', 'dark:text-gray-700');
+            } else {
+                btn.classList.remove('text-amber-500');
+                btn.classList.add('text-gray-200', 'dark:text-gray-700');
+            }
+        });
+    }
+</script>
+{% endblock %}

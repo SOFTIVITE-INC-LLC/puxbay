@@ -1,0 +1,233 @@
+{% extends 'storefront/base.html' %}
+{% load storefront_extras %}
+
+{% block title %}Secure Checkout{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    
+    <div class="flex flex-col lg:flex-row gap-16 items-start">
+        
+        <!-- Checkout Form Section -->
+        <div class="flex-grow w-full lg:w-3/5">
+            <!-- Header -->
+            <div class="flex items-center gap-6 mb-12">
+                <a href="{% url 'store_cart' tenant.subdomain branch.id %}" class="group w-12 h-12 flex items-center justify-center glass-card rounded-xl hover:bg-gray-900 dark:hover:bg-gray-700 hover:text-white transition-all duration-300 shadow-sm dark:shadow-none">
+                    <span class="material-icons-round">arrow_back</span>
+                </a>
+                <h1 class="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Checkout</h1>
+            </div>
+
+            <form method="POST" class="space-y-10">
+                {% csrf_token %}
+                
+                <!-- Contact Info Card -->
+                <div class="glass-card rounded-[2.5rem] shadow-sm dark:shadow-none border border-white dark:border-gray-800 p-10">
+                    <div class="flex items-center gap-4 mb-10">
+                        <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black">1</div>
+                        <h2 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Contact Information</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="md:col-span-2">
+                             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Full Name</label>
+                             <div class="relative group">
+                                 <span class="absolute inset-y-0 left-0 pl-5 flex items-center text-gray-400 group-focus-within:text-primary transition-colors">
+                                     <span class="material-icons-round text-xl">person_outline</span>
+                                 </span>
+                                 <input type="text" name="name" class="w-full pl-14 pr-4 py-4.5 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-bold text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-gray-600" 
+                                        required placeholder="John Doe" value="{{ customer.name|default:'' }}">
+                             </div>
+                        </div>
+
+                         <div class="md:col-span-1">
+                             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Phone Number</label>
+                             <div class="relative group">
+                                 <span class="absolute inset-y-0 left-0 pl-5 flex items-center text-gray-400 group-focus-within:text-primary transition-colors">
+                                     <span class="material-icons-round text-xl">phone_iphone</span>
+                                 </span>
+                                 <input type="tel" name="phone" class="w-full pl-14 pr-4 py-4.5 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-bold text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-gray-600" 
+                                        required placeholder="+1 234 567 8900" value="{{ customer.phone|default:'' }}">
+                             </div>
+                        </div>
+
+                        <div class="md:col-span-1">
+                             <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3">Email Address</label>
+                             <div class="relative group">
+                                 <span class="absolute inset-y-0 left-0 pl-5 flex items-center text-gray-400 group-focus-within:text-primary transition-colors">
+                                     <span class="material-icons-round text-xl">mail_outline</span>
+                                 </span>
+                                 <input type="email" name="email" class="w-full pl-14 pr-4 py-4.5 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 focus:bg-white dark:focus:bg-gray-800 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-bold text-gray-900 dark:text-white placeholder-gray-300 dark:placeholder-gray-600" 
+                                        required placeholder="john@example.com" value="{{ customer.email|default:user.email|default:'' }}">
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method Card -->
+                <div class="glass-card rounded-[2.5rem] shadow-sm dark:shadow-none border border-white dark:border-gray-800 p-10">
+                     <div class="flex items-center gap-4 mb-10">
+                        <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-black">2</div>
+                        <h2 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Payment Method</h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <label class="relative flex items-center justify-between p-6 rounded-[2rem] border-2 border-primary bg-primary/5 cursor-pointer group transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-white dark:bg-gray-800 rounded-xl flex items-center justify-center text-primary shadow-sm dark:shadow-none">
+                                    <span class="material-icons-round">payments</span>
+                                </div>
+                                <div>
+                                    <span class="block font-black text-gray-900 dark:text-white">Pay on Pickup</span>
+                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium">In-store Cash or Card</span>
+                                </div>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-4 border-primary bg-white dark:bg-gray-900 flex items-center justify-center">
+                                <div class="w-2 h-2 bg-primary rounded-full"></div>
+                            </div>
+                            <input type="radio" name="payment_method" value="cash" checked class="hidden">
+                        </label>
+
+                        {% if stripe_public_key %}
+                        <label class="payment-method-label relative flex items-center justify-between p-6 rounded-[2.5rem] border-2 border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-primary/30 cursor-pointer group transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 group-hover:text-primary transition-colors">
+                                    <span class="material-icons-round">credit_card</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="block font-black text-gray-900 dark:text-white">Pay Online Now</span>
+                                    <span class="block text-xs text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">Secure Credit/Debit Card</span>
+                                </div>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center shrink-0">
+                                <div class="radio-dot w-2 h-2 bg-primary rounded-full hidden"></div>
+                            </div>
+                            <input type="radio" name="payment_method" value="stripe" class="hidden">
+                        </label>
+                        {% endif %}
+
+                        {% if customer and crm_settings.redemption_rate > 0 %}
+                        {% with points_needed=total_amount|divide:crm_settings.redemption_rate %}
+                        <label class="payment-method-label relative flex items-center justify-between p-6 rounded-[2.5rem] border-2 {% if customer.loyalty_points >= points_needed %}border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-primary/30 cursor-pointer{% else %}border-gray-50 dark:border-gray-900/50 bg-gray-50/30 dark:bg-gray-900/30 opacity-60 cursor-not-allowed{% endif %} transition-all group overflow-hidden">
+                             <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-2xl flex items-center justify-center text-primary shadow-sm dark:shadow-none">
+                                    <span class="material-icons-round">stars</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <span class="block font-black text-gray-900 dark:text-white">Pay with Points</span>
+                                    <span class="block text-[10px] text-primary font-black uppercase tracking-widest mt-0.5">
+                                        {{ points_needed|floatformat:0 }} Points Required
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-right hidden sm:block">
+                                <span class="block text-[10px] text-gray-400 dark:text-gray-500 font-black uppercase tracking-widest mb-1">Your Balance</span>
+                                <span class="block text-sm font-bold text-gray-900 dark:text-white">{{ customer.loyalty_points|floatformat:0 }} pts</span>
+                            </div>
+                            {% if customer.loyalty_points >= points_needed %}
+                                <div class="w-6 h-6 rounded-full border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex items-center justify-center shrink-0">
+                                    <div class="radio-dot w-2 h-2 bg-primary rounded-full hidden"></div>
+                                </div>
+                                <input type="radio" name="payment_method" value="loyalty_points" class="hidden">
+                            {% endif %}
+                        </label>
+                        {% endwith %}
+                        {% endif %}
+                    </div>
+                    
+                    <script>
+                        document.querySelectorAll('.payment-method-label').forEach(label => {
+                            label.addEventListener('click', () => {
+                                const radio = label.querySelector('input[type="radio"]');
+                                if (radio) {
+                                    radio.checked = true;
+                                    // Update styling
+                                    document.querySelectorAll('.payment-method-label').forEach(l => {
+                                        l.classList.remove('border-primary', 'bg-primary/5');
+                                        l.classList.add('border-gray-100', 'dark:border-gray-800', 'bg-white', 'dark:bg-gray-900');
+                                        const dot = l.querySelector('.radio-dot');
+                                        if (dot) dot.classList.add('hidden');
+                                        const outer = l.querySelector('.radio-dot')?.parentElement;
+                                        if (outer) outer.classList.replace('border-primary', 'border-gray-200');
+                                        if (outer) outer.classList.replace('border-primary', 'border-gray-700');
+                                    });
+                                    label.classList.add('border-primary', 'bg-primary/5');
+                                    label.classList.remove('border-gray-100', 'dark:border-gray-800', 'bg-white', 'dark:bg-gray-900');
+                                    const dot = label.querySelector('.radio-dot');
+                                    if (dot) dot.classList.remove('hidden');
+                                    const outer = dot?.parentElement;
+                                    if (outer) {
+                                        outer.classList.remove('border-gray-200');
+                                        outer.classList.add('border-primary');
+                                    }
+                                }
+                            });
+                        });
+                        // Initialize first selected
+                        document.querySelector('.payment-method-label input[checked]')?.parentElement.click();
+                    </script>
+                    
+                    <p class="text-xs text-gray-400 mt-8 leading-relaxed italic">* Your information is used only to process this order and provide status updates via SMS/Email.</p>
+                </div>
+
+                <button type="submit" class="btn-primary w-full text-white py-6 rounded-3xl font-black text-xl shadow-2xl shadow-primary/30 dark:shadow-none flex items-center justify-center gap-4">
+                    Complete Your Order
+                    <span class="material-icons-round">task_alt</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Order Summary Column -->
+        <div class="w-full lg:w-2/5">
+             <div class="glass-card rounded-[2.5rem] p-10 border border-white dark:border-gray-800 sticky top-28 shadow-2xl shadow-gray-200/50 dark:shadow-none">
+                <div class="flex items-center justify-between mb-10">
+                    <h3 class="text-xl font-black text-gray-900 dark:text-white tracking-tight">Summary</h3>
+                    <a href="{% url 'store_cart' tenant.subdomain branch.id %}" class="text-xs font-bold text-primary uppercase tracking-widest hover:underline">Edit Bag</a>
+                </div>
+                
+                <div class="space-y-6 mb-10">
+                     {% for item in cart_preview %}
+                     <div class="flex items-center gap-4 bg-white/40 dark:bg-gray-800/40 p-3 rounded-2xl border border-gray-50/50 dark:border-gray-800 transition-all hover:bg-white/60 dark:hover:bg-gray-800/60">
+                         <div class="w-14 h-14 bg-white/60 dark:bg-gray-900/60 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden p-2">
+                             <img src="{{ item.product.image_url }}" class="w-full h-full object-contain">
+                         </div>
+                         <div class="flex-grow min-w-0">
+                             <h4 class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ item.product.name }}</h4>
+                             <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Qty: {{ item.quantity }}</p>
+                         </div>
+                         <span class="text-sm font-black text-gray-900 dark:text-white tabular-nums">${{ item.product.price|multiply:item.quantity|floatformat:2 }}</span>
+                     </div>
+                     {% endfor %}
+                </div>
+
+                <div class="space-y-4 pt-8 border-t border-gray-100 dark:border-gray-800">
+                    <div class="flex justify-between items-center text-gray-500 dark:text-gray-400 font-medium">
+                        <span class="text-sm uppercase tracking-widest font-black text-[10px]">Subtotal</span>
+                        <span class="text-lg font-bold text-gray-900 dark:text-white">${{ total_amount|floatformat:2 }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm uppercase tracking-widest font-black text-[10px] text-gray-500 dark:text-gray-400">Pickup Fee</span>
+                        <span class="text-xs font-black text-emerald-500 dark:text-emerald-400 uppercase tracking-[0.2em] bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full">Complementary</span>
+                    </div>
+                    <div class="pt-8 border-t border-gray-100 dark:border-gray-800">
+                        <div class="flex justify-between items-baseline mb-2">
+                             <span class="text-gray-900 dark:text-white font-black text-lg tracking-tight">Total</span>
+                             <span class="text-4xl font-black text-primary tabular-nums tracking-tighter">${{ total_amount|floatformat:2 }}</span>
+                        </div>
+                        <p class="text-right text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-[0.15em]">Ready for pickup today</p>
+                    </div>
+                </div>
+
+                <!-- Trust signals -->
+                <div class="mt-10 p-6 bg-gray-950 dark:bg-black rounded-[2rem] text-center border border-white/5 dark:border-gray-800">
+                    <div class="flex items-center justify-center gap-2 text-white/40 mb-3">
+                         <span class="material-icons-round text-sm text-emerald-400">lock</span>
+                         <span class="text-[10px] uppercase font-black tracking-widest">Encrypted Checkout</span>
+                    </div>
+                    <p class="text-[11px] text-white/30 dark:text-white/40 font-medium leading-relaxed">Your transaction is secured by industrial-grade SSL encryption and Softivite protocols.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

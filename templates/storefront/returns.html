@@ -1,0 +1,106 @@
+{% extends 'storefront/base.html' %}
+
+{% block title %}Returns & Exchanges{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-16 px-4">
+    <div class="text-center mb-16">
+        <h1 class="text-5xl font-black text-gray-900 dark:text-white tracking-tight mb-4">Returns & Exchanges</h1>
+        <p class="text-xl text-gray-500 dark:text-gray-400 font-medium">Your satisfaction is our priority</p>
+    </div>
+
+    <div class="space-y-8">
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-6">Return Policy</h2>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed mb-6">
+                We want you to be completely satisfied with your purchase. If you're not happy with your order, we offer returns and exchanges within a reasonable timeframe.
+            </p>
+            
+            <div class="bg-primary/5 dark:bg-primary/10 rounded-2xl p-6 mb-6">
+                <h3 class="font-black text-gray-900 dark:text-white mb-4">Eligibility Requirements</h3>
+                <ul class="space-y-3 text-gray-600 dark:text-gray-400">
+                    <li class="flex items-start gap-3">
+                        <span class="material-icons-round text-primary mt-0.5">check_circle</span>
+                        <span>Items must be in original condition with tags attached</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="material-icons-round text-primary mt-0.5">check_circle</span>
+                        <span>Original receipt or order confirmation required</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="material-icons-round text-primary mt-0.5">check_circle</span>
+                        <span>Items must be unused and in resalable condition</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="material-icons-round text-primary mt-0.5">check_circle</span>
+                        <span>Return within 14 days of purchase</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-6">How to Return</h2>
+            <div class="space-y-6">
+                <div class="flex gap-6">
+                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-black shrink-0">1</div>
+                    <div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-2">Contact Us</h3>
+                        <p class="text-gray-600 dark:text-gray-400">Reach out to our support team with your order number and reason for return</p>
+                    </div>
+                </div>
+                <div class="flex gap-6">
+                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-black shrink-0">2</div>
+                    <div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-2">Get Approval</h3>
+                        <p class="text-gray-600 dark:text-gray-400">We'll review your request and provide return authorization if eligible</p>
+                    </div>
+                </div>
+                <div class="flex gap-6">
+                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-black shrink-0">3</div>
+                    <div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-2">Return Items</h3>
+                        <p class="text-gray-600 dark:text-gray-400">Bring items to the store with your receipt and authorization</p>
+                    </div>
+                </div>
+                <div class="flex gap-6">
+                    <div class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-black shrink-0">4</div>
+                    <div>
+                        <h3 class="font-black text-gray-900 dark:text-white mb-2">Get Refund</h3>
+                        <p class="text-gray-600 dark:text-gray-400">Refunds are processed to the original payment method within 5-7 business days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card rounded-[3rem] p-12 dark:border-gray-800">
+            <h2 class="text-3xl font-black text-gray-900 dark:text-white mb-6">Exchanges</h2>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">
+                If you'd like to exchange an item for a different size, color, or product, we're happy to help! Exchanges follow the same eligibility requirements as returns.
+            </p>
+            <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
+                Simply bring the item to our store along with your receipt, and our team will assist you in finding the perfect replacement.
+            </p>
+        </div>
+
+        <div class="glass-card rounded-[3rem] p-12 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-800">
+            <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4">Non-Returnable Items</h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">For health and safety reasons, the following items cannot be returned:</p>
+            <ul class="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400">
+                <li>Opened or used personal care items</li>
+                <li>Perishable goods</li>
+                <li>Final sale or clearance items</li>
+                <li>Gift cards</li>
+            </ul>
+        </div>
+
+        <div class="text-center bg-primary/5 dark:bg-primary/10 rounded-3xl p-8">
+            <p class="text-gray-600 dark:text-gray-400 mb-4">Have questions about returns or exchanges?</p>
+            <a href="{% url 'store_contact' tenant.subdomain branch.id %}" class="inline-flex items-center gap-2 bg-gray-900 dark:bg-primary hover:bg-primary text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-xl dark:shadow-none">
+                Contact Support
+                <span class="material-icons-round">arrow_forward</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,217 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Transfer {{ transfer.reference_id }} - SaaS POS{% endblock %}
+
+{% block content %}
+<div class="px-4 py-8 max-w-5xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6 text-sm font-medium text-slate-500" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2">
+            <li><a href="{% url 'branch_dashboard' branch.id %}" class="hover:text-indigo-600 transition-colors">{{ branch.name }}</a></li>
+            <li><svg class="h-4 w-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></li>
+            <li><a href="{% url 'transfer_list' branch.id %}" class="hover:text-indigo-600 transition-colors">Transfers</a></li>
+            <li><svg class="h-4 w-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></li>
+            <li class="text-slate-900 font-bold" aria-current="page">{{ transfer.reference_id }}</li>
+        </ol>
+    </nav>
+
+    <div class="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
+        <div>
+            <div class="flex items-center gap-3 mb-2">
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">{{ transfer.reference_id }}</h1>
+                <span class="px-3 py-1 text-xs font-bold rounded-full 
+                    {% if transfer.status == 'completed' %}bg-emerald-100 text-emerald-800
+                    {% elif transfer.status == 'cancelled' %}bg-rose-100 text-rose-800
+                    {% elif transfer.status == 'shipped' %}bg-blue-100 text-blue-800
+                    {% elif transfer.status == 'approved' %}bg-indigo-100 text-indigo-800
+                    {% else %}bg-amber-100 text-amber-800{% endif %}">
+                    {{ transfer.get_status_display }}
+                </span>
+            </div>
+            <div class="flex items-center gap-4 text-slate-500 text-sm">
+                <span class="flex items-center">
+                    <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    Source: <strong class="ml-1 text-slate-900">{{ transfer.source_branch.name }}</strong>
+                </span>
+                <span class="text-slate-300">|</span>
+                <span class="flex items-center">
+                    <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                    Destination: <strong class="ml-1 text-slate-900">{{ transfer.destination_branch.name }}</strong>
+                </span>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+            {% if is_destination and transfer.status == 'requested' or is_destination and transfer.status == 'pending' %}
+                <form method="post" action="{% url 'transfer_approve' branch.id transfer.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Approve Request
+                    </button>
+                </form>
+            {% endif %}
+
+            {% if is_source and transfer.status == 'approved' %}
+                <form method="post" action="{% url 'transfer_ship' branch.id transfer.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        Ship Inventory
+                    </button>
+                </form>
+            {% endif %}
+
+            {% if is_destination and transfer.status == 'shipped' %}
+                <form method="post" action="{% url 'transfer_receive' branch.id transfer.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Receive Inventory
+                    </button>
+                </form>
+            {% endif %}
+
+            {# Admin override to receive from any branch #}
+            {% if request.user.profile.role == 'admin' and transfer.status == 'shipped' and not is_destination %}
+                <form method="post" action="{% url 'transfer_receive' transfer.destination_branch.id transfer.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center px-6 py-2.5 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-all">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Complete Transfer (Admin)
+                    </button>
+                </form>
+            {% endif %}
+
+            {# Status message when waiting for action from other branch #}
+            {% if is_source and transfer.status == 'shipped' %}
+                <div class="inline-flex items-center px-4 py-2.5 rounded-xl bg-blue-50 text-blue-700 text-sm font-medium">
+                    <svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Awaiting receipt at {{ transfer.destination_branch.name }}
+                </div>
+            {% endif %}
+
+            {% if is_source and transfer.status == 'requested' %}
+                <div class="inline-flex items-center px-4 py-2.5 rounded-xl bg-amber-50 text-amber-700 text-sm font-medium">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Awaiting approval from {{ transfer.destination_branch.name }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-8">
+            <!-- Items Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Transfer Items</h3>
+                    <span class="text-xs font-medium text-slate-500">{{ transfer.items.count }} items found</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50/50">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Product</th>
+                                <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Unit Value</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for item in transfer.items.all %}
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4 text-sm">
+                                    <div class="font-bold text-slate-900">{{ item.product.name }}</div>
+                                    <div class="text-xs text-slate-500">{{ item.product.sku }}</div>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-800">
+                                        {{ item.quantity }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-right text-sm font-medium text-slate-600">
+                                    {% if item.transfer_price %}
+                                        ${{ item.transfer_price }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            {% if transfer.notes %}
+            <div class="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100">
+                <h4 class="text-sm font-bold text-indigo-900 uppercase tracking-wider mb-2">Internal Notes</h4>
+                <p class="text-slate-700 text-sm whitespace-pre-line">{{ transfer.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Transfer Lifecycle</h3>
+                
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-4 w-0.5 bg-slate-100"></div>
+                    <ul class="space-y-6 relative">
+                        <li class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-indigo-600 text-white z-10">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Initiated</p>
+                                <p class="text-xs text-slate-500">{{ transfer.created_at|date:"M d, Y - H:i" }}</p>
+                                <p class="text-xs text-slate-400">By {{ transfer.created_by.user.username }}</p>
+                            </div>
+                        </li>
+
+                        {% if transfer.status != 'requested' %}
+                        <li class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-indigo-600 text-white z-10">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Approved</p>
+                                <p class="text-xs text-slate-400 italic">Confirmed by destination</p>
+                            </div>
+                        </li>
+                        {% endif %}
+
+                        {% if transfer.status == 'shipped' or transfer.status == 'completed' %}
+                        <li class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 text-white z-10">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Shipped</p>
+                                <p class="text-xs text-slate-400 italic">In transit to destination</p>
+                            </div>
+                        </li>
+                        {% endif %}
+
+                        {% if transfer.status == 'completed' %}
+                        <li class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-emerald-600 text-white z-10">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-900">Completed</p>
+                                <p class="text-xs text-slate-500">{{ transfer.completed_at|date:"M d, Y - H:i" }}</p>
+                            </div>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

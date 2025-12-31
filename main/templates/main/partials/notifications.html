@@ -1,0 +1,93 @@
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2">
+    <!-- Toasts will be injected here -->
+</div>
+
+<template id="toast-template">
+    <div class="flex items-center w-full max-w-xs p-4 bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-gray-800 border-l-4 border-blue-500" role="alert">
+        <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-blue-500 bg-blue-100 rounded-lg dark:bg-blue-800 dark:text-blue-200">
+            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 6.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"/>
+            </svg>
+        </div>
+        <div class="ml-3 text-sm font-normal text-gray-800 dark:text-gray-200">
+            <span class="font-semibold block mb-1 toast-title">Notification</span>
+            <span class="toast-message">Message content</span>
+        </div>
+        <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700" onclick="this.parentElement.remove()">
+            <span class="sr-only">Close</span>
+            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+            </svg>
+        </button>
+    </div>
+</template>
+
+<script nonce="{{ request.csp_nonce }}">
+    // Notifications WebSocket
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = protocol + '//' + window.location.host + '/ws/notifications/';
+    
+    // Simple reconnection logic
+    function connect() {
+        const socket = new WebSocket(wsUrl);
+
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            showToast(data.title, data.message, data.type);
+        };
+
+        socket.onclose = function(e) {
+            console.log('Notification socket closed. Reconnecting...');
+            setTimeout(function() {
+                connect();
+            }, 3000);
+        };
+        
+        socket.onerror = function(err) {
+            console.error('Socket encountered error: ', err.message, 'Closing socket');
+            socket.close();
+        };
+    }
+
+    connect();
+
+    function showToast(title, message, type='info') {
+        const container = document.getElementById('toast-container');
+        const template = document.getElementById('toast-template');
+        
+        const clone = template.content.cloneNode(true);
+        const toastEl = clone.querySelector('div');
+        
+        clone.querySelector('.toast-title').innerText = title;
+        clone.querySelector('.toast-message').innerText = message;
+        
+        // Colors
+        if (type === 'success') {
+            toastEl.classList.replace('border-blue-500', 'border-green-500');
+            // Update icon background if needed
+        } else if (type === 'error') {
+            toastEl.classList.replace('border-blue-500', 'border-red-500');
+        }
+        
+        container.appendChild(clone);
+        
+        // Play sound
+        playNotificationSound();
+        
+        // Auto remove
+        setTimeout(() => {
+            if(toastEl && toastEl.parentElement) {
+                toastEl.remove();
+            }
+        }, 5000);
+    }
+    
+    function playNotificationSound() {
+        try {
+            const audio = new Audio('/static/sounds/notification.mp3');
+            audio.play().catch(e => console.log('Audio play blocked', e));
+        } catch (e) {
+            console.log('No audio support');
+        }
+    }
+</script>

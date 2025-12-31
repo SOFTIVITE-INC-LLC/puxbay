@@ -1,0 +1,31 @@
+{% extends "emails/base.html" %}
+
+{% block content %}
+<div style="padding: 20px; font-family: sans-serif; line-height: 1.6; color: #333;">
+    <h2 style="color: #2563eb; margin-bottom: 20px;">
+        Response to Your {{ feedback.get_report_type_display }}: "{{ feedback.subject }}"
+    </h2>
+    
+    <p>Hello {{ feedback.user.first_name|default:feedback.user.username }},</p>
+    
+    <p>Thank you for reaching out to us. A Puxbay administrator has reviewed your feedback and updated its status.</p>
+
+    <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 25px 0;">
+        <p style="margin: 0 0 10px 0; font-weight: bold; color: #4b5563; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Current Status</p>
+        <span style="background-color: #dbeafe; color: #1e40af; padding: 4px 12px; border-radius: 20px; font-weight: bold; text-transform: uppercase; font-size: 13px;">
+            {{ feedback.get_status_display }}
+        </span>
+    </div>
+
+    {% if feedback.admin_notes %}
+    <div style="margin-bottom: 30px;">
+        <h3 style="font-size: 14px; text-transform: uppercase; color: #6b7280; letter-spacing: 1px; margin-bottom: 10px;">Administrator's Comments</h3>
+        <div style="white-space: pre-wrap; background-color: #fffbeb; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b; color: #92400e;">{{ feedback.admin_notes }}</div>
+    </div>
+    {% endif %}
+
+    <p style="margin-top: 30px;">The Puxbay team works continuously to improve our platform based on your input. If you have further questions, please don't hesitate to reply to this email or submit a new report.</p>
+
+    <p style="margin-top: 30px;">Best regards,<br><strong>Puxbay Team</strong></p>
+</div>
+{% endblock %}

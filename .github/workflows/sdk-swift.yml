@@ -1,0 +1,19 @@
+name: Swift SDK
+
+on:
+  push:
+    paths:
+      - 'sdks/swift/**'
+  pull_request:
+    paths:
+      - 'sdks/swift/**'
+
+jobs:
+  test:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Test
+      run: |
+        cd sdks/swift
+        swift test

@@ -1,0 +1,107 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="px-4 py-6 sm:px-0">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Purchase Orders</h1>
+        <a href="{% url 'purchase_order_create' branch.id %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+            Create Order
+        </a>
+    </div>
+    
+    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul id="po-list" class="divide-y divide-gray-200">
+            {% for po in orders %}
+            <li>
+                <a href="{% url 'purchase_order_detail' branch.id po.id %}" class="block hover:bg-gray-50">
+                    <div class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm font-medium text-blue-600 truncate">{{ po.reference_id }}</p>
+                            <div class="ml-2 flex-shrink-0 flex">
+                                <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if po.status == 'received' %}bg-green-100 text-green-800
+                                    {% elif po.status == 'cancelled' %}bg-red-100 text-red-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {{ po.get_status_display }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-2 sm:flex sm:justify-between">
+                            <div class="sm:flex">
+                                <p class="flex items-center text-sm text-gray-500 mr-4">
+                                    {{ po.supplier.name }}
+                                </p>
+                                <p class="flex items-center text-sm text-gray-500">
+                                    ${{ po.total_cost }}
+                                </p>
+                            </div>
+                            <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                <p>
+                                    Created {{ po.created_at|date:"M d, Y" }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </li>
+            {% empty %}
+            <li class="px-4 py-4 text-center text-gray-500">No purchase orders found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/offline-forms.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Inject pending POs
+        new OfflineListInjector({
+            containerId: 'po-list',
+            storeName: 'purchase_orders',
+            emptyStateId: null,
+            templateFunc: (item) => {
+                // Calculate total cost if possible
+                let total = 0;
+                if (item.items) {
+                    total = item.items.reduce((sum, i) => sum + (i.quantity * i.cost), 0);
+                }
+                
+                return `
+                <li data-offline-id="${item.id}">
+                    <a href="#" class="block hover:bg-gray-50 bg-yellow-50/50">
+                        <div class="px-4 py-4 sm:px-6">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-medium text-blue-600 truncate">Pending Order</p>
+                                <div class="ml-2 flex-shrink-0 flex">
+                                    <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 animate-pulse">
+                                        Pending Sync
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-2 sm:flex sm:justify-between">
+                                <div class="sm:flex">
+                                    <p class="flex items-center text-sm text-gray-500 mr-4">
+                                        ${item.supplier_name || 'Supplier'}
+                                    </p>
+                                    <p class="flex items-center text-sm text-gray-500">
+                                        $${total.toFixed(2)}
+                                    </p>
+                                </div>
+                                <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                    <p>
+                                        Created ${new Date(item.created_at).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+                `;
+            }
+        });
+    });
+</script>
+{% endblock %}

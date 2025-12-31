@@ -1,0 +1,221 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SaaS POS{% endblock %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6 text-sm font-medium text-slate-500" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2">
+            <li><a href="{% url 'dashboard' %}" class="hover:text-blue-600 transition-colors">Dashboard</a></li>
+            <li><span class="text-slate-300">/</span></li>
+            <li><a href="{% url 'staff_list' %}" class="hover:text-blue-600 transition-colors">Staff</a></li>
+            <li><span class="text-slate-300">/</span></li>
+            <li class="text-slate-900" aria-current="page">{{ title }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">{{ title }}</h1>
+        <p class="mt-2 text-slate-500">Create a new user account for a staff member.</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-xl shadow-lg shadow-slate-200/50 border border-slate-200 overflow-hidden">
+        <div class="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
+            <h3 class="text-lg font-semibold text-slate-900">Staff Account Details</h3>
+            <p class="text-sm text-slate-500">Enter the user credentials and role information.</p>
+        </div>
+        
+        <div class="p-8">
+            <form method="post" class="space-y-8">
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">
+                        {{ field.label }} {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+                    </label>
+                    
+                    {% if field.name == 'username' %}
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}" value="{{ field.value|default_if_none:'' }}" 
+                            class="block w-full pl-10 h-11 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                            placeholder="Enter username" {% if field.field.required %}required{% endif %}>
+                    </div>
+                    
+                    {% elif field.name == 'email' %}
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}" value="{{ field.value|default_if_none:'' }}" 
+                            class="block w-full pl-10 h-11 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                            placeholder="user@example.com" {% if field.field.required %}required{% endif %}>
+                    </div>
+                    
+                    {% elif field.name == 'password1' or field.name == 'password2' %}
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}" value="{{ field.value|default_if_none:'' }}" 
+                            class="block w-full pl-10 h-11 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm" 
+                            placeholder="••••••••" {% if field.field.required %}required{% endif %}>
+                    </div>
+                    
+                    {% elif field.name == 'role' %}
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <select name="{{ field.name }}" id="{{ field.id_for_label }}" 
+                            class="block w-full pl-10 pr-10 h-11 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none" 
+                            {% if field.field.required %}required{% endif %}>
+                            {% for choice in field.field.choices %}
+                            <option value="{{ choice.0 }}" {% if field.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>{{ choice.1 }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    {% elif field.name == 'branch' %}
+                    <div class="relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        </div>
+                        <select name="{{ field.name }}" id="{{ field.id_for_label }}" 
+                            class="block w-full pl-10 pr-10 h-11 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm appearance-none" 
+                            {% if field.field.required %}required{% endif %}>
+                            {% for choice in field.field.choices %}
+                            <option value="{{ choice.0 }}" {% if field.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>{{ choice.1 }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    {% elif field.name == 'can_perform_credit_sales' %}
+                    <div class="flex items-start bg-slate-50 border border-slate-200 p-4 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer" onclick="document.getElementById('{{ field.id_for_label }}').click()">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="{{ field.name }}" id="{{ field.id_for_label }}" {% if field.value %}checked{% endif %}
+                                class="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 transition-all">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ field.id_for_label }}" class="font-bold text-slate-900">{{ field.label }}</label>
+                            <p class="text-xs text-slate-500">{{ field.help_text }}</p>
+                        </div>
+                    </div>
+                    
+                    {% else %}
+                    <input type="{{ field.field.widget.input_type }}" name="{{ field.name }}" id="{{ field.id_for_label }}" value="{{ field.value|default_if_none:'' }}" 
+                        class="block w-full h-11 rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3" 
+                        {% if field.field.required %}required{% endif %}>
+                    {% endif %}
+                    
+                    {% if field.help_text %}
+                    <p class="mt-2 text-xs text-slate-500 flex items-start gap-1">
+                        <svg class="w-3 h-3 mt-0.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        {{ field.help_text }}
+                    </p>
+                    {% endif %}
+                    
+                    {% for error in field.errors %}
+                    <p class="mt-2 text-sm text-red-600 flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        {{ error }}
+                    </p>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+    
+                <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 mt-8">
+                    <a href="{% url 'staff_list' %}" class="px-5 py-2.5 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" class="inline-flex items-center justify-center px-5 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-blue-200 transition-all hover:scale-[1.02]">
+                        <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                        Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/offline-forms.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const isEdit = "{{ title }}".includes('Edit') || window.location.pathname.includes('/edit/') || window.location.pathname.includes('/update/');
+        
+        new OfflineFormManager({
+            formId: document.querySelector('form').getAttribute('id') || 'staff-form',
+            storeName: 'staff', 
+            transactionType: isEdit ? 'update_staff' : 'create_staff',
+            redirectUrl: "{% url 'staff_list' %}",
+            onBeforeSave: async (data) => {
+                if (isEdit) {
+                    const pathParts = window.location.pathname.split('/');
+                    const id = pathParts[pathParts.length - 2] || pathParts[pathParts.length - 3];
+                    if (id && !isNaN(id)) data.id = parseInt(id);
+                }
+                return data;
+            },
+            validate: async (data) => {
+                if (isEdit) return { valid: true };
+                
+                try {
+                    if (!window.posDB) return { valid: true };
+                    
+                    const limits = await window.posDB.get('settings', 'subscription_limits');
+                    if (!limits) return { valid: true };
+                    
+                    const maxUsers = limits.max_users;
+                    const currentUsers = limits.current_users;
+                    
+                    const queue = await window.posDB.getAll('sync_queue');
+                    const pendingCreations = queue.filter(q => q.type === 'create_staff').length;
+                    
+                    if ((currentUsers + pendingCreations) >= maxUsers) {
+                        return { valid: false, message: `Subscription limit reached. Max staff: ${maxUsers}.` };
+                    }
+                    
+                    return { valid: true };
+                } catch (err) {
+                    console.error('Validation error', err);
+                    return { valid: true };
+                }
+            }
+        });
+        
+        const form = document.querySelector('form');
+        if (form && !form.id) form.id = 'staff-form';
+    });
+</script>
+{% endblock %}

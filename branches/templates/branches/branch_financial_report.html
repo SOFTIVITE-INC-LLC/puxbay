@@ -1,0 +1,261 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Financial Report - {{ branch.name }}{% endblock %}
+{% block page_title %}Financial Report{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+@media print {
+    .no-print { display: none !important; }
+    .print-full-width { width: 100% !important; max-width: none !important; }
+    body { background: white !important; }
+    .bg-gradient-to-br { background: #f8f9fa !important; color: #000 !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header with Actions -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 no-print">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900">{{ branch.name }} - Financial Report</h2>
+                <p class="text-sm text-slate-500 mt-1">
+                    {% if start_date and end_date %}
+                        {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}
+                    {% else %}
+                        All Time
+                    {% endif %}
+                </p>
+            </div>
+            
+            <div class="flex gap-2">
+                <!-- Print Button -->
+                <button onclick="window.print()" class="px-4 py-2 bg-slate-600 text-white rounded-lg text-sm font-medium hover:bg-slate-700 transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    Print Report
+                </button>
+                
+                <!-- Date Range Selector -->
+                <form method="get" class="flex flex-wrap gap-2">
+                    <select name="range" id="date-range-select" onchange="handleDateRangeChange()" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500">
+                        <option value="today" {% if date_range == 'today' %}selected{% endif %}>Today</option>
+                        <option value="week" {% if date_range == 'week' %}selected{% endif %}>Last 7 Days</option>
+                        <option value="month" {% if date_range == 'month' %}selected{% endif %}>Last 30 Days</option>
+                        <option value="year" {% if date_range == 'year' %}selected{% endif %}>Last Year</option>
+                        <option value="all" {% if date_range == 'all' %}selected{% endif %}>All Time</option>
+                        <option value="custom" {% if date_range == 'custom' %}selected{% endif %}>Custom Range</option>
+                    </select>
+                    
+                    <div id="custom-date-range" class="flex gap-2" style="display: {% if date_range == 'custom' %}flex{% else %}none{% endif %};">
+                        <input type="date" name="start_date" value="{{ start_date|date:'Y-m-d' }}" class="px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                        <input type="date" name="end_date" value="{{ end_date|date:'Y-m-d' }}" class="px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Apply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 no-print">
+        <div class="border-b border-slate-200">
+            <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                <button onclick="switchTab('overview')" id="tab-overview" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-blue-500 text-blue-600">
+                    Overview
+                </button>
+                <button onclick="switchTab('revenue')" id="tab-revenue" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
+                    Revenue Analysis
+                </button>
+                <button onclick="switchTab('performance')" id="tab-performance" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">
+                    Performance
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Overview Tab -->
+    <div id="content-overview" class="space-y-6 tab-content">
+        <h3 class="text-lg font-bold text-slate-900 px-2">Key Metrics</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg p-6 text-white">
+                <p class="text-blue-100 text-sm font-medium uppercase">Total Revenue</p>
+                <h3 class="text-3xl font-bold mt-2">${{ total_revenue|floatformat:2 }}</h3>
+            </div>
+            <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg p-6 text-white">
+                <p class="text-emerald-100 text-sm font-medium uppercase">Total Orders</p>
+                <h3 class="text-3xl font-bold mt-2">{{ total_orders }}</h3>
+            </div>
+            <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg p-6 text-white">
+                <p class="text-purple-100 text-sm font-medium uppercase">Avg Order Value</p>
+                <h3 class="text-3xl font-bold mt-2">${{ avg_order_value|floatformat:2 }}</h3>
+            </div>
+            <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
+                <p class="text-amber-100 text-sm font-medium uppercase">Total Profit</p>
+                <h3 class="text-3xl font-bold mt-2">${{ total_profit|floatformat:2 }}</h3>
+                <p class="text-amber-100 text-xs mt-1">{{ profit_margin|floatformat:1 }}% margin</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Analysis Tab -->
+    <div id="content-revenue" class="space-y-6 tab-content hidden">
+        <h3 class="text-lg font-bold text-slate-900 px-2">Revenue Analysis</h3>
+        
+        {% if daily_revenue %}
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h4 class="text-md font-bold text-slate-900 mb-4">Revenue Trend</h4>
+            <canvas id="revenueTrendChart" height="80"></canvas>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-h-[500px] flex flex-col">
+                <h4 class="text-md font-bold text-slate-900 mb-4 flex-shrink-0">Top Products by Revenue</h4>
+                <div class="overflow-x-auto overflow-y-auto flex-1">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="sticky top-0 bg-white z-10">
+                            <tr>
+                                <th class="px-3 py-2 text-left text-xs font-semibold text-slate-500 uppercase">Product</th>
+                                <th class="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase">Qty</th>
+                                <th class="px-3 py-2 text-right text-xs font-semibold text-slate-500 uppercase">Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for product in top_products %}
+                            <tr>
+                                <td class="px-3 py-2 text-sm">{{ product.product__name }}</td>
+                                <td class="px-3 py-2 text-right text-sm">{{ product.quantity_sold }}</td>
+                                <td class="px-3 py-2 text-right text-sm font-bold text-blue-600">${{ product.revenue|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="px-3 py-4 text-center text-sm text-slate-500">No data</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-h-[500px] flex flex-col">
+                <h4 class="text-md font-bold text-slate-900 mb-4 flex-shrink-0">Revenue by Category</h4>
+                <div class="flex-1 flex items-center justify-center">
+                    {% if revenue_by_category %}
+                    <canvas id="categoryChart" height="200"></canvas>
+                    {% else %}
+                    <p class="text-sm text-slate-500 text-center py-8">No category data</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Tab -->
+    <div id="content-performance" class="space-y-6 tab-content hidden">
+        <h3 class="text-lg font-bold text-slate-900 px-2">Team Performance</h3>
+        
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h4 class="text-md font-bold text-slate-900 mb-4">Cashier Performance</h4>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Cashier</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Orders</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Total Sales</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Avg/Order</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for cashier in cashier_performance %}
+                        <tr>
+                            <td class="px-4 py-3 text-sm font-medium">{{ cashier.cashier__user__username }}</td>
+                            <td class="px-4 py-3 text-right text-sm">{{ cashier.order_count }}</td>
+                            <td class="px-4 py-3 text-right text-sm font-bold text-blue-600">${{ cashier.total_sales|floatformat:2 }}</td>
+                            <td class="px-4 py-3 text-right text-sm">${{ cashier.avg_per_order|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4" class="px-4 py-4 text-center text-sm text-slate-500">No data</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabName) {
+        // Hide all content
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        
+        // Show active content
+        document.getElementById('content-' + tabName).classList.remove('hidden');
+        
+        // Reset all tabs
+        const tabs = ['overview', 'revenue', 'performance'];
+        tabs.forEach(t => {
+            const btn = document.getElementById('tab-' + t);
+            if(t === tabName) {
+                btn.className = "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-blue-500 text-blue-600";
+            } else {
+                btn.className = "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300";
+            }
+        });
+    }
+
+
+{% if daily_revenue %}
+const revenueTrendCtx = document.getElementById('revenueTrendChart').getContext('2d');
+new Chart(revenueTrendCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for day in daily_revenue %}'{{ day.day }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Revenue',
+            data: [{% for day in daily_revenue %}{{ day.revenue }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            borderColor: 'rgb(59, 130, 246)',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { callback: function(value) { return '$' + value.toFixed(2); } }
+            }
+        }
+    }
+});
+{% endif %}
+
+{% if revenue_by_category %}
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+new Chart(categoryCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for cat in revenue_by_category %}'{{ cat.product__category__name }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for cat in revenue_by_category %}{{ cat.revenue }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+            backgroundColor: ['rgb(59, 130, 246)', 'rgb(16, 185, 129)', 'rgb(168, 85, 247)', 'rgb(251, 146, 60)', 'rgb(236, 72, 153)', 'rgb(14, 165, 233)', 'rgb(132, 204, 22)', 'rgb(249, 115, 22)']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

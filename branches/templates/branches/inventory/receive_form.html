@@ -1,0 +1,93 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ title }} - {{ branch.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6 text-sm font-medium text-gray-500" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2">
+            <li><a href="{% url 'inventory_dashboard' branch.id %}" class="hover:text-indigo-600">Inventory</a></li>
+            <li><span class="text-gray-300">/</span></li>
+            <li class="text-gray-900" aria-current="page">{{ title }}</li>
+        </ol>
+    </nav>
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden">
+        <div class="px-8 py-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex items-center justify-between">
+            <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                     <div class="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                         <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                     </div>
+                    Receive Stock
+                </h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-12">Add new inventory from a supplier or PO.</p>
+            </div>
+        </div>
+        
+        <div class="p-8">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Product Selection -->
+                <div>
+                    <label for="product" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Product</label>
+                    <select name="product" id="product" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 transition-all" required>
+                        <option value="" disabled selected>Select a product...</option>
+                        {% for product in products %}
+                            <option value="{{ product.id }}">{{ product.name }} (Currently: {{ product.stock_quantity }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Batch Number -->
+                    <div>
+                        <label for="batch_number" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Batch / Serial Number</label>
+                        <input type="text" name="batch_number" id="batch_number" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 transition-all" placeholder="e.g. BATCH-001" required>
+                    </div>
+                    
+                    <!-- Expiry Date -->
+                    <div>
+                        <label for="expiry_date" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Expiry Date (Optional)</label>
+                        <input type="date" name="expiry_date" id="expiry_date" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 transition-all">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Quantity -->
+                    <div>
+                        <label for="quantity" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Quantity Received</label>
+                        <div class="relative rounded-lg shadow-sm">
+                            <input type="number" name="quantity" id="quantity" min="1" class="block w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 transition-all" placeholder="0" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Cost Price -->
+                    <div>
+                        <label for="cost_price" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Cost per Unit</label>
+                        <div class="relative rounded-lg shadow-sm">
+                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number" name="cost_price" id="cost_price" step="0.01" min="0" class="block w-full pl-8 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 transition-all" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end pt-6 border-t border-gray-100 dark:border-gray-700 gap-4">
+                    <a href="{% url 'inventory_dashboard' branch.id %}" class="px-6 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        Cancel
+                    </a>
+                    <button type="submit" class="inline-flex items-center px-8 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-900 transition-transform transform hover:-translate-y-0.5">
+                        Confirm Receipt
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
