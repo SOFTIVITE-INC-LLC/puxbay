@@ -21,6 +21,41 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "finance"],
+  "shortcuts": [
+    {
+      "name": "Inventory Forecast",
+      "url": "/intelligence/inventory/",
+      "icons": [
+        {
+          "src": "/static/images/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Staff Leaderboard",
+      "url": "/intelligence/staff/",
+      "icons": [
+        {
+          "src": "/static/images/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "POS Terminals",
+      "url": "/dashboard/kanban/",
+      "icons": [
+        {
+          "src": "/static/images/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "categories": [
+    "business",
+    "finance"
+  ],
   "prefer_related_applications": false
 }
