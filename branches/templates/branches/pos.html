@@ -247,20 +247,17 @@
             </div>
 
             <!-- Smart Suggestions Panel -->
-            <div v-show="state.recommendations.length > 0" class="flex-none bg-blue-50/50 dark:bg-blue-900/10 p-4 border-t border-b border-blue-100 dark:border-blue-800">
-                <div class="flex items-center gap-2 mb-3">
-                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-lg">auto_awesome</span>
-                    <h4 class="text-xs font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">Frequently Bought Together</h4>
+            <div v-show="state.recommendations.length > 0" class="flex-none bg-blue-50/50 dark:bg-blue-900/10 p-3 border-t border-b border-blue-100 dark:border-blue-800">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-sm">auto_awesome</span>
+                    <h4 class="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider">Suggested</h4>
                 </div>
-                <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                    <div v-for="r in state.recommendations" :key="r.id" @click="handleProductClick(r)" 
-                         class="flex-none w-32 bg-white dark:bg-slate-800 p-2 rounded-xl border border-blue-100 dark:border-blue-900 shadow-sm cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all transform hover:-translate-y-1 active:scale-95 group">
-                        <div class="aspect-square bg-slate-50 dark:bg-slate-900 rounded-lg mb-2 overflow-hidden flex items-center justify-center p-2">
-                            <img :src="r.image_url || '{% static 'images/default_product.png' %}'" class="w-full h-full object-contain group-hover:scale-110 transition-transform">
-                        </div>
-                        <h5 class="text-[10px] font-bold text-slate-800 dark:text-white truncate mb-0.5">{% verbatim %}{{ r.name }}{% endverbatim %}</h5>
-                        <div class="text-[10px] font-black text-blue-600 dark:text-blue-400">{% verbatim %}{{ state.currency }}{{ r.price.toFixed(2) }}{% endverbatim %}</div>
-                    </div>
+                <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    <button v-for="r in state.recommendations" :key="r.id" @click="handleProductClick(r)" 
+                         class="flex-none px-3 py-1.5 bg-white dark:bg-slate-800 rounded-full border border-blue-100 dark:border-blue-900 shadow-sm whitespace-nowrap text-[10px] font-bold text-slate-700 dark:text-slate-200 hover:border-blue-400 transition-all flex items-center gap-1.5 active:scale-95">
+                        <span>{% verbatim %}{{ r.name }}{% endverbatim %}</span>
+                        <span class="text-blue-600 dark:text-blue-400 font-black">{% verbatim %}{{ state.currency }}{{ r.price.toFixed(0) }}{% endverbatim %}</span>
+                    </button>
                 </div>
             </div>
 
