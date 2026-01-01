@@ -254,7 +254,7 @@
                 <div class="grid grid-cols-4 gap-1.5 mb-3" data-kiosk-class="gap-4">
                     <button v-for="method in ['cash', 'gift_card', 'store_credit', 'loyalty_points', 'credit', 'split', 'stripe', 'paystack', 'mobile']" 
                             :key="method"
-                            v-show="(method !== 'stripe' || state.paymentConfig?.stripe_enabled) && (method !== 'paystack' || state.paymentConfig?.paystack_enabled) && (method !== 'mobile' || state.paymentConfig?.mobile_money_enabled)"
+                            v-show="(method !== 'stripe' || state.paymentConfig?.stripe_enabled) && (method !== 'paystack' || state.paymentConfig?.paystack_enabled)"
                             @click="setPaymentMethod(method)"
                             :class="['flex flex-col items-center justify-center gap-0.5 p-1.5 rounded-lg border-2 transition-all duration-200 dark:text-slate-300', state.paymentMethod === method ? 'border-blue-500 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'border-slate-200 dark:border-slate-600 text-slate-500']"
                             data-kiosk-class="py-6">
