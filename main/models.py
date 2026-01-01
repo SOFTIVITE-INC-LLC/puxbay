@@ -29,7 +29,7 @@ class Supplier(models.Model):
 
 class SupplierProfile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user_profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name='supplier_link')
+    user_profile = models.OneToOneField(UserProfile, on_delete=models.DO_NOTHING, related_name='supplier_link')
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='portal_users')
 
     def __str__(self):
@@ -297,7 +297,7 @@ class Order(models.Model):
     tenant = models.ForeignKey(Tenant, on_delete=models.DO_NOTHING, related_name='orders')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
-    cashier = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='processed_orders')
+    cashier = models.ForeignKey(UserProfile, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='processed_orders')
     
     # Unique identifier
     order_number = EncryptedTextField(max_length=30, unique=True, db_index=True, blank=True, null=True, help_text="Human-readable order number (e.g., ORD-000001)")
@@ -761,7 +761,7 @@ class CustomerCreditTransaction(models.Model):
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
     reference = models.CharField(max_length=100, blank=True, help_text="Order ID or Payment Ref")
     notes = models.TextField(blank=True)
-    created_by = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
+    created_by = models.ForeignKey(UserProfile, on_delete=models.DO_NOTHING, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -784,7 +784,7 @@ class SupplierCreditTransaction(models.Model):
     reference = models.CharField(max_length=100, blank=True, help_text="PO ID or Payment Ref")
     receipt_image = models.ImageField(upload_to='supplier_payments/', blank=True, null=True)
     notes = models.TextField(blank=True)
-    created_by = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True)
+    created_by = models.ForeignKey(UserProfile, on_delete=models.DO_NOTHING, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

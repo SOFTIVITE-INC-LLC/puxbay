@@ -22,7 +22,7 @@ class CommissionRule(models.Model):
 class StaffAchievement(models.Model):
     """Earned badges and milestones for staff members"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    staff = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='achievements')
+    staff = models.ForeignKey(UserProfile, on_delete=models.DO_NOTHING, related_name='achievements')
     
     badge_name = models.CharField(max_length=100)
     badge_icon = models.CharField(max_length=50, default='stars') # Material icon name
@@ -36,8 +36,8 @@ class StaffAchievement(models.Model):
 class ShiftSwapRequest(models.Model):
     """Handles employee-led shift exchange logic"""
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    requesting_staff = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='sent_swap_requests')
-    target_staff = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='received_swap_requests')
+    requesting_staff = models.ForeignKey(UserProfile, on_delete=models.DO_NOTHING, related_name='sent_swap_requests')
+    target_staff = models.ForeignKey(UserProfile, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='received_swap_requests')
     
     # Using 'branches.Shift' as string to avoid circular imports if any, 
     # though they are in the same app.

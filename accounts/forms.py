@@ -4,7 +4,7 @@ from .models import Tenant, Branch, APIKey
 
 class TenantRegistrationForm(forms.ModelForm):
     name = forms.CharField(label="Company Name", max_length=100)
-    subdomain = forms.CharField(label="Subdomain (e.g., storename)", max_length=100, help_text="This will be your unique store URL identifier.")
+    subdomain = forms.CharField(label="Subdomain (e.g., storename)", max_length=100, help_text="Lowercase letters only, no numbers, spaces or special characters.")
     address = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=False)
 
     class Meta:

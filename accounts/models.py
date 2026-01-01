@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.validators import RegexValidator
+
 from django.contrib.auth.models import User
 import uuid
 from utils.encryption import EncryptedTextField
@@ -7,7 +9,17 @@ from django_tenants.models import TenantMixin, DomainMixin
 class Tenant(TenantMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
-    subdomain = models.CharField(max_length=100, unique=True, help_text="Used for schema name")
+    subdomain = models.CharField(
+        max_length=100, 
+        unique=True, 
+        validators=[
+            RegexValidator(
+                regex='^[a-z]+$',
+                message='Subdomain must only contain lowercase letters, with no numbers, spaces, or special characters.'
+            )
+        ],
+        help_text="Used for schema name"
+    )
     created_on = models.DateField(auto_now_add=True)
     
     TENANT_TYPES = (

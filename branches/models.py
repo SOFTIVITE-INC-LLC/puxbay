@@ -222,7 +222,7 @@ class Shift(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='shifts')
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name='shifts')
-    staff = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='shifts')
+    staff = models.ForeignKey(UserProfile, on_delete=models.DO_NOTHING, related_name='shifts')
     
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
@@ -241,7 +241,7 @@ class Shift(models.Model):
     actual_end = models.DateTimeField(null=True, blank=True)
     
     is_for_bid = models.BooleanField(default=False, help_text="Available for any qualified staff to claim")
-    requested_swap_with = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name='swap_requests_received')
+    requested_swap_with = models.ForeignKey(UserProfile, on_delete=models.DO_NOTHING, null=True, blank=True, related_name='swap_requests_received')
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
