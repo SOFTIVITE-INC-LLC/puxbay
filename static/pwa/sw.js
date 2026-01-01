@@ -38,10 +38,37 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
+    // 1. Bypass List: Never cache sensitive paths (Admin, Auth, API)
+    const bypassPaths = ['/admin/', '/login/', '/logout/', '/api/'];
+    if (bypassPaths.some(path => url.pathname.includes(path))) {
+        return; // Let it fall through to network
+    }
+
     // Skip non-GET requests and browser extensions
     if (request.method !== 'GET' || !url.protocol.startsWith('http')) return;
 
-    // Image Caching (Cache-First)
+    // 2. Navigation Requests (Network-First)
+    // Ensures fresh HTML and CSRF tokens while online, with offline fallback
+    if (request.mode === 'navigate') {
+        event.respondWith(
+            fetch(request).then((networkResponse) => {
+                // Update cache if successful
+                if (networkResponse && networkResponse.status === 200) {
+                    caches.open(STATIC_CACHE).then((cache) => {
+                        cache.put(request, networkResponse.clone());
+                    });
+                }
+                return networkResponse;
+            }).catch(async () => {
+                // Return cached version if available, else show offline page
+                const cachedResponse = await caches.match(request);
+                return cachedResponse || caches.match('/static/pwa/offline.html');
+            })
+        );
+        return;
+    }
+
+    // 3. Image Caching (Cache-First)
     if (request.destination === 'image') {
         event.respondWith(
             caches.open(IMAGE_CACHE).then(async (cache) => {
@@ -60,7 +87,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Static Assets & Pages (Stale-While-Revalidate)
+    // 4. Static Assets (Stale-While-Revalidate)
     event.respondWith(
         caches.match(request).then((cachedResponse) => {
             const fetchPromise = fetch(request).then((networkResponse) => {
@@ -71,10 +98,8 @@ self.addEventListener('fetch', (event) => {
                 }
                 return networkResponse;
             }).catch(() => {
-                // If network fails and no cache, show offline page for navigation requests
-                if (request.mode === 'navigate') {
-                    return caches.match('/static/pwa/offline.html');
-                }
+                // Handled above for navigation
+                return undefined;
             });
 
             return cachedResponse || fetchPromise;
