@@ -44,7 +44,10 @@ export function initVuePOS(config) {
 
                 // Hardware status
                 printerName: 'Not connected',
-                connectionStatus: 'Online'
+                connectionStatus: 'Online',
+
+                // Mobile POS
+                showMobileCart: false
             });
 
             // --- Computed Properties ---
@@ -101,6 +104,10 @@ export function initVuePOS(config) {
                     window.posApp?.ui?.showBatchModal(product);
                 } else {
                     addToCart(product);
+                    // Open cart on mobile when item added
+                    if (window.innerWidth < 1024) {
+                        state.showMobileCart = true;
+                    }
                 }
             };
 
@@ -143,6 +150,10 @@ export function initVuePOS(config) {
             const clearCart = () => {
                 state.cart = [];
                 state.recommendations = [];
+            };
+
+            const toggleMobileCart = () => {
+                state.showMobileCart = !state.showMobileCart;
             };
 
             let recommendationTimeout = null;
@@ -206,6 +217,7 @@ export function initVuePOS(config) {
 
                 state.loading = true;
                 state.loadingMessage = 'Processing payment...';
+                state.showMobileCart = false; // Hide mobile cart during checkout
 
                 const payments = new PaymentHandler(state, config.paymentConfig);
                 const extraData = {};
@@ -463,6 +475,7 @@ export function initVuePOS(config) {
                 updateQuantity,
                 removeFromCart,
                 clearCart,
+                toggleMobileCart,
                 setPaymentMethod,
                 processCheckout,
                 toggleTheme,

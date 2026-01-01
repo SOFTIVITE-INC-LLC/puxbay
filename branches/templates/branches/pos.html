@@ -144,7 +144,28 @@
         </main>
 
         <!-- RIGHT: Cart Area (33%) -->
-        <aside class="w-full lg:w-1/3 bg-white dark:bg-slate-800 flex flex-col shadow-xl z-30 relative border-l dark:border-slate-700">
+        <!-- Backdrop for mobile -->
+        <div v-show="state.showMobileCart" 
+             @click="toggleMobileCart"
+             class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[90] lg:hidden transition-opacity duration-300">
+        </div>
+
+        <aside :class="['w-full lg:w-1/3 bg-white dark:bg-slate-800 flex flex-col shadow-xl z-[100] lg:z-30 transition-transform duration-500 ease-in-out border-l dark:border-slate-700',
+                       'fixed inset-x-0 bottom-0 lg:relative lg:translate-y-0 h-[85vh] lg:h-auto rounded-t-[2.5rem] lg:rounded-none',
+                       state.showMobileCart ? 'translate-y-0' : 'translate-y-full']">
+            
+            <!-- Mobile Handle / Close -->
+            <div class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-t-[2.5rem]">
+                <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-3"></div>
+                <h3 class="text-sm font-black text-slate-800 dark:text-white flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-600">shopping_cart</span>
+                    Your Cart
+                </h3>
+                <button @click="toggleMobileCart" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors">
+                    <span class="material-symbols-outlined text-slate-400">close</span>
+                </button>
+            </div>
+
             <!-- Customer Selector -->
             <div class="p-4 border-b border-slate-100 dark:border-slate-700 flex-none bg-slate-50/50 dark:bg-slate-800/50" data-kiosk-class="p-6">
                 <div class="relative">
@@ -279,6 +300,19 @@
             </div>
         </aside>
     </div>
+
+    <!-- Mobile Floating Action Button -->
+    <button v-show="!state.showMobileCart" 
+            @click="toggleMobileCart"
+            class="lg:hidden fixed bottom-6 right-6 w-16 h-16 bg-blue-600 text-white rounded-2xl shadow-2xl flex items-center justify-center z-[80] animate-bounce-subtle hover:scale-105 active:scale-95 transition-all">
+        <div class="relative">
+            <span class="material-symbols-outlined text-3xl">shopping_cart</span>
+            <span v-show="state.cart.length > 0" 
+                  class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black w-6 h-6 rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 animate-pulse">
+                {% verbatim %}{{ state.cart.length }}{% endverbatim %}
+            </span>
+        </div>
+    </button>
 
 
 <!-- Loading Overlay -->
@@ -549,6 +583,14 @@
     .payment-btn:not(.active):hover {
         border-color: #cbd5e1; /* slate-300 */
         background-color: #f8fafc; /* slate-50 */
+    }
+
+    @keyframes bounce-subtle {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+    .animate-bounce-subtle {
+        animation: bounce-subtle 2s infinite ease-in-out;
     }
 </style>
 

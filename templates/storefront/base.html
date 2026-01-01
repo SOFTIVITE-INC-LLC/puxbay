@@ -171,24 +171,61 @@
         </div>
     </div>
 
-    <!-- PWA Install Banner -->
-    <div id="pwa-install-banner" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-[100] animate-in slide-in-from-bottom-8 duration-500">
-        <div class="bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-3xl p-6 shadow-2xl border border-white/10">
+    <!-- PWA Install Banner (Android/Chrome) -->
+    <div id="pwa-install-banner" class="hidden fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-96 z-[100] animate-in slide-in-from-bottom-8 duration-500">
+        <div class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white rounded-[2rem] p-6 shadow-2xl border border-white/10 backdrop-blur-xl">
             <div class="flex items-start gap-4">
-                <div class="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center shrink-0">
-                    <span class="material-icons-round text-primary text-2xl">get_app</span>
+                <div class="w-14 h-14 bg-primary/20 rounded-2xl flex items-center justify-center shrink-0 border border-primary/20">
+                    <span class="material-icons-round text-primary text-3xl">add_to_home_screen</span>
                 </div>
                 <div class="flex-grow">
-                    <h4 class="font-black text-sm mb-1">Install {{ store_settings.store_name|default:tenant.name }}</h4>
-                    <p class="text-xs text-white/60 leading-relaxed mb-4">Get faster access and shop offline with our app</p>
-                    <div class="flex gap-2">
-                        <button id="pwa-install-btn" class="px-4 py-2 bg-primary hover:bg-primary/90 rounded-xl text-xs font-bold transition-all">
-                            Install Now
+                    <h4 class="font-black text-base mb-1">Install {{ store_settings.store_name|default:tenant.name }}</h4>
+                    <p class="text-xs text-white/50 leading-relaxed mb-4">Add to your home screen for a fast, native-app experience.</p>
+                    <div class="flex gap-3">
+                        <button id="pwa-install-btn" class="flex-grow px-4 py-3 bg-primary hover:bg-primary/90 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
+                            Install App
                         </button>
-                        <button id="pwa-dismiss-btn" class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all">
-                            Not Now
+                        <button id="pwa-dismiss-btn" class="px-4 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-xs font-black uppercase tracking-widest transition-all">
+                            Later
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- iOS Install Instructions Modal -->
+    <div id="ios-install-modal" class="hidden fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-4">
+        <div class="fixed inset-0 bg-gray-950/60 backdrop-blur-md" onclick="closeIosModal()"></div>
+        <div class="relative w-full max-w-sm bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 shadow-2xl animate-in slide-in-from-bottom-10 duration-500">
+            <button onclick="closeIosModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <span class="material-icons-round">close</span>
+            </button>
+            <div class="text-center">
+                <div class="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <span class="material-icons-round text-primary text-4xl">apple</span>
+                </div>
+                <h3 class="text-2xl font-black text-gray-900 dark:text-white mb-2">Install on iOS</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-8">Follow these steps to add {{ store_settings.store_name|default:tenant.name }} to your home screen:</p>
+                
+                <div class="space-y-6 text-left">
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-sm font-black text-primary shrink-0">1</div>
+                        <p class="text-sm font-bold text-gray-700 dark:text-gray-300">Tap the <span class="text-primary italic">Share</span> button in Safari</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-sm font-black text-primary shrink-0">2</div>
+                        <p class="text-sm font-bold text-gray-700 dark:text-gray-300">Scroll down and tap <span class="text-primary font-black">Add to Home Screen</span></p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-sm font-black text-primary shrink-0">3</div>
+                        <p class="text-sm font-bold text-gray-700 dark:text-gray-300">Tap <span class="text-primary font-black">Add</span> in the top-right corner</p>
+                    </div>
+                </div>
+
+                <div class="mt-10 p-6 bg-gray-50 dark:bg-gray-800/50 rounded-3xl border border-dashed border-gray-200 dark:border-gray-700">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Pro Tip</p>
+                    <p class="text-xs font-bold text-gray-600 dark:text-gray-400 mt-1">This will enable full-screen shopping and offline access!</p>
                 </div>
             </div>
         </div>
@@ -478,7 +515,19 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register("{% static 'pwa/sw.js' %}")
-                    .then(reg => console.log('SW Registered', reg))
+                    .then(reg => {
+                        console.log('SW Registered', reg);
+                        // Clean up redundant /sw.js if registered by mistake
+                        if (reg.scope.endsWith('/')) {
+                             navigator.serviceWorker.getRegistrations().then(regs => {
+                                 regs.forEach(r => {
+                                     if (r.active && r.active.scriptURL.endsWith('/sw.js') && !r.active.scriptURL.includes('static')) {
+                                         r.unregister();
+                                     }
+                                 });
+                             });
+                        }
+                    })
                     .catch(err => console.log('SW Failed', err));
             });
         }
@@ -584,22 +633,45 @@
             });
         }
         
-        // PWA Install Prompt
+        // PWA Install Prompt Logic
         let deferredPrompt;
         const installBanner = document.getElementById('pwa-install-banner');
+        const iosModal = document.getElementById('ios-install-modal');
         const installBtn = document.getElementById('pwa-install-btn');
         const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+        // Detect iOS
+        const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            if (installBanner && !localStorage.getItem('pwa-dismissed')) {
-                installBanner.classList.remove('hidden');
+            // Only show banner if not already standalone and not dismissed
+            if (!isStandalone && !localStorage.getItem('pwa-dismissed')) {
+                setTimeout(() => {
+                    installBanner.classList.remove('hidden');
+                }, 3000); // Show after 3 seconds
             }
         });
 
+        // Show iOS instructions if appropriate
+        if (isIos && !isStandalone && !localStorage.getItem('pwa-dismissed')) {
+            setTimeout(() => {
+                // For iOS, we show the same banner but it opens the modal
+                installBanner.classList.remove('hidden');
+                installBtn.innerHTML = 'Install Guide';
+            }, 5000);
+        }
+
         if (installBtn) {
             installBtn.addEventListener('click', async () => {
+                if (isIos) {
+                    installBanner.classList.add('hidden');
+                    iosModal.classList.remove('hidden');
+                    return;
+                }
+                
                 if (deferredPrompt) {
                     deferredPrompt.prompt();
                     const { outcome } = await deferredPrompt.userChoice;
@@ -616,6 +688,10 @@
                 installBanner.classList.add('hidden');
                 localStorage.setItem('pwa-dismissed', 'true');
             });
+        }
+
+        function closeIosModal() {
+            if (iosModal) iosModal.classList.add('hidden');
         }
 
         // Theme Management
@@ -640,14 +716,6 @@
             });
         }
 
-        // Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('Service Worker registered'))
-                    .catch(err => console.log('Service Worker registration failed:', err));
-            });
-        }
     </script>
     {% endblock %}
 </body>
