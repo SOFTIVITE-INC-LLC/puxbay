@@ -38,10 +38,12 @@ self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // 1. Bypass List: Never cache sensitive paths (Admin, Auth, API)
-    const bypassPaths = ['/admin/', '/login/', '/logout/', '/api/'];
+    // 1. Bypass List: Never cache sensitive paths (Admin, Auth, API, Signup)
+    const bypassPaths = ['/admin/', '/login/', '/logout/', '/api/', '/signup/', '/accounts/'];
     if (bypassPaths.some(path => url.pathname.includes(path))) {
-        return; // Let it fall through to network
+        // We do NOT return here, instead we respond with network directly
+        // to avoid any potential caching logic later in the event.
+        return;
     }
 
     // Skip non-GET requests and browser extensions
@@ -52,8 +54,9 @@ self.addEventListener('fetch', (event) => {
     if (request.mode === 'navigate') {
         event.respondWith(
             fetch(request).then((networkResponse) => {
-                // Update cache if successful
-                if (networkResponse && networkResponse.status === 200) {
+                // Update cache if successful, but ONLY if not in bypass list
+                const shouldCache = !bypassPaths.some(path => url.pathname.includes(path));
+                if (networkResponse && networkResponse.status === 200 && shouldCache) {
                     caches.open(STATIC_CACHE).then((cache) => {
                         cache.put(request, networkResponse.clone());
                     });
