@@ -40,23 +40,24 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             </a>
             <div>
-                <h1 class="text-xl font-bold text-slate-800 dark:text-white" data-kiosk-class="text-2xl">
+                <h1 class="text-lg sm:text-xl font-bold text-slate-800 dark:text-white truncate max-w-[140px] sm:max-w-none" data-kiosk-class="text-2xl">
                     {{ branch.name }}
-                    <span class="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400">
+                    <span class="ml-2 text-sm font-normal text-slate-500 dark:text-slate-400 hidden sm:inline">
                         {% verbatim %}{{ state.currentUser?.name || state.currentUser?.username }}{% endverbatim %}
                     </span>
                 </h1>
-                <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400" data-kiosk-class="text-sm">
+                <div class="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-500 dark:text-slate-400" data-kiosk-class="text-sm">
                     <span id="connection-status" class="flex items-center gap-1 text-emerald-600 font-medium">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Online
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="hidden sm:inline">Online</span>
                     </span>
                     <span>•</span>
-                    <span id="last-sync-time">Synced just now</span>
+                    <span id="last-sync-time">just now</span>
                 </div>
             </div>
         </div>
         
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1 sm:gap-3 overflow-x-auto scrollbar-hide max-w-[50%] sm:max-w-none justify-end">
              <!-- Kiosk Toggle -->
              <button @click="toggleKiosk" id="kiosk-toggle-btn" class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-300 text-slate-600 hover:bg-slate-50 transition-all dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700" data-kiosk-class="px-5 py-2.5">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
@@ -118,7 +119,7 @@
 
             <!-- Product Grid -->
             <div class="flex-1 overflow-y-auto p-4 custom-scrollbar" data-kiosk-class="p-6">
-                <div v-show="filteredProducts.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-20 transition-all"
+                <div v-show="filteredProducts.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-28 lg:pb-8 transition-all"
                      data-kiosk-class="grid-cols-kiosk gap-6">
                     <div v-for="product in filteredProducts" :key="product.id" @click="handleProductClick(product)"
                          class="product-card bg-white dark:bg-slate-800 rounded-2xl p-3 border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer transition-all transform hover:-translate-y-1 active:scale-95 group relative overflow-hidden flex flex-col h-full">
@@ -142,6 +143,18 @@
                 </div>
             </div>
         </main>
+        
+        <!-- Floating Cart Button (Mobile Only) -->
+        <button v-show="!state.isLargeScreen && !state.showMobileCart" 
+                @click="toggleMobileCart"
+                class="fixed bottom-6 right-6 z-[80] w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center lg:hidden animate-bounce-subtle">
+            <div class="relative">
+                <span class="material-symbols-outlined text-3xl">shopping_cart</span>
+                <span v-if="state.cart.length > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black w-6 h-6 rounded-full flex items-center justify-center border-2 border-white">
+                    {% verbatim %}{{ state.cart.length }}{% endverbatim %}
+                </span>
+            </div>
+        </button>
 
         <!-- RIGHT: Cart Area (33%) -->
         <!-- Backdrop for mobile -->
@@ -152,7 +165,7 @@
 
         <aside :class="['bg-white dark:bg-slate-800 flex flex-col shadow-xl transition-all duration-500 ease-in-out border-l dark:border-slate-700',
                        state.isLargeScreen ? 'relative w-1/3 h-full z-30 translate-y-0 shadow-none' : 'fixed inset-x-0 bottom-0 z-[100] h-[85vh] w-full',
-                       (!state.isLargeScreen && !state.showMobileCart) ? 'translate-y-full' : 'translate-y-0']">
+                       (!state.isLargeScreen && !state.showMobileCart) ? 'translate-y-full opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto']">
             
             <!-- Mobile Handle / Close -->
             <div class="lg:hidden flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-t-[2.5rem]">
