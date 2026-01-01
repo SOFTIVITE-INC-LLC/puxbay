@@ -26,7 +26,7 @@ schema_view = get_schema_view(
    openapi.Info(
       title="Puxbay API",
       default_version='v1',
-      description="Modern API for SaaS Point of Sale Management",
+      description="Modern API for Puxbay Point of Sale Management",
       terms_of_service="https://puxbay.com/terms/",
       contact=openapi.Contact(email="api@puxbay.com"),
       license=openapi.License(name="Proprietary"),
