@@ -1,7 +1,7 @@
 {
-  "name": "SaaS POS System",
-  "short_name": "POS",
-  "description": "Multi-tenant Point of Sale System with Offline Support",
+  "name": "Puxbay",
+  "short_name": "Puxbay",
+  "description": "Professional Point of Sale & Management Platform",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

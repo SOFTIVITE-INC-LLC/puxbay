@@ -47,7 +47,8 @@ export function initVuePOS(config) {
                 connectionStatus: 'Online',
 
                 // Mobile POS
-                showMobileCart: false
+                showMobileCart: false,
+                isLargeScreen: window.innerWidth >= 1024
             });
 
             // --- Computed Properties ---
@@ -456,6 +457,11 @@ export function initVuePOS(config) {
                 if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                     document.documentElement.classList.add('dark');
                 }
+
+                window.addEventListener('resize', () => {
+                    state.isLargeScreen = window.innerWidth >= 1024;
+                });
+
                 setTimeout(() => {
                     state.loading = false;
                 }, 500);

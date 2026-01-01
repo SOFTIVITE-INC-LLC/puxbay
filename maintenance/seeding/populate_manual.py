@@ -22,7 +22,7 @@ def populate():
         order=1,
         content="""
         <p class="text-lg text-slate-600 mb-4">
-            Welcome to the SaaS POS System User Manual. This guide is designed to help you get up and running quickly and make the most of our powerful features. Whether you are a small boutique or a multi-store retail chain, our system scales with you.
+            Welcome to the Puxbay System User Manual. This guide is designed to help you get up and running quickly and make the most of our powerful features. Whether you are a small boutique or a multi-store retail chain, our system scales with you.
         </p>
         <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-md">
             <div class="flex">
