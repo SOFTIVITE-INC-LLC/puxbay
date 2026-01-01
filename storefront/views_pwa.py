@@ -20,19 +20,19 @@ def storefront_manifest(request, tenant_slug, branch_id):
         "orientation": "portrait-primary",
         "icons": [
             {
-                "src": store_settings.logo_image.url if store_settings and store_settings.logo_image else "/static/pwa/icon-192.png",
+                "src": store_settings.logo_image.url if store_settings and store_settings.logo_image else "/static/images/puxbay.png",
                 "sizes": "192x192",
                 "type": "image/png",
                 "purpose": "any"
             },
             {
-                "src": store_settings.logo_image.url if store_settings and store_settings.logo_image else "/static/pwa/icon-192-maskable.png",
+                "src": store_settings.logo_image.url if store_settings and store_settings.logo_image else "/static/images/puxbay.png",
                 "sizes": "192x192",
                 "type": "image/png",
                 "purpose": "maskable"
             },
             {
-                "src": store_settings.logo_image.url if store_settings and store_settings.logo_image else "/static/pwa/icon-512.png",
+                "src": store_settings.logo_image.url if store_settings and store_settings.logo_image else "/static/images/puxbay.png",
                 "sizes": "512x512",
                 "type": "image/png",
                 "purpose": "any"

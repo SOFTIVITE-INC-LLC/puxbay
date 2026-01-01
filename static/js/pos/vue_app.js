@@ -105,10 +105,6 @@ export function initVuePOS(config) {
                     window.posApp?.ui?.showBatchModal(product);
                 } else {
                     addToCart(product);
-                    // Open cart on mobile when item added
-                    if (window.innerWidth < 1024) {
-                        state.showMobileCart = true;
-                    }
                 }
             };
 
