@@ -37,6 +37,8 @@ class StorefrontSettings(models.Model):
     paystack_public_key = EncryptedTextField(blank=True, null=True)
     paystack_secret_key = EncryptedTextField(blank=True, null=True)
     
+    enable_mobile_money = models.BooleanField(default=False)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

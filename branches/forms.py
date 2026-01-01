@@ -19,11 +19,11 @@ class BranchSettingsForm(forms.ModelForm):
 
 class ProductImportForm(forms.Form):
     import_file = forms.FileField(
-        label='Excel File',
-        help_text='Upload a valid .xlsx file. (CSV not supported)',
+        label='File',
+        help_text='Upload a valid .xlsx or .csv file.',
         widget=forms.FileInput(attrs={
             'class': 'absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10',
-            'accept': '.xlsx'
+            'accept': '.xlsx,.csv'
         })
     )
 

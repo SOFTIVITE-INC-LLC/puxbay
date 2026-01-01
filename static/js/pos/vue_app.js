@@ -21,6 +21,8 @@ export function initVuePOS(config) {
                 selectedCustomerId: null,
                 paymentMethod: 'cash',
                 giftCardCode: null,
+                momoNetwork: '',
+                momoPhone: '',
 
                 cart: [],
                 splitPayments: [],
@@ -178,6 +180,8 @@ export function initVuePOS(config) {
                     state.activeModal = 'gift_card';
                 } else if (method === 'split') {
                     openSplitModal();
+                } else if (method === 'mobile') {
+                    state.activeModal = 'mobile_money';
                 }
             };
 
@@ -207,6 +211,11 @@ export function initVuePOS(config) {
                 const extraData = {};
                 if (state.paymentMethod === 'split') {
                     extraData.payments = state.splitPayments;
+                } else if (state.paymentMethod === 'mobile') {
+                    extraData.mobile_money = {
+                        network: state.momoNetwork,
+                        phone: state.momoPhone
+                    };
                 }
 
                 try {

@@ -470,8 +470,9 @@ def import_products(request, branch_id):
             f = request.FILES['import_file']
             try:
                 # Validate file type
-                if not f.name.endswith('.xlsx'):
-                    messages.error(request, 'Please upload a valid .xlsx file.')
+                is_csv = f.name.lower().endswith('.csv')
+                if not (f.name.endswith('.xlsx') or is_csv):
+                    messages.error(request, 'Please upload a valid .xlsx or .csv file.')
                     return redirect('import_products', branch_id=branch.id)
                 
                 # Read file content
@@ -505,9 +506,13 @@ def import_products(request, branch_id):
                     messages.warning(request, "Background processing unavailable, importing synchronously...")
                     
                     from .xlsx_utils import XLSXParser
+                    from .csv_utils import CSVParser
                     from .services.inventory import InventoryService
                     
-                    parser = XLSXParser(file_content)
+                    if is_csv:
+                         parser = CSVParser(file_content)
+                    else:
+                         parser = XLSXParser(file_content)
                     service = InventoryService(tenant=request.user.profile.tenant, branch=branch)
                     
                     results = service.import_from_parser(parser)
@@ -794,6 +799,7 @@ def pos_view(request, branch_id):
         'stripe_key': store_settings.stripe_public_key if store_settings and store_settings.enable_stripe else None,
         'paystack_enabled': False,
         'paystack_key': store_settings.paystack_public_key if store_settings and store_settings.enable_paystack else None,
+        'mobile_money_enabled': False,
         'currency_code': branch.currency_code,
         'logo_url': branch.logo.url if branch.logo else None
     }
@@ -801,6 +807,7 @@ def pos_view(request, branch_id):
     if store_settings:
         payment_config['stripe_enabled'] = bool(store_settings.enable_stripe and store_settings.stripe_public_key)
         payment_config['paystack_enabled'] = bool(store_settings.enable_paystack and store_settings.paystack_public_key)
+        payment_config['mobile_money_enabled'] = bool(store_settings.enable_mobile_money)
 
     context = {
         'branch': branch,
