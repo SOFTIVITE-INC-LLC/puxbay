@@ -49,6 +49,7 @@ class StaffCreationForm(forms.ModelForm):
     email = forms.EmailField(required=False, widget=forms.EmailInput(attrs={'class': 'block w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ring-1 ring-slate-200 sm:text-sm h-10 px-3 transition-all'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'block w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ring-1 ring-slate-200 sm:text-sm h-10 px-3 transition-all'}))
     role = forms.ChoiceField(choices=[
+        ('admin', 'Admin (Full System Access)'),
         ('manager', 'Branch Manager'),
         ('procurement_manager', 'Procurement Manager'),
         ('sales', 'Sales Person'),
@@ -77,6 +78,7 @@ class StaffCreationForm(forms.ModelForm):
 class StaffUpdateForm(forms.ModelForm):
     email = forms.EmailField(required=False, widget=forms.EmailInput(attrs={'class': 'block w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ring-1 ring-slate-200 sm:text-sm h-10 px-3 transition-all'}))
     role = forms.ChoiceField(choices=[
+        ('admin', 'Admin (Full System Access)'),
         ('manager', 'Branch Manager'),
         ('procurement_manager', 'Procurement Manager'),
         ('sales', 'Sales Person'),
